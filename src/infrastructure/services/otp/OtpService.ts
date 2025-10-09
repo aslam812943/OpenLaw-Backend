@@ -5,6 +5,7 @@ export class OtpService{
     constructor (private cache:RedisCacheService){}
 
     async generateOtp(email:string,data:any):Promise<string>{
+        console.log('otp renerating ', email)
         const otp = Math.floor(100000+Math.random()*900000).toString();
         await this.cache.set(`otp:${email}`,120,JSON.stringify({otp,data}))
         return otp;
