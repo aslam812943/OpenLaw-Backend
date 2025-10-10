@@ -1,9 +1,14 @@
 import { UserRegisterDTO } from "../../application/dtos/user/ RegisterUserDTO"; 
 import { User } from "../../domain/entities/ User"; 
 import { IUserRepository } from "../../domain/repositories/user/ IUserRepository";
-import UserModel from "../db/models/ UserModel";
+import UserModel, { IUserDocument } from "../db/models/ UserModel";
+import { BaseRepository } from "./BaseRepository";
 
-export class UserRepository implements IUserRepository {
+
+export class UserRepository extends BaseRepository<IUserDocument> implements IUserRepository {
+  constructor(){
+    super(UserModel)
+  }
    async verifyUser(userId: string): Promise<void> {
     await UserModel.findByIdAndUpdate(userId,{isVerified:true});
   }
@@ -33,5 +38,10 @@ export class UserRepository implements IUserRepository {
       isVerified: userDoc.isVerified,
       role: userDoc.role,
     };
+  }
+
+
+async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+    await this.update(userId, { password: hashedPassword });
   }
 }

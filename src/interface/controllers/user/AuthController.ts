@@ -2,24 +2,29 @@ import { Request, Response } from "express";
 import { IRegisterUserUseCase } from "../../../application/interface/user/IRegisterUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { VerifyOtpUseCase } from "../../../application/user/auth/VerifyOtpUseCase";
-import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
+ import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
 import { LoginUserUsecase } from "../../../application/user/auth/LoginUserUsecase";
 import { ResendOtpUseCase } from "../../../application/user/auth/ResendOtpUseCase";
-
-
+ import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
+import { RequestForgetPasswordUseCase } from "../../../application/user/auth/RequestForgetPasswordUseCase";
+import { VerifyResetPasswordUseCase } from "../../../application/user/auth/VerifyResetPasswordUseCase";
+// import { ResetPasswordDTO } from "../../../application/dtos/user/ResetPasswordDTO";
+ import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
 
 
 
 export class AuthController {
   constructor(private _registerUserCase: IRegisterUserUseCase,private verifyOtpUseCase:VerifyOtpUseCase,
-    private _loginUserUsecase:LoginUserUsecase, private _resendOtpUseCase:ResendOtpUseCase
+    private _loginUserUsecase:LoginUserUsecase, private _resendOtpUseCase:ResendOtpUseCase,
+    private _requestForgetPasswordUseCase: RequestForgetPasswordUseCase,
+    private _verifyResetPasswordUseCase: VerifyResetPasswordUseCase
     
   ) {}
 
 async registerUser(req: Request, res: Response): Promise<void> {
   try {
-
-    const result = await this._registerUserCase.execute(req.body);
+ const dto = new UserRegisterDTO(req.body)
+    const result = await this._registerUserCase.execute(dto);
     res.status(HttpStatusCode.CREATED).json({ success: true, message: result.message });
   } catch (error: any) {
     res.status(HttpStatusCode.BAD_REQUEST).json({ success: false, message: error.message });
@@ -30,7 +35,7 @@ async registerUser(req: Request, res: Response): Promise<void> {
 
   async verifyOtp(req:Request,res:Response): Promise<void>{
     try{
-        console.log('otp')
+    
       const {email,otp} = req.body;
       const result = await this.verifyOtpUseCase.execute(email,otp);
       res.status(HttpStatusCode.OK).json({success:true,user:result});
@@ -43,11 +48,11 @@ async registerUser(req: Request, res: Response): Promise<void> {
 
   async resendOtp(req:Request,res:Response):Promise <void>{
     try{
-      console.log('resent otp')
+      
 const {email} = req.body;
-console.log(email)
+
 const message = await this._resendOtpUseCase.execute(email)
-console.log(message)
+
 res.status(HttpStatusCode.OK).json({success:true,message})
     }catch(err:any){
       res.status(HttpStatusCode.BAD_REQUEST).json({success:false,message:err.message})
@@ -55,15 +60,41 @@ res.status(HttpStatusCode.OK).json({success:true,message})
   }
 
 
+
+
+async requestForgetPassword(req:Request,res:Response):Promise<void>{
+
+  try{
+const dto = new ForgetPasswordRequestDTO(req.body);
+const message = await this._requestForgetPasswordUseCase.execute(dto)
+res.status(HttpStatusCode.OK).json({success:true,message});
+  }catch(err:any){
+res.status(HttpStatusCode.BAD_REQUEST).json({success:false,message:err.message})
+  }
+}
+
+
+
+async verifyResetPassword(req:Request,res:Response):Promise<void>
+{
+  try{
+
+const message  = await this._verifyResetPasswordUseCase.execute(req.body);
+res.status(HttpStatusCode.OK).json({success:true,message})
+  }catch(err:any){
+res.status(HttpStatusCode.BAD_REQUEST).json({success:false,message: err.message})
+  }
+}
+
 async loginUser(req: Request,res:Response):Promise<void>{
   try{
-    console.log(req.body)
+
     const dto = new LoginUserDTO(req.body)
     const {token,user} = await this._loginUserUsecase.execute(dto);
     console.log(user,token)
     res.status(HttpStatusCode.OK).json({success:true,token,user});
   }catch(err:any){
-     console.error('Login error:', err);
+    
     res.status(HttpStatusCode.UNAUTHORIZED).json({success:false,message:err.message})
   }
 }

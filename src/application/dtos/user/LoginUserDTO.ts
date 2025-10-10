@@ -3,7 +3,7 @@ export class LoginUserDTO {
   password: string;
 
   constructor(data: Partial<LoginUserDTO>) {
-    console.log('loginUserDTO')
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email || !emailRegex.test(data.email)) {
       throw new Error("A valid email address is required");

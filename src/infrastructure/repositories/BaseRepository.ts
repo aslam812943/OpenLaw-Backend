@@ -1,3 +1,4 @@
+
 import { Model,Document,FilterQuery,UpdateQuery } from "mongoose";
 export class BaseRepository<T extends Document>{
     protected model:Model<T>;
@@ -17,4 +18,6 @@ export class BaseRepository<T extends Document>{
     async update(id:string,data:UpdateQuery<T>):Promise<T|null>{
         return await this.model.findByIdAndUpdate(id,data,{new:true}).exec()
     }
+
+
 }

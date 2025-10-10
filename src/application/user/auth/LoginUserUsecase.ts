@@ -4,16 +4,12 @@ import jwt from 'jsonwebtoken'
 import { LoginUserDTO } from "../../dtos/user/LoginUserDTO";
 import { User } from "../../../domain/entities/ User";
 
-
-
-
-
 export class LoginUserUsecase {
     constructor(private _userRepo: IUserRepository) { }
 
     async execute(data: LoginUserDTO): Promise<{ token: string; user: User }> {
         const user = await this._userRepo.findByEmail(data.email);
-        console.log('login user usecase')
+        
         if (!user) throw new Error('No user found with this email');
 
         if (!user.isVerified) throw new Error('User email not verified');
