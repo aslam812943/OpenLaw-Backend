@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { RegisterLawyerUseCase } from "../../../application/lawyer/VerificationLawyerUseCase";
+import { RegisterLawyerUseCase } from "../../../application/useCases/lawyer/VerificationLawyerUseCase";
 import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";

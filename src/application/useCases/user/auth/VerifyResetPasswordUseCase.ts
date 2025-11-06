@@ -1,6 +1,6 @@
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import { OtpService } from "../../../infrastructure/services/otp/OtpService";
-import { ResetPasswordDTO } from "../../dtos/user/ResetPasswordDTO";
+import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { ResetPasswordDTO } from "../../../dtos/user/ResetPasswordDTO";
 import bcrypt from 'bcrypt'
 
 

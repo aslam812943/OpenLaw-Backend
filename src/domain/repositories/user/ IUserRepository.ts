@@ -8,4 +8,5 @@ export interface IUserRepository {
   verifyUser(userId:string):Promise<void>;
   updateUserPassword(userId:string,hashedPassword:string):Promise<void>
    markVerificationSubmitted(userId: string): Promise<void>;
+   findAll():Promise<User[]>
 }

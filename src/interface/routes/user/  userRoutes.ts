@@ -1,16 +1,16 @@
 import express from "express";
 import { AuthController } from "../../controllers/user/AuthController";
-import { RegisterUserUsecase } from "../../../application/user/auth/RegisterUserUsecase";
+import { RegisterUserUsecase } from "../../../application/useCases/user/auth/RegisterUserUsecase";
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
 import { RedisCacheService } from "../../../infrastructure/services/otp/RedisCacheService";
-import { VerifyOtpUseCase } from "../../../application/user/auth/VerifyOtpUseCase";
+import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
 import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
-import { GenerateOtpUseCase } from "../../../application/user/auth/GenerateOtpUseCase";
+import { GenerateOtpUseCase } from "../../../application/useCases/user/auth/GenerateOtpUseCase";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";
-import { LoginUserUsecase } from "../../../application/user/auth/LoginUserUsecase";
-import { ResendOtpUseCase } from "../../../application/user/auth/ResendOtpUseCase";
-import { RequestForgetPasswordUseCase } from "../../../application/user/auth/RequestForgetPasswordUseCase";
-import { VerifyResetPasswordUseCase } from "../../../application/user/auth/VerifyResetPasswordUseCase";   
+import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
+import { ResendOtpUseCase } from "../../../application/useCases/user/auth/ResendOtpUseCase";
+import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
+import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";   
 import { LoginResponseMapper } from "../../../application/mapper/user/LoignResponseMapper";
 
 

@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { IRegisterUserUseCase } from "../../../application/interface/user/IRegisterUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { VerifyOtpUseCase } from "../../../application/user/auth/VerifyOtpUseCase";
+import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
  import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
-import { LoginUserUsecase } from "../../../application/user/auth/LoginUserUsecase";
-import { ResendOtpUseCase } from "../../../application/user/auth/ResendOtpUseCase";
+import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
+import { ResendOtpUseCase } from "../../../application/useCases/user/auth/ResendOtpUseCase";
  import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
-import { RequestForgetPasswordUseCase } from "../../../application/user/auth/RequestForgetPasswordUseCase";
-import { VerifyResetPasswordUseCase } from "../../../application/user/auth/VerifyResetPasswordUseCase";
+import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
+import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
 // import { ResetPasswordDTO } from "../../../application/dtos/user/ResetPasswordDTO";
  import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
 

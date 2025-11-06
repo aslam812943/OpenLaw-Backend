@@ -21,6 +21,7 @@ export class LoginResponseMapper implements ILoginResponseMapper {
             email: user.email!,
             phone: user.phone!,
             role: user.role!,
+            
             hasSubmittedVerification:user.hasSubmittedVerification
         });
         return userResponse

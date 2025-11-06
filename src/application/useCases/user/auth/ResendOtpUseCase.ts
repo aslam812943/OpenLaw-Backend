@@ -1,8 +1,8 @@
 
-import { OtpService } from "../../../infrastructure/services/otp/OtpService";
-import { UserRegisterDTO } from "../../dtos/user/ RegisterUserDTO";
-import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
-import { RedisCacheService } from "../../../infrastructure/services/otp/RedisCacheService";
+import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { UserRegisterDTO } from "../../../dtos/user/ RegisterUserDTO";
+import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { RedisCacheService } from "../../../../infrastructure/services/otp/RedisCacheService";
 
 
 export class ResendOtpUseCase {

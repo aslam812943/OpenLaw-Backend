@@ -1,7 +1,7 @@
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import { OtpService } from "../../../infrastructure/services/otp/OtpService";
-import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
-import { ForgetPasswordRequestDTO } from "../../dtos/user/ForgetPasswordRequestDTO";
+import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { ForgetPasswordRequestDTO } from "../../../dtos/user/ForgetPasswordRequestDTO";
 
 
 

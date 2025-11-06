@@ -1,8 +1,8 @@
-import { UserRegisterDTO } from "../../dtos/user/ RegisterUserDTO";
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import { IRegisterUserUseCase } from "../../interface/user/IRegisterUserUseCase";
+import { UserRegisterDTO } from "../../../dtos/user/ RegisterUserDTO";
+import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IRegisterUserUseCase } from "../../../interface/user/IRegisterUserUseCase";
 import { GenerateOtpUseCase } from "./GenerateOtpUseCase";
-import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 
 export class RegisterUserUsecase implements IRegisterUserUseCase {
   constructor(private _userRepo: IUserRepository, private _generateOptUseCase: GenerateOtpUseCase, private _mailService: NodeMailerEmailService) { }

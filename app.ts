@@ -4,8 +4,7 @@ import cors from 'cors'
 import userRoutes from './src/interface/routes/user/  userRoutes'
 import { DbConnection } from './src/config/mongoose/DbConnection'
 import lawyerRouts from './src/interface/routes/lawyer/lawyerRoutes'
-
-
+ import  adminRouts from './src/interface/routes/admin/adminRoutes'
 dotenv.config();
 
 const app = express();
@@ -21,6 +20,7 @@ app.use(cors({
 
 app.use("/api/user", userRoutes);
 app.use('/api/lawyer',lawyerRouts)
+ app.use('/api/admin',adminRouts)
 
 
 const PORT = process.env.PORT || 8080;

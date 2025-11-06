@@ -1,3 +1,5 @@
+
+
 export interface User {
   id?: string;
   name: string;
@@ -6,6 +8,7 @@ export interface User {
   phone: number;
   isVerified: boolean;
   role: string;
+  // isBlock : boolean;
   hasSubmittedVerification:boolean;
   
 }

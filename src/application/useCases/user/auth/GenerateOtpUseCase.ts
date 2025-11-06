@@ -1,5 +1,5 @@
-import { UserRegisterDTO } from "../../dtos/user/ RegisterUserDTO";
-import { OtpService } from "../../../infrastructure/services/otp/OtpService";
+import { UserRegisterDTO } from "../../../dtos/user/ RegisterUserDTO";
+import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
 
 
 export class GenerateOtpUseCase {

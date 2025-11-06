@@ -1,6 +1,6 @@
-import { IUserRepository } from '../../../domain/repositories/user/ IUserRepository'
-import { OtpService } from '../../../infrastructure/services/otp/OtpService'
-import { UserMapper } from '../../mapper/user/UserMapper'
+import { IUserRepository } from '../../../../domain/repositories/user/ IUserRepository'
+import { OtpService } from '../../../../infrastructure/services/otp/OtpService'
+import { UserMapper } from '../../../mapper/user/UserMapper'
 import bcrypt from 'bcrypt'
 
 export class VerifyOtpUseCase {

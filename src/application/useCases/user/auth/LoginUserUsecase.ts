@@ -1,10 +1,10 @@
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { LoginUserDTO } from "../../dtos/user/LoginUserDTO";
-import { User } from "../../../domain/entities/ User";
-import { LoginResponseMapper } from "../../mapper/user/LoignResponseMapper";
-import { LoginResponseDTO } from "../../dtos/user/LoginResponseDTO";
+import { LoginUserDTO } from "../../../dtos/user/LoginUserDTO";
+import { User } from "../../../../domain/entities/ User";
+import { LoginResponseMapper } from "../../../mapper/user/LoignResponseMapper";
+import { LoginResponseDTO } from "../../../dtos/user/LoginResponseDTO";
 
 export class LoginUserUsecase {
   constructor(private _userRepo: IUserRepository, private _LoginResponseMapper: LoginResponseMapper) { }
