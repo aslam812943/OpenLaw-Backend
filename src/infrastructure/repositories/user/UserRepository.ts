@@ -23,6 +23,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       phone: userDoc.phone,
       isVerified: userDoc.isVerified,
       role: userDoc.role,
+      isBlock:userDoc.isBlock,
        hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false, 
     };
   }
@@ -38,6 +39,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       phone: userDoc.phone,
       isVerified: userDoc.isVerified,
       role: userDoc.role,
+      isBlock:userDoc.isBlock,
       hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false, 
     };
   }

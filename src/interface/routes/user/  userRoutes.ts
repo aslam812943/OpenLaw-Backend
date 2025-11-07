@@ -12,7 +12,7 @@ import { ResendOtpUseCase } from "../../../application/useCases/user/auth/Resend
 import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
 import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";   
 import { LoginResponseMapper } from "../../../application/mapper/user/LoignResponseMapper";
-
+import {TokenService} from '../../../infrastructure/services/jwt/TokenService'
 
 const router = express.Router();
 const cacheService = new RedisCacheService()
@@ -25,7 +25,8 @@ const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase(userReposi
 const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase(userRepository,otpService)
 const verifyOtpUseCase = new VerifyOtpUseCase(userRepository,otpService)
 const registerUserUsecase = new RegisterUserUsecase(userRepository,generateOtpUseCase,mailService);
-const loginUserUsecase = new LoginUserUsecase(userRepository,loginResponseMapper);
+const tokenService = new TokenService()
+const loginUserUsecase = new LoginUserUsecase(userRepository,loginResponseMapper,tokenService);
 const resendOtpUseCase = new ResendOtpUseCase(cacheService, otpService, mailService);
 const authController = new AuthController(registerUserUsecase,verifyOtpUseCase,loginUserUsecase,resendOtpUseCase,requestForgetPasswordUseCase,verifyResetPasswordUseCase);
 

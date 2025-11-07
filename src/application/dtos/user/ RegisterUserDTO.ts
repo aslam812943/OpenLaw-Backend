@@ -5,7 +5,7 @@ export class UserRegisterDTO {
   password: string;
   isVerified?: boolean;
   role: string;
-  
+  isBlock:boolean
 
   
   
@@ -41,6 +41,7 @@ export class UserRegisterDTO {
     this.password = data.password;
     this.isVerified = false;
     this.role = data.role || "user";
+    this.isBlock = data.isBlock||false
 
   }
 

@@ -8,7 +8,7 @@ export interface User {
   phone: number;
   isVerified: boolean;
   role: string;
-  // isBlock : boolean;
+  isBlock : boolean;
   hasSubmittedVerification:boolean;
   
 }

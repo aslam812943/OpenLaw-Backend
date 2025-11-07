@@ -34,6 +34,7 @@ export class ResendOtpUseCase {
         password: data.password,
         isVerified: data.isVerified,
         role: data.role,
+        isBlock:data.isBlock
       };
 
       const otp = await this._otpService.generateOtp(email, userDto);
