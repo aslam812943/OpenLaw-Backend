@@ -49,6 +49,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         }
       }
     }
+   
 
     // 5) Overlap validation
     const existingRules = await this._repo.getAllRules(dto.lawyerId);
