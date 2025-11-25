@@ -8,6 +8,7 @@ import { UserRepository } from "../user/UserRepository";
 import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
 import { Types } from "mongoose";
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
+import bcrypt from "bcrypt";
 
 
 //  LawyerRepository
@@ -292,6 +293,24 @@ export class LawyerRepository implements ILawyerRepository {
       throw new Error(
         error.message || "Database error while updating lawyer profile."
       );
+    }
+  }
+
+  async changePassword(id: string, oldPass: string, newPass: string): Promise<void> {
+    try {
+      const lawyer = await LawyerModel.findOne({ userId: id }).populate("userId");
+      if (!lawyer) throw new Error('Lawyer not found');
+
+      const user: any = lawyer.userId;
+      if (!user) throw new Error('User not found');
+
+      const match = await bcrypt.compare(oldPass, user.password);
+      if (!match) throw new Error('Incorrect old password');
+
+      user.password = await bcrypt.hash(newPass, 10);
+      await user.save();
+    } catch (error: any) {
+      throw new Error('changePassword failed: ' + (error.message || error));
     }
   }
 }

@@ -29,6 +29,7 @@ import { GetAllAvailableRuleUseCase } from "../../../application/useCases/lawyer
 import { DeleteAvailableRuleUseCase } from "../../../application/useCases/lawyer/DeleteAvailabileRuleUseCase";
 import { GetProfileUseCase } from "../../../application/useCases/lawyer/GetProfileUseCase";
 import { UpdateProfileUseCase } from "../../../application/useCases/lawyer/UpdateProfileUseCase";
+import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/ChangePasswordUseCase";
 
 const router = Router();
 
@@ -51,6 +52,7 @@ const getAllAvailableRuleUseCase = new GetAllAvailableRuleUseCase(availabilityRu
 const deleteAvailableRuleUseCase = new DeleteAvailableRuleUseCase(availabilityRuleRepository);
 const getProfileUseCase = new GetProfileUseCase(lawyerRepository)
 const updateProfileUseCase = new UpdateProfileUseCase(lawyerRepository)
+const changePasswordUseCase = new ChangePasswordUseCase(lawyerRepository)
 // Availability Controller 
 const availabilityController = new AvailabilityController(
   createAvailabilityRuleUseCase,
@@ -60,13 +62,13 @@ const availabilityController = new AvailabilityController(
 );
 
 
-const getProfileController = new GetProfileController(getProfileUseCase,updateProfileUseCase)
+const getProfileController = new GetProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase)
 
 
 
 
 router.post(
-  "/verifyDetils",verifyToken(['lawyer']), 
+  "/verifyDetils", verifyToken(['lawyer']),
   upload.array("documents"),
   (req, res) => lawyerController.registerLawyer(req, res)
 );
@@ -80,12 +82,12 @@ router.post("/logout", (req, res) =>
 
 //  Schedule Management Routes
 
-router.post("/schedule/create",verifyToken(['lawyer']),  (req, res) =>
+router.post("/schedule/create", verifyToken(['lawyer']), (req, res) =>
   availabilityController.createRule(req, res)
 );
 
 
-router.put("/schedule/update/:ruleId",verifyToken(['lawyer']),  (req, res) =>
+router.put("/schedule/update/:ruleId", verifyToken(['lawyer']), (req, res) =>
   availabilityController.updateRule(req, res)
 );
 
@@ -94,15 +96,17 @@ router.get("/schedule/", verifyToken(['lawyer']), (req, res) =>
   availabilityController.getAllRuls(req, res)
 );
 
-router.delete("/schedule/delete/:ruleId",verifyToken(['lawyer']),  (req, res) =>
+router.delete("/schedule/delete/:ruleId", verifyToken(['lawyer']), (req, res) =>
   availabilityController.DeleteRule(req, res)
 );
 
 
 
-router.get('/profile',verifyToken(['lawyer']), (req, res) => getProfileController.getDetils(req, res))
+router.get('/profile', verifyToken(['lawyer']), (req, res) => getProfileController.getDetils(req, res))
 
 
-router.put('/profile/update', verifyToken(['lawyer']),upload.single('profileImage'), (req, res) => getProfileController.updateProfile(req,res))
+router.put('/profile/update', verifyToken(['lawyer']), upload.single('profileImage'), (req, res) => getProfileController.updateProfile(req, res))
+
+router.put('/profile/password', verifyToken(['lawyer']), (req, res) => getProfileController.changePassword(req, res))
 
 export default router;
