@@ -7,7 +7,7 @@ export class GetProfileController {
   constructor(
     private readonly _getprofileusecase: IGetProfileUseCase,
     private readonly _updateprofileusecase: IUpdateProfileUseCase
-  ) {}
+  ) { }
 
   // ------------------------------------------
   //   GET PROFILE
@@ -32,7 +32,7 @@ export class GetProfileController {
       });
 
     } catch (error: any) {
-      console.error("GET PROFILE ERROR:", error);
+    
 
       return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -46,14 +46,14 @@ export class GetProfileController {
   //   UPDATE PROFILE
   // ------------------------------------------
   async updateProfile(req: Request, res: Response) {
-    const id = req.user?.id 
+    const id = req.user?.id
 
-     if (!id) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: "Unauthorized: User ID missing",
-        });
-      }
+    if (!id) {
+      return res.status(HttpStatusCode.FORBIDDEN).json({
+        success: false,
+        message: "Unauthorized: User ID missing",
+      });
+    }
 
     try {
       const imageUrl = req.file ? req.file.path : "";
@@ -65,7 +65,8 @@ export class GetProfileController {
         req.body.city,
         req.body.state,
         req.body.pincode,
-        imageUrl 
+        imageUrl,
+        req.body.bio
       );
 
       await this._updateprofileusecase.execute(id, dto);
@@ -76,7 +77,7 @@ export class GetProfileController {
       });
 
     } catch (error: any) {
-      console.error("UPDATE PROFILE ERROR:", error);
+     
 
       return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,

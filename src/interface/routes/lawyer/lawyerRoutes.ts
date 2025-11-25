@@ -7,7 +7,7 @@ import { Router } from "express";
 import { LawyerController } from "../../controllers/lawyer/lawyerController";
 import { LawyerLogoutController } from "../../controllers/lawyer/lawyerLogoutController";
 import { AvailabilityController } from "../../controllers/lawyer/AvailabilityController";
-import { GetProfileController } from "../../controllers/lawyer/GetProfileController";
+import { GetProfileController } from "../../controllers/lawyer/ProfileController";
 
 // Cloudinary Upload Service
 
@@ -66,7 +66,7 @@ const getProfileController = new GetProfileController(getProfileUseCase,updatePr
 
 
 router.post(
-  "/verifyDetils",
+  "/verifyDetils",verifyToken(['lawyer']), 
   upload.array("documents"),
   (req, res) => lawyerController.registerLawyer(req, res)
 );
@@ -80,21 +80,21 @@ router.post("/logout", (req, res) =>
 
 //  Schedule Management Routes
 
-router.post("/schedule/create", (req, res) =>
+router.post("/schedule/create",verifyToken(['lawyer']),  (req, res) =>
   availabilityController.createRule(req, res)
 );
 
 
-router.put("/schedule/update/:ruleId", (req, res) =>
+router.put("/schedule/update/:ruleId",verifyToken(['lawyer']),  (req, res) =>
   availabilityController.updateRule(req, res)
 );
 
 
-router.get("/schedule/:lawyerId", (req, res) =>
+router.get("/schedule/", verifyToken(['lawyer']), (req, res) =>
   availabilityController.getAllRuls(req, res)
 );
 
-router.delete("/schedule/delete/:ruleId", (req, res) =>
+router.delete("/schedule/delete/:ruleId",verifyToken(['lawyer']),  (req, res) =>
   availabilityController.DeleteRule(req, res)
 );
 

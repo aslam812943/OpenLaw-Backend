@@ -6,6 +6,7 @@ import { IDeleteAvailableRuleUseCase } from "../../../application/useCases/inter
 
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
+import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class AvailabilityController {
   constructor(
@@ -21,11 +22,10 @@ export class AvailabilityController {
   async createRule(req: Request, res: Response) {
     try {
       const data = req.body.ruleData;
-      const lawyerId = req.body.lawyerId;
-      console.log(data)
-console.log('rule create ippo cheyyum')
+      const lawyerId = req.user?.id
+
       if (!lawyerId) {
-        return res.status(400).json({
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
           message: "Lawyer ID is missing. Unable to create rule.",
         });
@@ -48,14 +48,14 @@ console.log('rule create ippo cheyyum')
 
       const result = await this._createRuleUseCase.execute(dto);
 
-      return res.status(201).json({
+      return res.status(HttpStatusCode.CREATED).json({
         success: true,
         message: "Availability rule and slots created successfully.",
         data: result,
       });
     } catch (err: any) {
-      console.log(err.message)
-      return res.status(500).json({
+     
+      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err.message || "Unexpected error while creating rule.",
       });
@@ -70,7 +70,7 @@ console.log('rule create ippo cheyyum')
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
-        return res.status(400).json({
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
           message: "Rule ID is required for updating.",
         });
@@ -92,13 +92,13 @@ console.log('rule create ippo cheyyum')
 
       const result = await this._updateAvilableUseCase.execute(ruleId, dto);
 
-      return res.status(200).json({
+      return res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Rule updated successfully. Slots regenerated.",
         data: result,
       });
     } catch (err: any) {
-      return res.status(500).json({
+      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err.message || "Unexpected error while updating rule.",
       });
@@ -110,10 +110,10 @@ console.log('rule create ippo cheyyum')
    */
   async getAllRuls(req: Request, res: Response) {
     try {
-      const lawyerId = req.params.lawyerId;
+      const lawyerId =  req.user?.id 
 
       if (!lawyerId) {
-        return res.status(400).json({
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
           message: "Lawyer ID missing. Cannot fetch rules.",
         });
@@ -121,13 +121,13 @@ console.log('rule create ippo cheyyum')
 
       const rules = await this._getavailableUsecase.execute(lawyerId);
 
-      return res.status(200).json({
+      return res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Availability rules fetched successfully.",
         data: rules,
       });
     } catch (err: any) {
-      return res.status(500).json({
+      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err.message || "Failed to fetch availability rules.",
       });
@@ -142,7 +142,7 @@ console.log('rule create ippo cheyyum')
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
-        return res.status(400).json({
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
           message: "Rule ID missing. Cannot delete rule.",
         });
@@ -150,12 +150,12 @@ console.log('rule create ippo cheyyum')
 
       await this._deleteavailableusecase.execute(ruleId);
 
-      return res.status(200).json({
+      return res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Rule and its slots deleted successfully.",
       });
     } catch (err: any) {
-      return res.status(500).json({
+      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err.message || "Failed to delete rule.",
       });

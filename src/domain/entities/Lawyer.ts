@@ -7,11 +7,11 @@ export interface Lawyer {
   practiceAreas: string[];
   languages: string[];
   documentUrls: string[];
-  // addresses?: string[];
   verificationStatus?: string;
   isVerified: boolean;
   addresses?: { address: string; city: string; state: string; pincode: number; };
-profileImage:string;
+  profileImage: string;
+  bio?: string;
 
 
   user?: {

@@ -169,13 +169,13 @@ export class AuthController {
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Login successful! Tokens generated.",
+        message: "Login successful.",
         token,
         refreshToken,
         user,
       });
     } catch (err: any) {
-      console.log(err.message)
+    
       res.status(HttpStatusCode.UNAUTHORIZED).json({
         success: false,
         message: err.message || "Invalid credentials. Please check your email or password.",
@@ -188,9 +188,9 @@ export class AuthController {
   // Logout user and clear authentication cookies
   // ------------------------------------------------------------
 
-  async logoutUser(req: Request, res: Response): Promise<void> {
+  async logoutUser(_req: Request, res: Response): Promise<void> {
     try {
-      req
+      
       res.clearCookie("userAccessToken", {
         httpOnly: true,
         secure: false,

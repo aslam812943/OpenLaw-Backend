@@ -4,9 +4,9 @@ import { success } from "zod";
 
 
 export class LawyerLogoutController{
-    async handle(req:Request,res:Response):Promise<void>{
+    async handle(_req:Request,res:Response):Promise<void>{
     try {
-        req
+        
 
 
         res.clearCookie('lawyerAccessToken',{

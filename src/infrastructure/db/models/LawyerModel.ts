@@ -1,4 +1,4 @@
-import { Schema, model, Document,Types } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface ILawyerDocument extends Document {
 
@@ -12,16 +12,17 @@ export interface ILawyerDocument extends Document {
   dateOfBirth?: string;
   verificationStatus?: string;
   addresses?: string[];
-  isAdminVerified:boolean
-  Address:Address
-  Profileimageurl:string
-  
+  isAdminVerified: boolean
+  Address: Address
+  Profileimageurl: string
+  bio?: string
+
 }
 
 export interface Address {
   address: string;
   city: string;
-  state:string;
+  state: string;
   pincode: number;
 }
 
@@ -38,7 +39,7 @@ const AddressSchema: Schema<Address> = new Schema({
 
 const LawyerSchema = new Schema<ILawyerDocument>({
 
-   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   barNumber: { type: String, required: true },
   barAdmissionDate: { type: String, required: true },
   yearsOfPractice: { type: Number, required: true },
@@ -46,11 +47,12 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   languages: { type: [String], required: true },
   documentUrls: { type: [String], required: true },
   dateOfBirth: { type: String },
-  verificationStatus: { type: String ,default:'pending' },
-   isAdminVerified:{type:Boolean,default:false},
+  verificationStatus: { type: String, default: 'pending' },
+  isAdminVerified: { type: Boolean, default: false },
   Address: { type: AddressSchema },
-  Profileimageurl:{type:String}
-  
+  Profileimageurl: { type: String },
+  bio: { type: String }
+
 }, { timestamps: true });
 
 export default model<ILawyerDocument>("Lawyer", LawyerSchema);

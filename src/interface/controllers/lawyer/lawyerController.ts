@@ -20,6 +20,9 @@ export class LawyerController {
   // registerLawyer()
   // Handles lawyer verification and registration details.
   // ------------------------------------------------------------
+
+
+  
   async registerLawyer(req: Request, res: Response) {
     try {
 
@@ -49,7 +52,7 @@ export class LawyerController {
         lawyer,
       });
     } catch (err: any) {
-      console.log("Error in LawyerController.registerLawyer:", err);
+     
 
 
       res.status(HttpStatusCode.BAD_REQUEST).json({

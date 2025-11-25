@@ -177,24 +177,24 @@ export class LawyerRepository implements ILawyerRepository {
 
 
   async findById(id: string): Promise<Lawyer> {
-    
+
     try {
       if (!id) {
         throw new Error("Invalid ID: ID not provided");
       }
 
       const doc = await LawyerModel.findOne({ userId: id })
-      .populate({
-        path: "userId",
-        select: "name email phone role isBlock",
-      })
-      .exec();
+        .populate({
+          path: "userId",
+          select: "name email phone role isBlock",
+        })
+        .exec();
       if (!doc) {
         throw new Error(`Lawyer with ID ${id} not found`);
       }
 
 
-    
+
       return {
         id: (doc._id as Types.ObjectId).toString(),
         userId: (doc.userId as any)._id.toString(),
@@ -223,10 +223,11 @@ export class LawyerRepository implements ILawyerRepository {
         },
 
         profileImage: doc.Profileimageurl || "",
+        bio: doc.bio || "",
       };
 
     } catch (error: any) {
-    
+
 
       throw new Error(
         error.message || "Database error while fetching lawyer profile."
@@ -240,7 +241,7 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       if (!id) throw new Error("Invalid ID: ID not provided");
 
-      const data = await LawyerModel.findOne({userId:id}).populate("userId");
+      const data = await LawyerModel.findOne({ userId: id }).populate("userId");
 
       if (!data) {
         throw new Error(`Lawyer with ID ${id} not found`);
@@ -250,7 +251,7 @@ export class LawyerRepository implements ILawyerRepository {
         throw new Error("User linked to this lawyer not found");
       }
 
-    
+
       if (!data.Address) {
         data.Address = {
           address: "",
@@ -260,7 +261,7 @@ export class LawyerRepository implements ILawyerRepository {
         };
       }
 
-      
+
       if (dto.imageUrl) {
         data.Profileimageurl = dto.imageUrl;
       }
@@ -274,18 +275,19 @@ export class LawyerRepository implements ILawyerRepository {
         throw new Error("Failed to update user details");
       });
 
-     
+
       data.Address.address = dto.address;
       data.Address.city = dto.city;
       data.Address.state = dto.state;
       data.Address.pincode = Number(dto.pincode);
+      if (dto.bio) data.bio = dto.bio;
 
       await data.save().catch(() => {
         throw new Error("Failed to update lawyer profile");
       });
 
     } catch (error: any) {
-    
+
 
       throw new Error(
         error.message || "Database error while updating lawyer profile."

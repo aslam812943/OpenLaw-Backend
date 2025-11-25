@@ -27,7 +27,7 @@ export class GetProfileController {
         data
       });
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
+      
 
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -99,7 +99,7 @@ async editProfile(req: Request, res: Response) {
       message: "Profile updated successfully",
     });
   } catch (err: any) {
-    console.error(err);
+
 
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
