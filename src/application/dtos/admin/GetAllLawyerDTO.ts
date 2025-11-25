@@ -9,11 +9,24 @@ export interface IGetAllLawyerDTO {
   practiceAreas: string[];
   languages: string[];
   documentUrls: string[];
-  addresses: string[];
+
+  
+  addresses: (string | number)[];
+
+  
+  addressObject?: {
+    address: string;
+    city: string;
+    state: string;
+    pincode: number;
+  };
+
   verificationStatus?: string;
   isVerified: boolean;
   isBlock: boolean;
 }
+
+
 
 export class GetAllLawyerDTO implements IGetAllLawyerDTO {
   id: string;
@@ -26,7 +39,15 @@ export class GetAllLawyerDTO implements IGetAllLawyerDTO {
   practiceAreas: string[];
   languages: string[];
   documentUrls: string[];
-  addresses: string[];
+
+  addresses: (string | number)[];
+  addressObject?: {
+    address: string;
+    city: string;
+    state: string;
+    pincode: number;
+  };
+
   verificationStatus?: string;
   isVerified: boolean;
   isBlock: boolean;
@@ -42,7 +63,10 @@ export class GetAllLawyerDTO implements IGetAllLawyerDTO {
     this.practiceAreas = data.practiceAreas;
     this.languages = data.languages;
     this.documentUrls = data.documentUrls;
-    this.addresses = data.addresses;
+
+    this.addresses = data.addresses;        
+    this.addressObject = data.addressObject; 
+
     this.verificationStatus = data.verificationStatus;
     this.isVerified = data.isVerified;
     this.isBlock = data.isBlock;

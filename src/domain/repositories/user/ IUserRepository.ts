@@ -19,6 +19,6 @@ export interface IUserRepository {
   unBlockUser(id:string):Promise<void>;
   findById(id:string):Promise<User>;
   changePassword(id:string,oldPassword:string,newPassword:string):Promise<void>
-  profileUpdate(id:string,name:string,phone:string,imgurl:string,address:string,city:string,pincode:string):Promise<void>
+  profileUpdate(id:string,name:string,phone:string,imgurl:string,address:string,city:string,state:string,pincode:string):Promise<void>
 
 }

@@ -1,13 +1,12 @@
-export class ProfileUpdateDTO{
+export class UpdateLawyerProfileDTO{
     constructor(
-        public id:string,
         public name:string,
         public phone:string,
-        public profileImage:string,
         public address:string,
         public city:string,
         public state:string,
-        public pincode:string
-
+        public pincode:string,
+        public imageUrl?:string
     ){}
 }
+

@@ -1,9 +1,7 @@
 import { Schema, model, Document,Types } from "mongoose";
 
 export interface ILawyerDocument extends Document {
-  // fullName: string;
-  // email: string;
-  // phone: string;
+
   userId: Types.ObjectId;
   barNumber: string;
   barAdmissionDate: string;
@@ -15,13 +13,31 @@ export interface ILawyerDocument extends Document {
   verificationStatus?: string;
   addresses?: string[];
   isAdminVerified:boolean
+  Address:Address
+  Profileimageurl:string
   
 }
 
+export interface Address {
+  address: string;
+  city: string;
+  state:string;
+  pincode: number;
+}
+
+
+
+const AddressSchema: Schema<Address> = new Schema({
+  address: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  pincode: { type: Number, required: true },
+}, { _id: false });
+
+
+
 const LawyerSchema = new Schema<ILawyerDocument>({
-  // fullName: { type: String, required: true },
-  // email: { type: String, required: true },
-  // phone: { type: String, required: true },
+
    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   barNumber: { type: String, required: true },
   barAdmissionDate: { type: String, required: true },
@@ -31,9 +47,9 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   documentUrls: { type: [String], required: true },
   dateOfBirth: { type: String },
   verificationStatus: { type: String ,default:'pending' },
-  addresses: { type: [String] },
    isAdminVerified:{type:Boolean,default:false},
-  
+  Address: { type: AddressSchema },
+  Profileimageurl:{type:String}
   
 }, { timestamps: true });
 

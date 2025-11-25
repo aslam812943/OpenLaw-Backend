@@ -7,7 +7,7 @@ export class LawyerLogoutController{
     async handle(req:Request,res:Response):Promise<void>{
     try {
         req
-console.log('vann lawyer logout')
+
 
         res.clearCookie('lawyerAccessToken',{
             httpOnly:true,

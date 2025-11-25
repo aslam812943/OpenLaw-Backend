@@ -3,23 +3,33 @@
 import { Router } from "express";
 
 // Controllers
+
 import { LawyerController } from "../../controllers/lawyer/lawyerController";
 import { LawyerLogoutController } from "../../controllers/lawyer/lawyerLogoutController";
 import { AvailabilityController } from "../../controllers/lawyer/AvailabilityController";
+import { GetProfileController } from "../../controllers/lawyer/GetProfileController";
 
 // Cloudinary Upload Service
-import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
 
+import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
+import { verifyToken } from "../../middlewares/verifyToken";
 // Repository
+
 import { AvailabilityRuleRepository } from "../../../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
+import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
+
+
+
 
 // Use Cases 
+
 import { CreateAvailabilityRuleUseCase } from "../../../application/useCases/lawyer/CreateAvailabilityRuleUseCase";
 import { UpdateAvailabilityRuleUseCase } from "../../../application/useCases/lawyer/UpdateAvailabilityRuleUseCase";
 import { GetAllAvailableRuleUseCase } from "../../../application/useCases/lawyer/GetAllAvailabilityRulesUseCase";
 import { DeleteAvailableRuleUseCase } from "../../../application/useCases/lawyer/DeleteAvailabileRuleUseCase";
+import { GetProfileUseCase } from "../../../application/useCases/lawyer/GetProfileUseCase";
+import { UpdateProfileUseCase } from "../../../application/useCases/lawyer/UpdateProfileUseCase";
 
-// Create Express Router Instance
 const router = Router();
 
 // ============================================================================
@@ -28,19 +38,19 @@ const router = Router();
 const lawyerController = new LawyerController();
 const lawyerLogoutController = new LawyerLogoutController();
 
-// ============================================================================
-//  Availability Rule Setup (Repository + UseCases + Controller)
-// ============================================================================
+
 
 // Repository instance
 const availabilityRuleRepository = new AvailabilityRuleRepository();
+const lawyerRepository = new LawyerRepository()
 
 // UseCase instances
 const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository);
 const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository);
 const getAllAvailableRuleUseCase = new GetAllAvailableRuleUseCase(availabilityRuleRepository);
 const deleteAvailableRuleUseCase = new DeleteAvailableRuleUseCase(availabilityRuleRepository);
-
+const getProfileUseCase = new GetProfileUseCase(lawyerRepository)
+const updateProfileUseCase = new UpdateProfileUseCase(lawyerRepository)
 // Availability Controller 
 const availabilityController = new AvailabilityController(
   createAvailabilityRuleUseCase,
@@ -49,9 +59,11 @@ const availabilityController = new AvailabilityController(
   deleteAvailableRuleUseCase
 );
 
-// ============================================================================
-//  Lawyer Routes
-// ============================================================================
+
+const getProfileController = new GetProfileController(getProfileUseCase,updateProfileUseCase)
+
+
+
 
 router.post(
   "/verifyDetils",
@@ -86,5 +98,11 @@ router.delete("/schedule/delete/:ruleId", (req, res) =>
   availabilityController.DeleteRule(req, res)
 );
 
+
+
+router.get('/profile',verifyToken(['lawyer']), (req, res) => getProfileController.getDetils(req, res))
+
+
+router.put('/profile/update', verifyToken(['lawyer']),upload.single('profileImage'), (req, res) => getProfileController.updateProfile(req,res))
 
 export default router;

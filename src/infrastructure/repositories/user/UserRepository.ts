@@ -207,7 +207,7 @@ async changePassword(id: string, oldPass: string, newPass: string) {
 }
 
 
-async profileUpdate(id: string, name: string, phone: string,imgurl:string,address:string,city:string,pincode:string): Promise<void> {
+async profileUpdate(id: string, name: string, phone: string,imgurl:string,address:string,city:string,state:string,pincode:string): Promise<void> {
   try{
 const user = await UserModel.findById(id)
 if(!user) throw new Error('user not found')
@@ -220,11 +220,13 @@ if (!user.Address) {
   user.Address = {
     address: "",
     city: "",
+    state:'',
     pincode: 0
   };
 }
 user.Address.address = address;
 user.Address.city = city;
+user.Address.state = state;
 user.Address.pincode = Number(pincode);
 await user.save()
   }catch(error:any){

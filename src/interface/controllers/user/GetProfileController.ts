@@ -88,6 +88,7 @@ async editProfile(req: Request, res: Response) {
       profileImage,
       req.body.address,
       req.body.city,
+      req.body.state,
       req.body.pincode
     );
 

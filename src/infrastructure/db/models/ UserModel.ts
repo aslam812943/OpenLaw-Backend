@@ -5,6 +5,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface Address {
   address: string;
   city: string;
+  state:string;
   pincode: number;
 }
 
@@ -26,6 +27,7 @@ export interface IUserDocument extends Document {
 const AddressSchema: Schema<Address> = new Schema({
   address: { type: String, required: true },
   city: { type: String, required: true },
+  state:{type:String},
   pincode: { type: Number, required: true },
 }, { _id: false });
 

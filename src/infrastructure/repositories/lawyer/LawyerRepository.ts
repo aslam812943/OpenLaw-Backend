@@ -7,6 +7,7 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { UserRepository } from "../user/UserRepository";
 import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
 import { Types } from "mongoose";
+import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 
 
 //  LawyerRepository
@@ -25,10 +26,10 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       const lawyerDoc = (await LawyerModel.create(lawyer)) as ILawyerDocument;
 
-    
+
       await this.userRepository.markVerificationSubmitted(lawyerDoc.userId.toString());
 
-    
+
       return {
         userId: lawyerDoc.userId.toString(),
         barNumber: lawyerDoc.barNumber,
@@ -37,7 +38,8 @@ export class LawyerRepository implements ILawyerRepository {
         practiceAreas: lawyerDoc.practiceAreas,
         languages: lawyerDoc.languages,
         documentUrls: lawyerDoc.documentUrls,
-        addresses: lawyerDoc.addresses,
+        addresses: { address: '', city: '', state: '', pincode: 0 },
+        profileImage: '',
         isVerified: lawyerDoc.isAdminVerified,
       };
     } catch (error: any) {
@@ -87,15 +89,18 @@ export class LawyerRepository implements ILawyerRepository {
         practiceAreas: doc.practiceAreas,
         languages: doc.languages,
         documentUrls: doc.documentUrls,
-        addresses: doc.addresses,
+        addresses: { address: '', city: '', state: '', pincode: 0 },
+
         verificationStatus: doc.verificationStatus,
         isVerified: doc.isAdminVerified,
+
         user: {
           name: (doc.userId as any).name,
           email: (doc.userId as any).email,
           phone: (doc.userId as any).phone,
           isBlock: (doc.userId as any).isBlock,
         },
+        profileImage: doc.Profileimageurl ?? "",
       }));
 
       return { lawyers, total };
@@ -145,7 +150,7 @@ export class LawyerRepository implements ILawyerRepository {
       lawyer.verificationStatus = "Approved";
       await lawyer.save();
     } catch (error: any) {
-   
+
       throw new Error("Database error while approving lawyer.");
     }
   }
@@ -163,6 +168,128 @@ export class LawyerRepository implements ILawyerRepository {
       await lawyer.save();
     } catch (error: any) {
       throw new Error("Database error while rejecting lawyer.");
+    }
+  }
+
+
+
+
+
+
+  async findById(id: string): Promise<Lawyer> {
+    
+    try {
+      if (!id) {
+        throw new Error("Invalid ID: ID not provided");
+      }
+
+      const doc = await LawyerModel.findOne({ userId: id })
+      .populate({
+        path: "userId",
+        select: "name email phone role isBlock",
+      })
+      .exec();
+      if (!doc) {
+        throw new Error(`Lawyer with ID ${id} not found`);
+      }
+
+
+    
+      return {
+        id: (doc._id as Types.ObjectId).toString(),
+        userId: (doc.userId as any)._id.toString(),
+        barNumber: doc.barNumber,
+        barAdmissionDate: doc.barAdmissionDate,
+        yearsOfPractice: doc.yearsOfPractice,
+        practiceAreas: doc.practiceAreas,
+        languages: doc.languages,
+        documentUrls: doc.documentUrls,
+
+        addresses: doc.Address || {
+          address: "",
+          city: "",
+          state: "",
+          pincode: 0,
+        },
+
+        verificationStatus: doc.verificationStatus,
+        isVerified: doc.isAdminVerified,
+
+        user: {
+          name: (doc.userId as any).name,
+          email: (doc.userId as any).email,
+          phone: (doc.userId as any).phone,
+          isBlock: (doc.userId as any).isBlock,
+        },
+
+        profileImage: doc.Profileimageurl || "",
+      };
+
+    } catch (error: any) {
+    
+
+      throw new Error(
+        error.message || "Database error while fetching lawyer profile."
+      );
+    }
+  }
+
+
+
+  async updateProfile(id: string, dto: UpdateLawyerProfileDTO): Promise<void> {
+    try {
+      if (!id) throw new Error("Invalid ID: ID not provided");
+
+      const data = await LawyerModel.findOne({userId:id}).populate("userId");
+
+      if (!data) {
+        throw new Error(`Lawyer with ID ${id} not found`);
+      }
+
+      if (!data.userId) {
+        throw new Error("User linked to this lawyer not found");
+      }
+
+    
+      if (!data.Address) {
+        data.Address = {
+          address: "",
+          city: "",
+          state: "",
+          pincode: 0,
+        };
+      }
+
+      
+      if (dto.imageUrl) {
+        data.Profileimageurl = dto.imageUrl;
+      }
+
+
+      const user: any = data.userId;
+      user.name = dto.name;
+      user.phone = dto.phone;
+
+      await user.save().catch(() => {
+        throw new Error("Failed to update user details");
+      });
+
+     
+      data.Address.address = dto.address;
+      data.Address.city = dto.city;
+      data.Address.state = dto.state;
+      data.Address.pincode = Number(dto.pincode);
+
+      await data.save().catch(() => {
+        throw new Error("Failed to update lawyer profile");
+      });
+
+    } catch (error: any) {
+    
+
+      throw new Error(
+        error.message || "Database error while updating lawyer profile."
+      );
     }
   }
 }

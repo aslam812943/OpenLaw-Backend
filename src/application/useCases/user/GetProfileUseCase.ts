@@ -13,7 +13,7 @@ export class GetProfileUseCase implements IGetProfileUseCase {
       data.id ?? '',
       data.name,
       data.email,
-      data.phone?.toString() ?? '',
+      data.phone.toString(),
       data.profileImage??'',
       data.address??{}
 
