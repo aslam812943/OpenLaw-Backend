@@ -11,8 +11,7 @@ import bcrypt from "bcrypt";
 
 export class UserRepository
   extends BaseRepository<IUserDocument>
-  implements IUserRepository
-{
+  implements IUserRepository {
   constructor() {
     super(UserModel);
   }
@@ -43,7 +42,7 @@ export class UserRepository
         name: userDoc.name,
         email: userDoc.email,
         password: userDoc.password,
-        phone: userDoc.phone,
+        phone: Number(userDoc.phone),
         isVerified: userDoc.isVerified,
         role: userDoc.role,
         isBlock: userDoc.isBlock,
@@ -67,18 +66,18 @@ export class UserRepository
         id: String(userDoc._id),
         name: userDoc.name,
         email: userDoc.email,
-        password: userDoc.password,
-        phone: userDoc.phone,
+        password: String(userDoc.password),
+        phone: Number(userDoc.phone),
         isVerified: userDoc.isVerified,
         role: userDoc.role,
         isBlock: userDoc.isBlock,
         hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false,
       };
     } catch (error: any) {
-    
+
 
       if (error.code === 11000) {
-    
+
         throw new Error("A user with this email already exists.");
       }
 
@@ -93,7 +92,7 @@ export class UserRepository
     try {
       await this.update(userId, { password: hashedPassword });
     } catch (error: any) {
-  
+
       throw new Error("Database error while updating user password.");
     }
   }
@@ -124,7 +123,7 @@ export class UserRepository
       const users = docs.map((doc) => this.mapToDomain(doc));
       return { users, total };
     } catch (error: any) {
-  
+
       throw new Error("Database error while fetching paginated users.");
     }
   }
@@ -160,7 +159,7 @@ export class UserRepository
       name: doc.name,
       email: doc.email,
       password: doc.password,
-      phone: doc.phone,
+      phone: Number(doc.phone),
       isVerified: doc.isVerified,
       role: doc.role,
       isBlock: doc.isBlock,
@@ -168,69 +167,98 @@ export class UserRepository
     };
   }
 
-async findById(id: string): Promise<User> {
-  try {
-    const doc = await UserModel.findById(id);
-    if (!doc) throw new Error('User document not found ');
-    return {
-      id: String(doc._id),
-      name: doc.name,
-      email: doc.email,
-      password: doc.password,
-      phone: doc.phone,
-      isVerified: doc.isVerified,
-      role: doc.role,
-      isBlock: doc.isBlock,
-      hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
-      profileImage:doc.profileImage??'',
-      address:doc.Address
-    };
-  } catch (error: any) {
-    throw new Error('findById failed: ' + (error.message || error));
+  async findById(id: string): Promise<User> {
+    try {
+      const doc = await UserModel.findById(id);
+      if (!doc) throw new Error('User document not found ');
+      return {
+        id: String(doc._id),
+        name: doc.name,
+        email: doc.email,
+        password: doc.password,
+        phone: Number(doc.phone),
+        isVerified: doc.isVerified,
+        role: doc.role,
+        isBlock: doc.isBlock,
+        hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
+        profileImage: doc.profileImage ?? '',
+        address: doc.Address
+      };
+    } catch (error: any) {
+      throw new Error('findById failed: ' + (error.message || error));
+    }
   }
-}
 
-async changePassword(id: string, oldPass: string, newPass: string) {
-  try {
-    const user = await UserModel.findById(id);
-    if (!user) throw new Error('User not found ');
+  async changePassword(id: string, oldPass: string, newPass: string) {
+    try {
+      const user = await UserModel.findById(id);
+      if (!user) throw new Error('User not found ');
 
-    const match = await bcrypt.compare(oldPass, user.password);
-    if (!match) throw new Error('Incorrect old password ');
+      const match = await bcrypt.compare(oldPass, String(user.password));
+      if (!match) throw new Error('Incorrect old password ');
 
-    user.password = await bcrypt.hash(newPass, 10);
-    await user.save();
-  } catch (error: any) {
-  
-    throw new Error('changePassword failed: ' + (error.message || error));
+      user.password = await bcrypt.hash(newPass, 10);
+      await user.save();
+    } catch (error: any) {
+
+      throw new Error('changePassword failed: ' + (error.message || error));
+    }
   }
-}
 
 
-async profileUpdate(id: string, name: string, phone: string,imgurl:string,address:string,city:string,state:string,pincode:string): Promise<void> {
-  try{
-const user = await UserModel.findById(id)
-if(!user) throw new Error('user not found')
-user.name = name
-user.phone = Number(phone)
-if(imgurl){
-user.profileImage = imgurl
-}
-if (!user.Address) {
-  user.Address = {
-    address: "",
-    city: "",
-    state:'',
-    pincode: 0
-  };
-}
-user.Address.address = address;
-user.Address.city = city;
-user.Address.state = state;
-user.Address.pincode = Number(pincode);
-await user.save()
-  }catch(error:any){
-console.log(error)
+  async profileUpdate(id: string, name: string, phone: string, imgurl: string, address: string, city: string, state: string, pincode: string): Promise<void> {
+    try {
+      const user = await UserModel.findById(id)
+      if (!user) throw new Error('user not found')
+      user.name = name
+      user.phone = Number(phone)
+      if (imgurl) {
+        user.profileImage = imgurl
+      }
+      if (!user.Address) {
+        user.Address = {
+          address: "",
+          city: "",
+          state: '',
+          pincode: 0
+        };
+      }
+      user.Address.address = address;
+      user.Address.city = city;
+      user.Address.state = state;
+      user.Address.pincode = Number(pincode);
+      await user.save()
+    } catch (error: any) {
+      console.log(error)
+    }
   }
-}
+
+
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    const userDoc = await UserModel.findOne({ googleId });
+    if (!userDoc) return null;
+    return this.mapToDomain(userDoc);
+  }
+
+  async save(user: User): Promise<User> {
+    if (!user.id) throw new Error("User ID is required for update");
+
+    const updateData: any = { ...user };
+    delete updateData.id; // Don't update _id
+
+    // Map domain fields to DB fields if necessary (e.g. address -> Address)
+    if (user.address) {
+      updateData.Address = user.address;
+      delete updateData.address;
+    }
+    if (user.profileImage) {
+      updateData.profileImage = user.profileImage
+    }
+
+    const updatedDoc = await UserModel.findByIdAndUpdate(user.id, updateData, { new: true });
+    if (!updatedDoc) throw new Error("User not found for update");
+
+    return this.mapToDomain(updatedDoc);
+  }
 }

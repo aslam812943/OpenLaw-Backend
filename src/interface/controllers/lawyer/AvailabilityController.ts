@@ -66,6 +66,7 @@ export class AvailabilityController {
    * Update an existing availability rule
    */
   async updateRule(req: Request, res: Response) {
+   
     try {
       const ruleId = req.params.ruleId;
 

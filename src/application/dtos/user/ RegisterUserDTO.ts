@@ -2,7 +2,7 @@ export class UserRegisterDTO {
   name: string;
   email: string;
   phone: number;
-  password: string;
+  password?: string;
   isVerified?: boolean;
   role: string;
   isBlock:boolean
@@ -38,7 +38,7 @@ export class UserRegisterDTO {
     this.name = data.name;
     this.email = data.email;
     this.phone = data.phone;
-    this.password = data.password;
+    this.password = data.password??'';
     this.isVerified = false;
     this.role = data.role || "user";
     this.isBlock = data.isBlock||false

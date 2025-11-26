@@ -12,7 +12,7 @@ export class VerificationLawyerDTO{
 
 
     constructor(data:Partial<VerificationLawyerDTO>){
-  
+
 if(!data.userId){
   throw new Error('User id required')
 }

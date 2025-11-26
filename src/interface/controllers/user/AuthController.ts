@@ -10,6 +10,7 @@ import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetP
 import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
 import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
 import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
+import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
 
 
 
@@ -20,7 +21,8 @@ export class AuthController {
     private _loginUserUsecase: LoginUserUsecase,
     private _resendOtpUseCase: ResendOtpUseCase,
     private _requestForgetPasswordUseCase: RequestForgetPasswordUseCase,
-    private _verifyResetPasswordUseCase: VerifyResetPasswordUseCase
+    private _verifyResetPasswordUseCase: VerifyResetPasswordUseCase,
+    private _googleAuthUseCase: GoogleAuthUsecase
   ) { }
 
   // ------------------------------------------------------------
@@ -52,6 +54,7 @@ export class AuthController {
   async verifyOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email, otp } = req.body;
+      
       const result = await this.verifyOtpUseCase.execute(email, otp);
 
       res.status(HttpStatusCode.OK).json({
@@ -74,6 +77,7 @@ export class AuthController {
   async resendOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
+     
       const message = await this._resendOtpUseCase.execute(email);
 
       res.status(HttpStatusCode.OK).json({
@@ -141,6 +145,8 @@ export class AuthController {
         res.cookie("userAccessToken", token, {
           httpOnly: true,
           secure: false,
+          sameSite: 'lax',
+          path: '/',
           maxAge: 15 * 60 * 1000, // 15 minutes
         });
 
@@ -148,12 +154,16 @@ export class AuthController {
         res.cookie("userRefreshToken", refreshToken, {
           httpOnly: true,
           secure: false,
+          sameSite: 'lax',
+          path: '/',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
       } else {
         res.cookie("lawyerAccessToken", token, {
           httpOnly: true,
           secure: false,
+          sameSite: 'lax',
+          path: '/',
           maxAge: 15 * 60 * 1000, // 15 minutes
         });
 
@@ -161,6 +171,8 @@ export class AuthController {
         res.cookie("lawyerRefreshToken", refreshToken, {
           httpOnly: true,
           secure: false,
+          sameSite: 'lax',
+          path: '/',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
       }
@@ -175,7 +187,7 @@ export class AuthController {
         user,
       });
     } catch (err: any) {
-    
+
       res.status(HttpStatusCode.UNAUTHORIZED).json({
         success: false,
         message: err.message || "Invalid credentials. Please check your email or password.",
@@ -190,19 +202,19 @@ export class AuthController {
 
   async logoutUser(_req: Request, res: Response): Promise<void> {
     try {
-      
+
       res.clearCookie("userAccessToken", {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-
+        path: '/'
       });
 
       res.clearCookie("userRefreshToken", {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-
+        path: '/'
       });
 
 
@@ -211,11 +223,77 @@ export class AuthController {
         message: "User logged out successfully.",
       });
     } catch (error: any) {
-    
+
 
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Failed to log out. Please try again later.",
+      });
+    }
+  }
+  // ------------------------------------------------------------
+  //  Google Authentication
+  // ------------------------------------------------------------
+  async googleAuth(req: Request, res: Response): Promise<void> {
+    try {
+      const { token, role } = req.body;
+      const result = await this._googleAuthUseCase.execute(token, role);
+
+      if (result.needsRoleSelection) {
+        res.status(HttpStatusCode.OK).json({
+          success: true,
+          message: "Please select a role.",
+          needsRoleSelection: true,
+        });
+        return;
+      }
+
+      // Set Cookies
+      if (result.user.role === 'user') {
+        res.cookie("userAccessToken", result.token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 15 * 60 * 1000,
+        });
+        res.cookie("userRefreshToken", result.refreshToken, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      } else {
+        res.cookie("lawyerAccessToken", result.token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 15 * 60 * 1000,
+        });
+        res.cookie("lawyerRefreshToken", result.refreshToken, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      }
+
+      res.status(HttpStatusCode.OK).json({
+        success: true,
+        message: "Google login successful.",
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        needsVerificationSubmission: result.needsVerificationSubmission
+      });
+
+    } catch (error: any) {
+      res.status(HttpStatusCode.BAD_REQUEST).json({
+        success: false,
+        message: error.message || "Google authentication failed.",
       });
     }
   }

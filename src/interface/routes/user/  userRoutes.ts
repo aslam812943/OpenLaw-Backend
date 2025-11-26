@@ -12,6 +12,8 @@ import { RequestForgetPasswordUseCase } from "../../../application/useCases/user
 import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
 import { ChangePasswordUseCase } from "../../../application/useCases/user/ChengePasswordUseCase";
 import { ProfileEditUseCase } from "../../../application/useCases/user/ProfileEditUseCase";
+import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
+import { GoogleAuthService } from "../../../infrastructure/services/googleAuth/GoogleAuthService";
 // Cloudinary Upload Service
 import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
 
@@ -51,13 +53,16 @@ const getProfileUseCase = new GetProfileUseCase(userRepository)
 const changePasswordUseCase = new ChangePasswordUseCase(userRepository)
 const profileEditUseCase = new ProfileEditUseCase(userRepository)
 const getProfileController = new GetProfileController(getProfileUseCase, changePasswordUseCase, profileEditUseCase)
+const googleAuthService = new GoogleAuthService();
+const googleAuthUseCase = new GoogleAuthUsecase(userRepository, googleAuthService, tokenService);
 const authController = new AuthController(
   registerUserUsecase,
   verifyOtpUseCase,
   loginUserUsecase,
   resendOtpUseCase,
   requestForgetPasswordUseCase,
-  verifyResetPasswordUseCase
+  verifyResetPasswordUseCase,
+  googleAuthUseCase
 );
 
 //  Define authentication-related API routes
@@ -70,6 +75,9 @@ router.post("/verify-otp", (req, res) => authController.verifyOtp(req, res));
 
 
 router.post("/login", (req, res) => authController.loginUser(req, res));
+
+
+router.post("/google", (req, res) => authController.googleAuth(req, res));
 
 
 router.post("/resend-otp", (req, res) => authController.resendOtp(req, res));
