@@ -25,7 +25,7 @@ export class VerifyOtpUseCase {
       }
 
       const userData = await this._otpService.verifyOtp(email, otp);
-console.log('data ',userData)
+
       if (!userData) {
         throw new Error("Invalid or expired OTP. Please request a new one.");
       }

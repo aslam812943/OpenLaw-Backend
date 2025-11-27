@@ -22,22 +22,20 @@ export class GoogleAuthUsecase {
             user = await this._userRepository.findByEmail(email!);
 
             if (user) {
-                // Link existing user to Google ID
+          
                 user.googleId = googleId;
-                // If user exists but role is not set (unlikely but possible), update it if provided
+               
                 if (!user.role && role) {
                     user.role = role;
                 }
-                user = await this._userRepository.save(user); // Assuming save updates the user
+                user = await this._userRepository.save(user); 
             } else {
-                // New User
+                
                 if (!role) {
-                    // Ask frontend to select role
+                   
                     return {
                         needsRoleSelection: true,
-                        // We don't generate a full session token yet, but we might need to pass back some temp info
-                        // or just rely on the frontend to send the ID token again with the role.
-                        // For simplicity, let's just return the flag.
+                       
                     } as any;
                 }
 
@@ -47,14 +45,13 @@ export class GoogleAuthUsecase {
                     googleId: googleId,
                     role: role,
                     hasSubmittedVerification: false,
-                    isVerified: true, // Email is verified by Google
+                    isVerified: true, 
                     isBlock: false
                 };
                 user = await this._userRepository.createUser(newUser as any);
             }
         }
 
-        // Generate Token
         const token = this._tokenService.generateToken(user.id!, user.role);
         const refreshToken = this._tokenService.generateRefreshToken(user.id!, user.role);
 

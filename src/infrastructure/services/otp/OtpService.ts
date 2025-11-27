@@ -14,21 +14,18 @@ export class OtpService {
 
     async verifyOtp(email: string, otp: string): Promise<any> {
         const stored = await this.cache.get(`otp:${email}`);
-        console.log('Stored OTP data:', stored);
+       
 
         if (!stored) throw new Error('OTP expired or not found');
 
         const { otp: savedOtp, data } = JSON.parse(stored);
 
       
-        const normalizedSavedOtp = String(savedOtp).trim();
-        const normalizedInputOtp = String(otp).trim();
+        
 
        
 
-        if (normalizedSavedOtp !== normalizedInputOtp) {
-            throw new Error('Invalid otp');
-        }
+     if(savedOtp!==otp) throw new Error('Invalid otp')
 
         await this.cache.del(`otp:${email}`);
         return data;
