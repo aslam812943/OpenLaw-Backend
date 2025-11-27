@@ -100,18 +100,18 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         throw new Error("Lawyer ID is missing.");
       }
 
-      // Validate DTO
+   
       await this.validate(dto);
 
-      // Convert DTO → Entity
+     
       const newRuleEntity = AvailabilityRuleMapper.toEntity(dto);
 
-      // Save Rule
+     
       const savedRule = await this._repo.createRule(newRuleEntity);
 
       if (!savedRule) throw new Error("Failed to save availability rule.");
 
-      // Generate Slots
+      
       const slots = SlotGeneratorService.generateSlots(newRuleEntity);
 
       if (!slots || slots.length === 0)

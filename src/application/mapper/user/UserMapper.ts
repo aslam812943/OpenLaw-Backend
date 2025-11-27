@@ -6,8 +6,8 @@ export class UserMapper {
     return {
       name: dto.name,
       email: dto.email,
-      password: dto.password,
-      phone: dto.phone,
+      password: String(dto.password),
+      phone: Number(dto.phone),
       isVerified: dto.isVerified ?? false,
       role: dto.role ?? "user",
       isBlock:dto.isBlock,

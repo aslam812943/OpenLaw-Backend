@@ -24,7 +24,9 @@ export class LawyerController {
 
   
   async registerLawyer(req: Request, res: Response) {
+  
     try {
+     
 
       const documentUrls = Array.isArray(req.files)
         ? req.files.map((file: any) => file.path)

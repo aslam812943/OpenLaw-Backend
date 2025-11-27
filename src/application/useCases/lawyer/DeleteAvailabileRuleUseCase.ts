@@ -8,6 +8,7 @@ export class DeleteAvailableRuleUseCase implements IDeleteAvailableRuleUseCase{
 
     async execute(ruleId: string): Promise<void> {
         await this._ruleRepo.deleteRuleById(ruleId)
+        await this ._ruleRepo.deleteSlotsByRuleId(ruleId)
         return 
     }
     

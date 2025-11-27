@@ -15,10 +15,11 @@ export class VerifyOtpUseCase {
 
  
   async execute(email: string, otp: string): Promise<any> {
+    
     try {
    
 
-  
+
       if (!email || !otp) {
         throw new Error("Email and OTP are required for verification.");
       }

@@ -8,7 +8,7 @@ import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStat
 // ✅ AdminAuthController
 
 export class AdminAuthController {
-  constructor(private readonly _loginUseCase: LoginAdminUseCase) {}
+  constructor(private readonly _loginUseCase: LoginAdminUseCase) { }
 
   // ------------------------------------------------------------
   // Admin Login Handler
@@ -16,28 +16,32 @@ export class AdminAuthController {
 
 
   async login(req: Request, res: Response) {
-   
-   console.log('admin login working ')
+
+    console.log('admin login working ')
     try {
- 
+
       const dto = new AdminLoginRequestDTO(req.body);
 
-     
+
       const result = await this._loginUseCase.execute(dto);
 
       res.cookie("adminAccessToken", result.token, {
         httpOnly: true,
-        secure: false, 
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
         maxAge: 15 * 60 * 1000, // 15 minutes
       });
 
-      res.cookie('adminRefreshToken',result.refreshToken,{
-        httpOnly:true,
-        secure:false,
-        maxAge:1*24*60*60*1000
+      res.cookie('adminRefreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 1 * 24 * 60 * 60 * 1000
       })
 
-      
+
       return res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Admin logged in successfully.",
@@ -47,7 +51,7 @@ export class AdminAuthController {
     } catch (error: any) {
 
 
-    
+
       return res.status(HttpStatusCode.BAD_REQUEST).json({
         success: false,
         message: error.message || "Login failed. Please check your credentials and try again.",
@@ -56,25 +60,26 @@ export class AdminAuthController {
   }
 
 
-    async logout(req: Request, res: Response): Promise<void> {
-   req
+  async logout(req: Request, res: Response): Promise<void> {
+    req
 
     try {
-   
+
       res.clearCookie("adminAccessToken", {
         httpOnly: true,
         secure: false,
-       
-    
+        sameSite: 'lax',
+        path: '/'
       });
 
-      res.clearCookie('adminRefreshToken',{
-        httpOnly:true,
-        secure:false,
-       
+      res.clearCookie('adminRefreshToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/'
       })
 
- 
+
       //  Send success response
       res.status(HttpStatusCode.OK).json({
         success: true,

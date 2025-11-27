@@ -68,7 +68,7 @@ const getProfileController = new GetProfileController(getProfileUseCase, updateP
 
 
 router.post(
-  "/verifyDetils", verifyToken(['lawyer']),
+  "/verifyDetils",
   upload.array("documents"),
   (req, res) => lawyerController.registerLawyer(req, res)
 );
@@ -96,7 +96,7 @@ router.get("/schedule/", verifyToken(['lawyer']), (req, res) =>
   availabilityController.getAllRuls(req, res)
 );
 
-router.delete("/schedule/delete/:ruleId", verifyToken(['lawyer']), (req, res) =>
+router.delete("/schedule/delete/:ruleId", (req, res) =>
   availabilityController.DeleteRule(req, res)
 );
 
