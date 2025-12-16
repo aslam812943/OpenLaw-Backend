@@ -1,23 +1,25 @@
-import { IGetProfileUseCase } from "../interface/user/IGetProfileUseCase";
+import { IGetProfileUseCase } from "../../interface/use-cases/user/IGetProfileUseCase";
 import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
 import { ResponseGetProfileDTO } from "../../dtos/user/ResponseGetProfileDTO";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class GetProfileUseCase implements IGetProfileUseCase {
-  constructor(private readonly _repo: IUserRepository) {}
+  constructor(private readonly _repo: IUserRepository) { }
 
   async execute(id: string): Promise<ResponseGetProfileDTO> {
 
-   
+
     if (!id) {
-      throw new AppError("User ID is required to fetch profile.", HttpStatusCode.BAD_REQUEST);
+      throw new BadRequestError("User ID is required to fetch profile.");
     }
 
+    
     const data = await this._repo.findById(id);
 
     if (!data) {
-      throw new AppError(`User not found for ID: ${id}`, HttpStatusCode.NOT_FOUND);
+      throw new NotFoundError(`User not found for ID: ${id}`);
     }
 
     const userDTO = new ResponseGetProfileDTO(

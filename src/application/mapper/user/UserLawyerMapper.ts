@@ -7,16 +7,14 @@ export class UserLawyerMapper {
     static toGetLawyerDTO(lawyer: Lawyer): ResponseGetLawyersDTO {
         const dto: ResponseGetLawyersDTO = {
             id: lawyer.id!,
-            userId:lawyer.userId,
-            name: lawyer.user?.name ?? '',
-            email: lawyer.user?.email ?? '',
-            phone: String(lawyer.user?.phone ?? '0'),
-            yearsOfPractice: lawyer.yearsOfPractice,
-            practiceAreas: lawyer.practiceAreas,
-            languages: lawyer.languages,
-            profileImage: lawyer.profileImage
-
-
+            userId: lawyer.id!, 
+            name: lawyer.name,
+            email: lawyer.email,
+            phone: String(lawyer.phone ?? '0'),
+            yearsOfPractice: lawyer.yearsOfPractice ?? 0,
+            practiceAreas: lawyer.practiceAreas ?? [],
+            languages: lawyer.languages ?? [],
+            profileImage: lawyer.profileImage ?? ''
         }
 
         return dto

@@ -1,4 +1,4 @@
-import { ICreateAvailabilityRuleUseCase } from "../interface/lawyer/ICreateAvailabilityRuleUseCase";
+import { ICreateAvailabilityRuleUseCase } from "../../interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityRuleDTO";
@@ -6,11 +6,11 @@ import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapp
 import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
 import { Slot } from "../../../domain/entities/Slot";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUseCase {
 
-  constructor(private readonly _repo: IAvailabilityRuleRepository) {}
+  constructor(private readonly _repo: IAvailabilityRuleRepository) { }
 
   private toMinutes(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -78,7 +78,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     }
 
     if (errors.length > 0) {
-      throw new AppError("Validation failed: " + errors.join("; "), HttpStatusCode.BAD_REQUEST);
+      throw new BadRequestError("Validation failed: " + errors.join("; "));
     }
   }
 
@@ -86,7 +86,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
     try {
       if (!dto.lawyerId) {
-        throw new AppError("Lawyer ID is missing.", HttpStatusCode.BAD_REQUEST);
+        throw new BadRequestError("Lawyer ID is missing.");
       }
 
       await this.validate(dto);
@@ -96,13 +96,13 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
       const savedRule = await this._repo.createRule(newRuleEntity);
 
       if (!savedRule) {
-        throw new AppError("Failed to save availability rule.", HttpStatusCode.INTERNAL_SERVER_ERROR);
+        throw new BadRequestError("Failed to save availability rule.");
       }
 
       const slots = SlotGeneratorService.generateSlots(newRuleEntity);
 
       if (!slots || slots.length === 0) {
-        throw new AppError("Failed to generate slots.", HttpStatusCode.INTERNAL_SERVER_ERROR);
+        throw new BadRequestError("Failed to generate slots.");
       }
 
       await this._repo.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
@@ -113,9 +113,8 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
       if (err instanceof AppError) throw err;
 
-      throw new AppError(
-        err.message || "Something went wrong while creating availability rule.",
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+      throw new BadRequestError(
+        err.message || "Something went wrong while creating availability rule."
       );
     }
   }

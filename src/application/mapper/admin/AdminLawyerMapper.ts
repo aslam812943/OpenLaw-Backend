@@ -6,12 +6,12 @@ export class AdminLawyerMapper {
 
     const dto: IGetAllLawyerDTO = {
       id: lawyer.id!,
-      name: lawyer.user?.name ?? "N/A",
-      email: lawyer.user?.email ?? "N/A",
-      phone: String(lawyer.user?.phone ?? "0"),
-      barNumber: lawyer.barNumber,
-      barAdmissionDate: lawyer.barAdmissionDate,
-      yearsOfPractice: lawyer.yearsOfPractice,
+      name: lawyer.name,
+      email: lawyer.email,
+      phone: String(lawyer.phone ?? "0"),
+      barNumber: lawyer.barNumber ?? "",
+      barAdmissionDate: lawyer.barAdmissionDate ?? "",
+      yearsOfPractice: lawyer.yearsOfPractice ?? 0,
       practiceAreas: lawyer.practiceAreas || [],
       languages: lawyer.languages || [],
       documentUrls: lawyer.documentUrls || [],
@@ -30,7 +30,7 @@ export class AdminLawyerMapper {
 
       verificationStatus: lawyer.verificationStatus,
       isVerified: lawyer.isVerified,
-      isBlock: lawyer.user?.isBlock ?? false,
+      isBlock: lawyer.isBlock,
     };
 
     return new GetAllLawyerDTO(dto);

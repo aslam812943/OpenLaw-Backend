@@ -1,8 +1,10 @@
-import { UserRegisterDTO } from "../../../dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
 import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
-import { IRegisterUserUseCase } from "../../../interface/user/IRegisterUserUseCase";
+import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
+import { IRegisterUserUseCase } from "../../../interface/use-cases/user/IRegisterUserUseCase";
 import { GenerateOtpUseCase } from "./GenerateOtpUseCase";
 import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 
 
 //  RegisterUserUsecase
@@ -10,29 +12,37 @@ import { NodeMailerEmailService } from "../../../../infrastructure/services/node
 export class RegisterUserUsecase implements IRegisterUserUseCase {
   constructor(
     private _userRepo: IUserRepository,
+    private _lawyerRepo: ILawyerRepository,
     private _generateOtpUseCase: GenerateOtpUseCase,
     private _mailService: NodeMailerEmailService
-  ) {}
+  ) { }
 
   async execute(data: UserRegisterDTO): Promise<{ message: string }> {
     try {
-   
+
       if (!data.email || !data.name || !data.password) {
-        throw new Error("All fields (name, email, password) are required.");
+        throw new BadRequestError("All fields (name, email, password) are required.");
       }
 
-    
-      const existingUser = await this._userRepo.findByEmail(data.email);
-      if (existingUser) {
-        throw new Error("User already exists with this email address.");
+
+      const userExists = await this._userRepo.findByEmail(data.email);
+      const lawyerExists = await this._lawyerRepo.findByEmail(data.email);
+
+      if (userExists) {
+        throw new BadRequestError("Email already exists as a regular user.");
       }
+
+      if (lawyerExists) {
+        throw new BadRequestError("Email already exists as a lawyer.");
+      }
+
 
       const otp = await this._generateOtpUseCase.execute(data.email, data);
       if (!otp) {
-        throw new Error("Failed to generate OTP. Please try again.");
+        throw new BadRequestError("Failed to generate OTP. Please try again.");
       }
 
-    
+
       await this._mailService.sendMail(
         data.email,
         "Welcome to LegalConnect - Your OTP Verification Code",
@@ -65,7 +75,7 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
 
       return { message: "OTP sent successfully to the registered email." };
     } catch (error: any) {
-      throw new Error(
+      throw new BadRequestError(
         error.message || "Registration process failed. Please try again later."
       );
     }

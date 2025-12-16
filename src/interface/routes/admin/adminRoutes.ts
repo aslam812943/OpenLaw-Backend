@@ -71,9 +71,9 @@ const blockLawyerUseCase = new BlockLawyerUseCase(lawyerRepo);
 const blockLawyerController = new BlockLawyerController(blockLawyerUseCase);
 const unBlockLawyerUseCase = new UNBlockLawyerUseCase(lawyerRepo);
 const unBlockLawyerController = new UNBlockLawyerController(unBlockLawyerUseCase);
-const approveLawyerUseCase = new ApproveLawyerUseCase(lawyerRepo,nodeMailerEmailService);
+const approveLawyerUseCase = new ApproveLawyerUseCase(lawyerRepo, nodeMailerEmailService);
 const approveLawyerController = new ApproveLawyerController(approveLawyerUseCase);
-const rejectLawyerUseCase = new RejectLawyerUseCase(lawyerRepo,nodeMailerEmailService);
+const rejectLawyerUseCase = new RejectLawyerUseCase(lawyerRepo, nodeMailerEmailService);
 const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
 
 // ------------------------------------------------------
@@ -81,20 +81,21 @@ const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
 // ------------------------------------------------------
 
 //  Admin Login and Logout
-router.post('/login', (req, res) => controller.login(req, res));
-router.post('/logout',(req,res)=>controller.logout(req,res))
+//  Admin Login and Logout
+router.post('/login', (req, res, next) => controller.login(req, res, next));
+router.post('/logout', (req, res, next) => controller.logout(req, res, next))
 
 //  User Management Routes
-router.get('/users', adminAuth, (req, res) => getAllUsersController.handle(req, res));
-router.patch('/users/:id/block', adminAuth, (req, res) => blockUserController.handle(req, res));
-router.patch('/users/:id/unblock', adminAuth, (req, res) => unBlockUserController.handle(req, res));
+router.get('/users', adminAuth, (req, res, next) => getAllUsersController.handle(req, res, next));
+router.patch('/users/:id/block', adminAuth, (req, res, next) => blockUserController.handle(req, res, next));
+router.patch('/users/:id/unblock', adminAuth, (req, res, next) => unBlockUserController.handle(req, res, next));
 
 //  Lawyer Management Routes
-router.get('/lawyers',adminAuth, (req, res) => getAllLawyersController.handle(req, res));
-router.patch('/lawyers/:id/block', adminAuth, (req, res) => blockLawyerController.handle(req, res));
-router.patch('/lawyers/:id/unblock', adminAuth, (req, res) => unBlockLawyerController.handle(req, res));
-router.patch('/lawyers/:id/approve',adminAuth, (req, res) => approveLawyerController.handle(req, res));
-router.patch('/lawyers/:id/reject', adminAuth, (req, res) => rejectLawyerController.handle(req, res));
+router.get('/lawyers', adminAuth, (req, res, next) => getAllLawyersController.handle(req, res, next));
+router.patch('/lawyers/:id/block', adminAuth, (req, res, next) => blockLawyerController.handle(req, res, next));
+router.patch('/lawyers/:id/unblock', adminAuth, (req, res, next) => unBlockLawyerController.handle(req, res, next));
+router.patch('/lawyers/:id/approve', adminAuth, (req, res, next) => approveLawyerController.handle(req, res, next));
+router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerController.handle(req, res, next));
 
 
 export default router;

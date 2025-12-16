@@ -2,24 +2,31 @@ import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepo
 import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
 import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 import { ForgetPasswordRequestDTO } from "../../../dtos/user/ForgetPasswordRequestDTO";
-
+import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 //  RequestForgetPasswordUseCase
 export class RequestForgetPasswordUseCase {
   constructor(
     private _userRepo: IUserRepository,
     private _otpService: OtpService,
-    private _mailService: NodeMailerEmailService
-  ) {}
+    private _mailService: NodeMailerEmailService,
+    private _lawyerRepo: ILawyerRepository
+  ) { }
 
   async execute(data: ForgetPasswordRequestDTO): Promise<string> {
     try {
       if (!data.email) {
-        throw new Error("Email is required to request a password reset.");
+        throw new BadRequestError("Email is required to request a password reset.");
       }
-
-      const user = await this._userRepo.findByEmail(data.email);
+      let user;
+      user = await this._userRepo.findByEmail(data.email);
+      if(!user){
+user = await this._lawyerRepo.findByEmail(data.email)
+      }
+      
       if (!user) {
-        throw new Error("No user found with this email address.");
+        throw new NotFoundError("No user found with this email address.");
       }
 
       const otp = await this._otpService.generateOtp(data.email, {
@@ -28,7 +35,7 @@ export class RequestForgetPasswordUseCase {
       });
 
       if (!otp) {
-        throw new Error("Failed to generate password reset OTP. Please try again.");
+        throw new BadRequestError("Failed to generate password reset OTP. Please try again.");
       }
 
 
@@ -76,9 +83,9 @@ export class RequestForgetPasswordUseCase {
 
       return "Password reset OTP sent successfully.";
     } catch (error: any) {
-      throw new Error(
+      throw new BadRequestError(
         error.message ||
-          "An unexpected error occurred while requesting password reset."
+        "An unexpected error occurred while requesting password reset."
       );
     }
   }

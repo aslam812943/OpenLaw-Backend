@@ -1,8 +1,10 @@
 
 import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
 import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 
 
 //  VerifyOtpUseCase
@@ -10,6 +12,7 @@ import bcrypt from "bcrypt";
 export class VerifyOtpUseCase {
   constructor(
     private _userRepo: IUserRepository,
+    private _lawyerRepo: ILawyerRepository,
     private _otpService: OtpService
   ) { }
 
@@ -20,13 +23,13 @@ export class VerifyOtpUseCase {
 
 
       if (!email || !otp) {
-        throw new Error("Email and OTP are required for verification.");
+        throw new BadRequestError("Email and OTP are required for verification.");
       }
 
       const userData = await this._otpService.verifyOtp(email, otp);
 
       if (!userData) {
-        throw new Error("Invalid or expired OTP. Please request a new one.");
+        throw new BadRequestError("Invalid or expired OTP. Please request a new one.");
       }
 
 
@@ -38,18 +41,20 @@ export class VerifyOtpUseCase {
 
       const userEntity = UserMapper.toEntity(userData);
 
+      let savedUser;
+      if (userData.role === 'lawyer') {
+        savedUser = await this._lawyerRepo.create(userEntity);
 
-      const savedUser = await this._userRepo.createUser(userEntity);
-
-
-
+      } else {
+        savedUser = await this._userRepo.createUser(userEntity);
+      }
 
       return savedUser;
     } catch (error: any) {
 
 
 
-      throw new Error(
+      throw new BadRequestError(
         error.message || "OTP verification failed. Please try again later."
       );
     }

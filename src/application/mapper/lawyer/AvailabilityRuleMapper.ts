@@ -3,11 +3,11 @@ import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityR
 import { GetAvailabilityRuleDTO } from "../../dtos/lawyer/ResponseGetAllRuleDTO";
 import { Slot } from "../../../domain/entities/Slot";
 import { ResponseGetALLSlotsDTO } from "../../dtos/user/ResponseGetALLSlotsDTO";
-export class AvailabilityRuleMapper{
-    static toEntity(dto:CreateAvailabilityRuleDTO):AvailabilityRule{
-        return new AvailabilityRule(
-            '',
-                dto.title,
+export class AvailabilityRuleMapper {
+  static toEntity(dto: CreateAvailabilityRuleDTO): AvailabilityRule {
+    return new AvailabilityRule(
+      '',
+      dto.title,
       dto.startTime,
       dto.endTime,
       dto.startDate,
@@ -20,11 +20,11 @@ export class AvailabilityRuleMapper{
       dto.exceptionDays,
       dto.lawyerId,
       dto.consultationFee
-        )
-    }
+    )
+  }
 
 
-    static toDTO(entity: AvailabilityRule): GetAvailabilityRuleDTO {
+  static toDTO(entity: AvailabilityRule): GetAvailabilityRuleDTO {
     return new GetAvailabilityRuleDTO(
       entity.id,
       entity.title,
@@ -44,26 +44,26 @@ export class AvailabilityRuleMapper{
   }
 
 
-    static toDTOList(entities: AvailabilityRule[]): GetAvailabilityRuleDTO[] {
+  static toDTOList(entities: AvailabilityRule[]): GetAvailabilityRuleDTO[] {
     return entities.map((e) => this.toDTO(e));
   }
 
 
 
-  static toDTOSlots(data:Slot[]):ResponseGetALLSlotsDTO[]{
-   const slots =  data.map((s)=>{
-  return new ResponseGetALLSlotsDTO(
-      s.id,
-      s.date,
-      s.startTime,
-      s.endTime,
-      s.sessionType,
-  s.isBooked,
-  String(s.consultationFee)
-    )
+  static toDTOSlots(data: Slot[]): ResponseGetALLSlotsDTO[] {
+    const slots = data.map((s) => {
+      return new ResponseGetALLSlotsDTO(
+        s.id,
+        s.date,
+        s.startTime,
+        s.endTime,
+        s.sessionType,
+        s.isBooked,
+        String(s.consultationFee)
+      )
     })
 
     return slots
-   
+
   }
 }

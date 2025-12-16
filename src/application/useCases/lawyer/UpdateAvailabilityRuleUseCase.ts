@@ -1,37 +1,39 @@
 import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
-import { IUpdateAvailabilityRuleUseCase } from "../interface/lawyer/ICreateAvailabilityRuleUseCase";
+import { IUpdateAvailabilityRuleUseCase } from "../../interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { UpdateAvailabilityRuleDTO } from "../../dtos/lawyer/UpdateAvailabilityRuleDTO";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 
 
-export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUseCase{
-    constructor(private readonly _repo:IAvailabilityRuleRepository){}
+export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUseCase {
+  constructor(private readonly _repo: IAvailabilityRuleRepository) { }
 
 
 
-    async execute(ruleId:string,dto: UpdateAvailabilityRuleDTO): Promise<{ rule: any; slots: any; }> {
-     try {
+  async execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: any; slots: any; }> {
+    try {
       const updateRule = await this._repo.updateRule(ruleId, dto);
-      if (!updateRule) throw new Error("Rule not found");
+      if (!updateRule) throw new NotFoundError("Rule not found");
 
-   
+
       await this._repo.deleteSlotsByRuleId(ruleId);
 
-     
-      const newSlots = SlotGeneratorService.generateSlots(updateRule);
-      if (!newSlots) throw new Error("Failed to generate slots");
 
-    
-      await this._repo.createSlots(ruleId,'', newSlots);
+      const newSlots = SlotGeneratorService.generateSlots(updateRule);
+      if (!newSlots) throw new BadRequestError("Failed to generate slots");
+
+
+      await this._repo.createSlots(ruleId, '', newSlots);
 
       return {
         rule: updateRule,
         slots: newSlots,
       };
     } catch (error: any) {
-     
-      throw new Error(error.message || "Failed to update rule");
+
+      throw new BadRequestError(error.message || "Failed to update rule");
     }
   }
 }

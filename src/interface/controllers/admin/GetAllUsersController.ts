@@ -1,6 +1,6 @@
 
 import { Response, Request } from "express";
-import { IGetAllUsersUseCase } from "../../../application/useCases/interface/admin/IGetAllUsersUseCase";
+import { IGetAllUsersUseCase } from "../../../application/interface/use-cases/admin/IGetAllUsersUseCase";
 import { GetAllUserDTO } from "../../../application/dtos/admin/GetAllUserDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
@@ -17,16 +17,13 @@ export class GetAllUsersController {
       PaginationInput,
       { users: GetAllUserDTO[]; total: number }
     >
-  ) {}
+  ) { }
 
 
-  async handle(req: Request, res: Response): Promise<Response> {
+  async handle(req: Request, res: Response, next: any): Promise<Response | void> {
     try {
-
-
-      const page = parseInt(req.query.page as string) || 1; 
-      const limit = parseInt(req.query.limit as string) || 10; 
-
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
 
       const { users, total } = await this._getAllUserUseCase.execute({ page, limit });
 
@@ -40,12 +37,7 @@ export class GetAllUsersController {
       });
 
     } catch (err: any) {
-     
-
-      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: err.message || "An unexpected error occurred while fetching users.",
-      });
+      next(err);
     }
   }
 }

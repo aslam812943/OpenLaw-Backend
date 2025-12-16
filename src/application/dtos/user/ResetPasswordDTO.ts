@@ -6,7 +6,7 @@ export class ResetPasswordDTO {
 
     constructor(data: Partial<ResetPasswordDTO>) {
        
-        //const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
         if (!data.email ) {
        
             throw new Error('A valid email address is required')
@@ -25,7 +25,7 @@ export class ResetPasswordDTO {
         this.email = data.email;
         this.otp = data.otp;
         this.newPassword = data.newPassword
-        console.log(this.email,this.newPassword,this.otp)
+     
 
     }
 

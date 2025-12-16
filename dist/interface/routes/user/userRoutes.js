@@ -1,0 +1,88 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const AuthController_1 = require("../../controllers/user/AuthController");
+const GetSingleLawyerController_1 = require("../../controllers/user/GetSingleLawyerController");
+//  Importing all required UseCases for authentication flow
+const RegisterUserUsecase_1 = require("../../../application/useCases/user/auth/RegisterUserUsecase");
+const VerifyOtpUseCase_1 = require("../../../application/useCases/user/auth/VerifyOtpUseCase");
+const GenerateOtpUseCase_1 = require("../../../application/useCases/user/auth/GenerateOtpUseCase");
+const LoginUserUsecase_1 = require("../../../application/useCases/user/auth/LoginUserUsecase");
+const ResendOtpUseCase_1 = require("../../../application/useCases/user/auth/ResendOtpUseCase");
+const RequestForgetPasswordUseCase_1 = require("../../../application/useCases/user/auth/RequestForgetPasswordUseCase");
+const VerifyResetPasswordUseCase_1 = require("../../../application/useCases/user/auth/VerifyResetPasswordUseCase");
+const ChengePasswordUseCase_1 = require("../../../application/useCases/user/ChengePasswordUseCase");
+const ProfileEditUseCase_1 = require("../../../application/useCases/user/ProfileEditUseCase");
+const GoogleAuthUseCase_1 = require("../../../application/useCases/user/GoogleAuthUseCase");
+const GoogleAuthService_1 = require("../../../infrastructure/services/googleAuth/GoogleAuthService");
+const GetAllLawyersUseCase_1 = require("../../../application/useCases/user/GetAllLawyersUseCase");
+const GetSingleLawyerUseCase_1 = require("../../../application/useCases/user/GetSingleLawyerUseCase");
+const GetAllSlotsUseCase_1 = require("../../../application/useCases/user/GetAllSlotsUseCase");
+const checkUserStatusUseCase_1 = require("../../../application/useCases/user/checkUserStatusUseCase");
+// Cloudinary Upload Service
+const CloudinaryConfig_1 = require("../../../infrastructure/services/cloudinary/CloudinaryConfig");
+const UserAuthMiddleware_1 = require("../../middlewares/UserAuthMiddleware");
+const GetProfileUseCase_1 = require("../../../application/useCases/user/GetProfileUseCase");
+const GetProfileController_1 = require("../../controllers/user/GetProfileController");
+const GetAllLawyersController_1 = require("../../controllers/user/GetAllLawyersController");
+//  Importing Repositories and Services 
+const UserRepository_1 = require("../../../infrastructure/repositories/user/UserRepository");
+const AvailabilityRuleRepository_1 = require("../../../infrastructure/repositories/lawyer/AvailabilityRuleRepository");
+const LawyerRepository_1 = require("../../../infrastructure/repositories/lawyer/LawyerRepository");
+const RedisCacheService_1 = require("../../../infrastructure/services/otp/RedisCacheService");
+const NodeMailerEmailService_1 = require("../../../infrastructure/services/nodeMailer/NodeMailerEmailService");
+const OtpService_1 = require("../../../infrastructure/services/otp/OtpService");
+const LoignResponseMapper_1 = require("../../../application/mapper/user/LoignResponseMapper");
+const TokenService_1 = require("../../../infrastructure/services/jwt/TokenService");
+const router = express_1.default.Router();
+console.log("User routes file loaded");
+//  Initialize all service instances
+const cacheService = new RedisCacheService_1.RedisCacheService();
+const otpService = new OtpService_1.OtpService(cacheService);
+const generateOtpUseCase = new GenerateOtpUseCase_1.GenerateOtpUseCase(otpService);
+const mailService = new NodeMailerEmailService_1.NodeMailerEmailService();
+const userRepository = new UserRepository_1.UserRepository();
+const loginResponseMapper = new LoignResponseMapper_1.LoginResponseMapper();
+const tokenService = new TokenService_1.TokenService();
+const lawyerRepository = new LawyerRepository_1.LawyerRepository();
+const availabilityRuleRepository = new AvailabilityRuleRepository_1.AvailabilityRuleRepository();
+//  Initialize use case instances 
+const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase_1.RequestForgetPasswordUseCase(userRepository, otpService, mailService, lawyerRepository);
+const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase_1.VerifyResetPasswordUseCase(userRepository, otpService, lawyerRepository);
+const verifyOtpUseCase = new VerifyOtpUseCase_1.VerifyOtpUseCase(userRepository, lawyerRepository, otpService);
+const registerUserUsecase = new RegisterUserUsecase_1.RegisterUserUsecase(userRepository, lawyerRepository, generateOtpUseCase, mailService);
+const loginUserUsecase = new LoginUserUsecase_1.LoginUserUsecase(userRepository, loginResponseMapper, tokenService, lawyerRepository);
+const resendOtpUseCase = new ResendOtpUseCase_1.ResendOtpUseCase(cacheService, otpService, mailService);
+const getProfileUseCase = new GetProfileUseCase_1.GetProfileUseCase(userRepository);
+const changePasswordUseCase = new ChengePasswordUseCase_1.ChangePasswordUseCase(userRepository);
+const profileEditUseCase = new ProfileEditUseCase_1.ProfileEditUseCase(userRepository);
+const getProfileController = new GetProfileController_1.GetProfileController(getProfileUseCase, changePasswordUseCase, profileEditUseCase);
+const googleAuthService = new GoogleAuthService_1.GoogleAuthService();
+const googleAuthUseCase = new GoogleAuthUseCase_1.GoogleAuthUsecase(userRepository, googleAuthService, tokenService, lawyerRepository);
+const getAllLawyersusecase = new GetAllLawyersUseCase_1.GetAllLawyersUseCase(lawyerRepository);
+const getAllLawyersController = new GetAllLawyersController_1.GetAllLawyersController(getAllLawyersusecase);
+const getSingleLawyerUseCase = new GetSingleLawyerUseCase_1.GetSingleLawyerUseCase(lawyerRepository);
+const getAllSlotsUseCase = new GetAllSlotsUseCase_1.GetAllSlotsUseCase(availabilityRuleRepository);
+const getSingleLawyerController = new GetSingleLawyerController_1.GetSingleLawyerController(getSingleLawyerUseCase, getAllSlotsUseCase);
+const checkUserStatusUseCase = new checkUserStatusUseCase_1.CheckUserStatusUseCase(userRepository);
+const authMiddleware = new UserAuthMiddleware_1.UserAuthMiddleware(checkUserStatusUseCase, tokenService);
+const authController = new AuthController_1.AuthController(registerUserUsecase, verifyOtpUseCase, loginUserUsecase, resendOtpUseCase, requestForgetPasswordUseCase, verifyResetPasswordUseCase, googleAuthUseCase);
+router.post("/register", (req, res, next) => authController.registerUser(req, res, next));
+router.post("/verify-otp", (req, res, next) => authController.verifyOtp(req, res, next));
+router.post("/login", (req, res, next) => authController.loginUser(req, res, next));
+router.post("/google", (req, res, next) => authController.googleAuth(req, res, next));
+router.post("/resend-otp", (req, res, next) => authController.resendOtp(req, res, next));
+router.post("/forget-password", (req, res, next) => authController.requestForgetPassword(req, res, next));
+router.post("/reset-password", (req, res, next) => authController.verifyResetPassword(req, res, next));
+router.post('/logout', (req, res, next) => authController.logoutUser(req, res, next));
+router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getprofiledetils(req, res, next); });
+router.put("/profile/update", authMiddleware.execute, CloudinaryConfig_1.upload.single("profileImage"), (req, res, next) => getProfileController.editProfile(req, res, next));
+router.put('/profile/password', authMiddleware.execute, (req, res, next) => getProfileController.chengePassword(req, res, next));
+router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.GetAllLawyers(req, res, next));
+router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getlawyer(req, res, next));
+router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getallslots(req, res, next));
+exports.default = router;
+//# sourceMappingURL=userRoutes.js.map

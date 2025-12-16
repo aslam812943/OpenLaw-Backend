@@ -7,7 +7,8 @@ export interface RoleSelectionRequestDTO {
 export interface GoogleAuthResponseDTO {
     token: string;
     refreshToken: string;
-    user: { id: string, email: string, role: SelectedRole, name?: string, phone?: number, hasSubmittedVerification?: boolean };
+    user: { id: string, email: string, role: SelectedRole, name?: string, phone?: number, hasSubmittedVerification?: boolean ,verificationStatus?:string };
     needsRoleSelection: boolean;
-    needsVerificationSubmission?: boolean; // True if role='lawyer' but hasSubmittedVerification=false
+    needsVerificationSubmission?: boolean; 
+    
 }

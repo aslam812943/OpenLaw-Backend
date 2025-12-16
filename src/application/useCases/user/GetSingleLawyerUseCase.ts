@@ -1,24 +1,26 @@
-import { IGetSingleLawyerUseCase } from "../interface/user/IGetAllLawyersUseCase";
+import { IGetSingleLawyerUseCase } from "../../interface/use-cases/user/IGetAllLawyersUseCase";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { LawyerMapper } from "../../mapper/lawyer/LawyerMapper";
 import { ResponseGetSingleLawyerDTO } from "../../dtos/user/ResponseGetSingleLawyerDTO";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class GetSingleLawyerUseCase implements IGetSingleLawyerUseCase {
 
-  constructor(private _repo: ILawyerRepository) {}
+  constructor(private _repo: ILawyerRepository) { }
 
   async execute(id: string): Promise<ResponseGetSingleLawyerDTO> {
 
     if (!id) {
-      throw new AppError("Lawyer ID is required.", HttpStatusCode.BAD_REQUEST);
+      throw new BadRequestError("Lawyer ID is required.");
     }
 
-    const lawyer = await this._repo.getSingleLawyer(id);
+   
+    const lawyer = await this._repo.findById(id);
 
     if (!lawyer) {
-      throw new AppError("Lawyer not found.", HttpStatusCode.NOT_FOUND);
+      throw new NotFoundError("Lawyer not found.");
     }
 
     return LawyerMapper.toSingle(lawyer);

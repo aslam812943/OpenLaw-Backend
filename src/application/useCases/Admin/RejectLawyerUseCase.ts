@@ -1,17 +1,18 @@
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { IRejectLawyerUseCase } from "../interface/admin/IRejectLawyerUseCase";
+import { IRejectLawyerUseCase } from "../../interface/use-cases/admin/IRejectLawyerUseCase";
 import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 
 export class RejectLawyerUseCase implements IRejectLawyerUseCase {
   constructor(
     private _lawyerRepo: ILawyerRepository,
     private _mailService: NodeMailerEmailService
-  ) {}
+  ) { }
 
   async execute(id: string, email: string, reason: string): Promise<void> {
+    // Reject the lawyer in the repository
     await this._lawyerRepo.rejectLawyer(id);
 
-    // ✅ Professional HTML + your same rejection message
+
     await this._mailService.sendMail(
       email,
       "⚠️ Regarding Your Lawyer Verification Status - LegalConnect Platform",

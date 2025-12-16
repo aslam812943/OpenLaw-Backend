@@ -1,8 +1,8 @@
-import { UserRegisterDTO } from "../../dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../dtos/user/RegisterUserDTO";
 import { User } from "../../../domain/entities/ User";
 
 export class UserMapper {
-    static toEntity(dto: UserRegisterDTO): User {
+  static toEntity(dto: UserRegisterDTO): User {
     return {
       name: dto.name,
       email: dto.email,
@@ -10,7 +10,7 @@ export class UserMapper {
       phone: Number(dto.phone),
       isVerified: dto.isVerified ?? false,
       role: dto.role ?? "user",
-      isBlock:dto.isBlock,
+      isBlock: dto.isBlock,
       hasSubmittedVerification: false
     };
   }

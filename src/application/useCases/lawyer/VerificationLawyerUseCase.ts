@@ -3,10 +3,11 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { VerificationLawyerDTO } from "../../dtos/lawyer/VerificationLawyerDTO";
 
 export class RegisterLawyerUseCase {
-  constructor(private lawyerRepo: ILawyerRepository) {}
+  constructor(private lawyerRepo: ILawyerRepository) { }
 
   async execute(data: VerificationLawyerDTO): Promise<Lawyer> {
-    return await this.lawyerRepo.createLawyer(data);
+    // Add verification details to the lawyer profile
+    return await this.lawyerRepo.addVerificationDetils(data);
   }
 }
 

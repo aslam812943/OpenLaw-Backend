@@ -8,13 +8,13 @@ export interface User {
   phone: number;
   isVerified: boolean;
   role: string;
-  isBlock : boolean;
-  hasSubmittedVerification:boolean;
-  profileImage?:string
+  isBlock: boolean;
+  hasSubmittedVerification: boolean;
+  profileImage?: string
   address?: object;
-  googleId?:string
-isPassword?:boolean
-
+  googleId?: string
+  isPassword?: boolean
+  verificationStatus?: string
 }
 
 // export class User {

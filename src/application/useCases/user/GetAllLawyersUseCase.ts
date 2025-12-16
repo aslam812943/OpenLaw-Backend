@@ -1,11 +1,12 @@
-import { IGetAllLawyersUseCase } from "../interface/user/IGetAllLawyersUseCase";
+import { IGetAllLawyersUseCase } from "../../interface/use-cases/user/IGetAllLawyersUseCase";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { UserLawyerMapper } from "../../mapper/user/UserLawyerMapper";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
-  constructor(private _repo: ILawyerRepository) {}
+  constructor(private _repo: ILawyerRepository) { }
 
   async execute(query?: {
     page?: number;
@@ -20,7 +21,7 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
       const { lawyers, total } = await this._repo.findAll(query);
 
       if (!lawyers || lawyers.length === 0) {
-        throw new AppError("No lawyers found.", HttpStatusCode.NOT_FOUND);
+        throw new NotFoundError("No lawyers found.");
       }
 
       const lawyerDTOs = UserLawyerMapper.toGetLawyerListDTO(lawyers);
@@ -37,9 +38,8 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
         throw error;
       }
 
-      throw new AppError(
-        error.message || "Failed to fetch lawyers. Please try again later.",
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+      throw new BadRequestError(
+        error.message || "Failed to fetch lawyers. Please try again later."
       );
     }
   }

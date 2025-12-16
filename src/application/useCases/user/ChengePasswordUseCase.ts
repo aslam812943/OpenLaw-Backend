@@ -1,8 +1,9 @@
 import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import { IChangePasswordUseCase } from "../../useCases/interface/user/IGetProfileUseCase";
+import { IChangePasswordUseCase } from "../../interface/use-cases/user/IGetProfileUseCase";
 import { ChangePasswordDTO } from "../../dtos/user/ChangePasswordDTO";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class ChangePasswordUseCase implements IChangePasswordUseCase {
   constructor(private readonly _user_repo: IUserRepository) { }
@@ -12,7 +13,7 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
 
     const user = await this._user_repo.findById(dto.id);
     if (!user) {
-      throw new AppError("User not found.", HttpStatusCode.NOT_FOUND);
+      throw new NotFoundError("User not found.");
     }
 
 
@@ -34,9 +35,8 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
 
 
 
-      throw new AppError(
-        "Something went wrong while changing the password. Please try again.",
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+      throw new BadRequestError(
+        "Something went wrong while changing the password. Please try again."
       );
     }
   }

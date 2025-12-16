@@ -2,7 +2,9 @@
 import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
 import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
 import { ResetPasswordDTO } from "../../../dtos/user/ResetPasswordDTO";
+import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import bcrypt from "bcrypt";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 
 
 //  VerifyResetPasswordUseCase
@@ -10,7 +12,8 @@ import bcrypt from "bcrypt";
 export class VerifyResetPasswordUseCase {
     constructor(
         private _userRepository: IUserRepository,
-        private _otpService: OtpService
+        private _otpService: OtpService,
+        private _lawyerRepo: ILawyerRepository
     ) { }
 
 
@@ -20,20 +23,25 @@ export class VerifyResetPasswordUseCase {
 
 
             if (!data.email || !data.otp || !data.newPassword) {
-                throw new Error("Email, OTP, and new password are required.");
+                throw new BadRequestError("Email, OTP, and new password are required.");
             }
 
 
             const stored = await this._otpService.verifyOtp(data.email, data.otp);
             if (!stored) {
-                throw new Error("Invalid or expired OTP. Please request a new one.");
+                throw new BadRequestError("Invalid or expired OTP. Please request a new one.");
             }
 
 
             const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+            let user = await this._userRepository.findByEmail(stored.email)
+            if (user) {
+                await this._userRepository.updateUserPassword(stored.userId, hashedPassword);
+            }
 
 
-            await this._userRepository.updateUserPassword(stored.userId, hashedPassword);
+            await this._lawyerRepo.forgotpassword(stored.userId, hashedPassword)
+
 
 
 
@@ -43,7 +51,7 @@ export class VerifyResetPasswordUseCase {
 
 
 
-            throw new Error(
+            throw new BadRequestError(
                 error.message || "Failed to reset password. Please try again later."
             );
         }

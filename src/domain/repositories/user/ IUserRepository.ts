@@ -1,6 +1,6 @@
 
 import { User } from "../../entities/ User";
-import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { GetAllUserDTO } from "../../../application/dtos/admin/GetAllUserDTO";
 
 export interface IUserRepository {

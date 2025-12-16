@@ -1,12 +1,16 @@
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { InternalServerError } from "../../errors/InternalServerError";
+import { NotFoundError } from "../../errors/NotFoundError";
+import { ConflictError } from "../../errors/ConflictError";
 import AvailabilityRuleModel from "../../db/models/AvailabilityRuleModel";
 import SlotModel from "../../db/models/SlotModel";
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { Slot } from "../../../domain/entities/Slot";
 import mongoose from "mongoose";
-
+import { Booking } from "../../../domain/entities/Booking";
+import { BookingModel } from "../../db/models/BookingModel";
 export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   /**
@@ -15,21 +19,24 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async createRule(rule: CreateAvailabilityRuleDTO): Promise<any> {
     try {
       return await AvailabilityRuleModel.create(rule);
-    } catch (err: any) {
-      throw new Error("Failed to create availability rule: " + err.message);
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new ConflictError("Availability rule already exists.");
+      }
+      throw new InternalServerError("Database error while creating availability rule.");
     }
   }
 
   /**
    * Create all slots generated for the rule
    */
-  async createSlots(ruleId: string,lawyerId:string, slots: any[]): Promise<any> {
+  async createSlots(ruleId: string, lawyerId: string, slots: any[]): Promise<any> {
     try {
-      const formatted = slots.map(s => ({ ...s, ruleId,userId :lawyerId}));
-    
+      const formatted = slots.map(s => ({ ...s, ruleId, userId: lawyerId }));
+
       return await SlotModel.insertMany(formatted);
-    } catch (err: any) {
-      throw new Error("Failed to create slots: " + err.message);
+    } catch (error: any) {
+      throw new InternalServerError("Database error while saving slots.");
     }
   }
 
@@ -41,12 +48,15 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       const rule = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
 
       if (!rule) {
-        throw new Error("Rule not found for update");
+        throw new NotFoundError("Rule not found for update");
       }
 
       return rule;
-    } catch (err: any) {
-      throw new Error("Failed to update rule: " + err.message);
+    } catch (error: any) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError("Database error while updating rule.");
     }
   }
 
@@ -56,8 +66,8 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async deleteSlotsByRuleId(ruleId: string): Promise<void> {
     try {
       await SlotModel.deleteMany({ ruleId });
-    } catch (err: any) {
-      throw new Error("Failed to delete slots for rule: " + err.message);
+    } catch (error: any) {
+      throw new InternalServerError("Database error while deleting slots by rule ID.");
     }
   }
 
@@ -69,12 +79,15 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       const rule = await AvailabilityRuleModel.findById(ruleId);
 
       if (!rule) {
-        throw new Error("Rule not found");
+        throw new NotFoundError("Rule not found");
       }
 
       return rule;
-    } catch (err: any) {
-      throw new Error("Failed to fetch rule: " + err.message);
+    } catch (error: any) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError("Database error while fetching rule.");
     }
   }
 
@@ -105,8 +118,8 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           doc.consultationFee
         )
       );
-    } catch (err: any) {
-      throw new Error("Failed to fetch availability rules: " + err.message);
+    } catch (error: any) {
+      throw new InternalServerError("Database error while fetching availability rules.");
     }
   }
 
@@ -127,32 +140,76 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
 
   async getAllSlots(lawyerId: string): Promise<Slot[]> {
-  try {
-    const response = await SlotModel.find({ userId: lawyerId });
+    try {
+      const response = await SlotModel.find({ userId: lawyerId });
 
-  
-    const slots = response.map((slot: any) => 
-      new Slot(
-        slot._id.toString(),
-         slot.ruleId,
-        slot.userId,
-        slot.startTime,
-        slot.endTime,
-        slot.date,
-        slot.sessionType,
-       
-        slot.isBooked,
-        slot.bookingId ?? null,
-        slot.maxBookings,
-        slot.consultationFee
-      )
-    );
 
-    return slots;
-  } catch (error) {
-    console.error("Error fetching slots:", error);
-    return [];
+      const slots = response.map((slot: any) =>
+        new Slot(
+          slot._id.toString(),
+          slot.ruleId,
+          slot.userId,
+          slot.startTime,
+          slot.endTime,
+          slot.date,
+          slot.sessionType,
+          slot.isBooked,
+          slot.bookingId ?? null,
+          slot.maxBookings,
+          slot.consultationFee
+        )
+      );
+
+      return slots;
+    } catch (error) {
+     
+      return [];
+    }
   }
-}
+
+
+
+
+  async bookSlot(id: string): Promise<void> {
+    await SlotModel.findByIdAndUpdate(id, { isBooked: true })
+  }
+
+  async getAppoiments(lawyerId: string): Promise<Booking[]> {
+    try {
+      const docs = await BookingModel.find({ lawyerId })
+        .populate("userId", "name")
+        .lean();
+
+      return docs.map((obj: any) => {
+        return new Booking(
+          obj._id.toString(),
+          obj.userId._id.toString(),
+          obj.lawyerId,
+          obj.date,
+          obj.startTime,
+          obj.endTime,
+          obj.consultationFee,
+          obj.status,
+          obj.paymentStatus,
+          obj.paymentId,
+          obj.stripeSessionId,
+          obj.description,
+          obj.userId.name
+        );
+      });
+
+    } catch (error) {
+
+      return [];
+    }
+  }
+
+  async updateAppointmentStatus(id: string, status: string): Promise<void> {
+    try {
+      await BookingModel.findByIdAndUpdate(id, { status });
+    } catch (error: any) {
+      throw new Error("Failed to update appointment status: " + error.message);
+    }
+  }
 
 }

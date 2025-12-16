@@ -15,19 +15,19 @@ export class GetProfileMapper {
       : [];
 
     const response = new ResponseGetProfileDTO(
-      data.barNumber,
-      data.barAdmissionDate,
-      data.yearsOfPractice,
-      data.practiceAreas,
-      data.languages,
-      data.documentUrls,
+      data.barNumber ?? "",
+      data.barAdmissionDate ?? "",
+      data.yearsOfPractice ?? 0,
+      data.practiceAreas ?? [],
+      data.languages ?? [],
+      data.documentUrls ?? [],
       addressArray,
-      data.user?.name ?? "",
-      data.user?.email ?? "",
-      data.user?.phone ?? 0,
-      data.profileImage,
-      data.bio,
-      data.isPassword
+      data.name,
+      data.email,
+      data.phone ?? 0,
+      data.profileImage ?? "",
+      data.bio ?? "",
+      data.isPassword ?? false
     );
 
     return response;

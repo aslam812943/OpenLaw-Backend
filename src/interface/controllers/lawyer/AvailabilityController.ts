@@ -1,8 +1,8 @@
 import { Request, Response,NextFunction } from "express";
-import { ICreateAvailabilityRuleUseCase } from "../../../application/useCases/interface/lawyer/ICreateAvailabilityRuleUseCase";
-import { IUpdateAvailabilityRuleUseCase } from "../../../application/useCases/interface/lawyer/ICreateAvailabilityRuleUseCase";
-import { IGetAllAvailableRuleUseCase } from "../../../application/useCases/interface/lawyer/ICreateAvailabilityRuleUseCase";
-import { IDeleteAvailableRuleUseCase } from "../../../application/useCases/interface/lawyer/ICreateAvailabilityRuleUseCase";
+import { ICreateAvailabilityRuleUseCase } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
+import { IUpdateAvailabilityRuleUseCase } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
+import { IGetAllAvailableRuleUseCase } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
+import { IDeleteAvailableRuleUseCase } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
 
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";

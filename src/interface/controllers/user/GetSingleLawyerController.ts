@@ -1,27 +1,29 @@
 import { Request, Response, NextFunction } from "express";
-import { IGetSingleLawyerUseCase } from "../../../application/useCases/interface/user/IGetAllLawyersUseCase";
-import { IGetAllSlotsUseCase } from "../../../application/useCases/interface/user/IGetAllLawyersUseCase";
+import { IGetSingleLawyerUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
+import { IGetAllSlotsUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { AppError } from "../../../infrastructure/errors/AppError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class GetSingleLawyerController {
   constructor(
     private _getsinglelawyerusecase: IGetSingleLawyerUseCase,
     private _getslotusecase: IGetAllSlotsUseCase
-  ) {}
+  ) { }
 
   async getlawyer(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id;
 
       if (!id) {
-        throw new AppError("Lawyer ID is required.", HttpStatusCode.BAD_REQUEST);
+        throw new BadRequestError("Lawyer ID is required.");
       }
 
       const lawyer = await this._getsinglelawyerusecase.execute(id);
 
       if (!lawyer) {
-        throw new AppError("Lawyer not found.", HttpStatusCode.NOT_FOUND);
+        throw new NotFoundError("Lawyer not found.");
       }
 
       return res.status(HttpStatusCode.OK).json({
@@ -31,7 +33,7 @@ export class GetSingleLawyerController {
       });
 
     } catch (error) {
-      next(error); 
+      next(error);
     }
   }
 
@@ -41,13 +43,13 @@ export class GetSingleLawyerController {
       const id = req.params.id;
 
       if (!id) {
-        throw new AppError("Lawyer ID is required to fetch slots.", HttpStatusCode.BAD_REQUEST);
+        throw new BadRequestError("Lawyer ID is required to fetch slots.");
       }
 
       const slots = await this._getslotusecase.execute(id);
 
       if (!slots || slots.length === 0) {
-        throw new AppError("No slots available for this lawyer.", HttpStatusCode.NOT_FOUND);
+        throw new NotFoundError("No slots available for this lawyer.");
       }
 
       return res.status(HttpStatusCode.OK).json({

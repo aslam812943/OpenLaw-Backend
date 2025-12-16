@@ -12,6 +12,7 @@ export interface ILoginResponseMapper {
 
 export class LoginResponseMapper implements ILoginResponseMapper {
     toDTO(user: User): LoginResponseDTO {
+    
         if (!user.id) {
             throw new Error('User id is missing');
         }
@@ -22,7 +23,9 @@ export class LoginResponseMapper implements ILoginResponseMapper {
             phone: user.phone!,
             role: user.role!,
             
-            hasSubmittedVerification:user.hasSubmittedVerification
+            hasSubmittedVerification:user.hasSubmittedVerification,
+            verificationStatus:user.verificationStatus
+           
         });
         return userResponse
 

@@ -1,7 +1,9 @@
 import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
-import { UserRegisterDTO } from "../../../dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
 import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 import { RedisCacheService } from "../../../../infrastructure/services/otp/RedisCacheService";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 
 // ResendOtpUseCase
 
@@ -10,19 +12,19 @@ export class ResendOtpUseCase {
     private _redisCacheService: RedisCacheService,
     private _otpService: OtpService,
     private _mailService: NodeMailerEmailService
-  ) {}
+  ) { }
 
   async execute(email: string): Promise<string> {
     try {
       if (!email) {
-        throw new Error("Email is required to resend OTP.");
+        throw new BadRequestError("Email is required to resend OTP.");
       }
 
-   
+
       const redisData = await this._redisCacheService.get(`otp:${email}`);
 
       if (!redisData) {
-        throw new Error(
+        throw new NotFoundError(
           "No registration data found for this email. Please register again."
         );
       }
@@ -33,12 +35,12 @@ export class ResendOtpUseCase {
       };
 
       if (!data) {
-        throw new Error(
+        throw new BadRequestError(
           "Corrupted registration data. Please register again."
         );
       }
 
-  
+
       const userDto: UserRegisterDTO = {
         name: data.name,
         email: data.email,
@@ -49,13 +51,13 @@ export class ResendOtpUseCase {
         isBlock: data.isBlock,
       };
 
-   
+
       const otp = await this._otpService.generateOtp(email, userDto);
       if (!otp) {
-        throw new Error("Failed to generate a new OTP. Please try again later.");
+        throw new BadRequestError("Failed to generate a new OTP. Please try again later.");
       }
 
-  
+
       await this._mailService.sendMail(
         email,
         "LegalConnect - Your New OTP Code (Resent)",
@@ -86,12 +88,12 @@ export class ResendOtpUseCase {
         `
       );
 
-    
+
       return "OTP resent successfully.";
     } catch (err: any) {
-      throw new Error(
+      throw new BadRequestError(
         err.message ||
-          "An unexpected error occurred while resending the OTP."
+        "An unexpected error occurred while resending the OTP."
       );
     }
   }

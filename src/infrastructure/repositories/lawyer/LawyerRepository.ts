@@ -1,179 +1,160 @@
 
 import LawyerModel, { ILawyerDocument } from "../../db/models/LawyerModel";
-import UserModel from "../../db/models/ UserModel";
+
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { Lawyer } from "../../../domain/entities/Lawyer";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { UserRepository } from "../user/UserRepository";
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import { Types } from "mongoose";
+
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 import bcrypt from "bcrypt";
+import { ConflictError } from "../../errors/ConflictError";
+import { InternalServerError } from "../../errors/InternalServerError";
+import { NotFoundError } from "../../errors/NotFoundError";
 
 
 //  LawyerRepository
 
 export class LawyerRepository implements ILawyerRepository {
-  private userRepository: IUserRepository;
 
-  constructor() {
-    this.userRepository = new UserRepository();
-  }
+  constructor() { }
 
   // ------------------------------------------------------------
-  //  createLawyer()
+  //  create() - For initial registration
   // ------------------------------------------------------------
-  async createLawyer(lawyer: VerificationLawyerDTO): Promise<Lawyer> {
+  async create(lawyer: Partial<Lawyer>): Promise<Lawyer> {
     try {
-      const lawyerDoc = (await LawyerModel.create(lawyer)) as ILawyerDocument;
-
-
-      await this.userRepository.markVerificationSubmitted(lawyerDoc.userId.toString());
-
-
-      return {
-        userId: lawyerDoc.userId.toString(),
-        barNumber: lawyerDoc.barNumber,
-        barAdmissionDate: lawyerDoc.barAdmissionDate,
-        yearsOfPractice: lawyerDoc.yearsOfPractice,
-        practiceAreas: lawyerDoc.practiceAreas,
-        languages: lawyerDoc.languages,
-        documentUrls: lawyerDoc.documentUrls,
-        addresses: { address: '', city: '', state: '', pincode: 0 },
-        profileImage: '',
-        isVerified: lawyerDoc.isAdminVerified,
-      };
+      const lawyerDoc = await LawyerModel.create(lawyer);
+      return this.mapToDomain(lawyerDoc);
     } catch (error: any) {
-      throw new Error("Database error while creating lawyer record.");
+      if (error.code === 11000) {
+        throw new ConflictError("A lawyer with this email already exists.");
+      }
+      throw new InternalServerError("Database error while creating lawyer.");
     }
   }
 
   // ------------------------------------------------------------
-  //  findAll(
+  //  findByEmail()
+  // ------------------------------------------------------------
+  async findByEmail(email: string): Promise<Lawyer | null> {
+    try {
+      const lawyerDoc = await LawyerModel.findOne({ email });
+
+      if (!lawyerDoc) return null;
+      return this.mapToDomain(lawyerDoc);
+    } catch (error: any) {
+
+      throw new InternalServerError("Database error while fetching lawyer by email.");
+    }
+  }
+
+  // ------------------------------------------------------------
+  //  addVerificationDetils() - For submitting verification details
+  // ------------------------------------------------------------
+  async addVerificationDetils(lawyer: VerificationLawyerDTO): Promise<Lawyer> {
+    try {
+
+      const lawyerDoc = await LawyerModel.findByIdAndUpdate(
+        lawyer.userId,
+        {
+          barNumber: lawyer.barNumber,
+          barAdmissionDate: lawyer.barAdmissionDate,
+          yearsOfPractice: lawyer.yearsOfPractice,
+          practiceAreas: lawyer.practiceAreas,
+          languages: lawyer.languages,
+          documentUrls: lawyer.documentUrls,
+          hasSubmittedVerification: true,
+          verificationStatus: 'pending',
+          isAdminVerified: false
+        },
+        { new: true }
+      );
+
+      if (!lawyerDoc) throw new Error("Lawyer not found for verification submission.");
+
+      return this.mapToDomain(lawyerDoc);
+    } catch (error: any) {
+      throw new InternalServerError("Database error while updating lawyer verification details.");
+    }
+  }
+
+  // ------------------------------------------------------------
+  //  findAll()
   // ------------------------------------------------------------
   async findAll(query?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sort?: string;
-  filter?: string;
-   fromAdmin?: boolean;
-}): Promise<{ lawyers: Lawyer[]; total: number }> {
-  try {
-    const page = query?.page ?? 1;
-    const limit = query?.limit ?? 10;
-    const search = query?.search ?? "";
-    const sort = query?.sort ?? "";
-    const filter = query?.filter ?? "";
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: string;
+    filter?: string;
+    fromAdmin?: boolean;
+  }): Promise<{ lawyers: Lawyer[]; total: number }> {
+    try {
+      const page = query?.page ?? 1;
+      const limit = query?.limit ?? 10;
+      const search = query?.search ?? "";
+      const sort = query?.sort ?? "";
+      const filter = query?.filter ?? "";
 
-    // MATCH CONDITIONS
-    const match: any = {
-      ...(search && {
-        $or: [
-          { practiceAreas: { $regex: search, $options: "i" } },
-          { languages: { $regex: search, $options: "i" } },
-          { "user.name": { $regex: search, $options: "i" } },
-          { "user.email": { $regex: search, $options: "i" } },
-        ],
-      }),
-    };
+      // MATCH CONDITIONS
+      const match: any = {
+        ...(search && {
+          $or: [
+            { practiceAreas: { $regex: search, $options: "i" } },
+            { languages: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        }),
+      };
 
+      if (!query?.fromAdmin) {
+        match.isBlock = false;
+        match.isAdminVerified = true;
+        match.verificationStatus = 'Approved';
+      }
 
-    if (!query?.fromAdmin) {
-  match["user.isBlock"] = false;
-  match['isAdminVerified'] = true
-  match['verificationStatus'] = 'Approved'
-}
+      // FILTER FEATURE
+      if (filter) {
+        match.$or = [
+          { practiceAreas: { $regex: filter, $options: "i" } },
+          { practiceAreas: { $elemMatch: { $regex: filter, $options: "i" } } },
+        ];
+      }
 
-    // FILTER FEATURE
-  if (filter) {
-  match.$or = [
-    { practiceAreas: { $regex: filter, $options: "i" } },
-    { practiceAreas: { $elemMatch: { $regex: filter, $options: "i" } } },
-  ];
-}
+      // SORT OPTIONS
+      const sortOption: any = {};
+      switch (sort) {
+        case "experience-asc":
+          sortOption["yearsOfPractice"] = 1;
+          break;
+        case "experience-desc":
+          sortOption["yearsOfPractice"] = -1;
+          break;
+        default:
+          sortOption["_id"] = -1;
+      }
 
+      const [lawyerDocs, total] = await Promise.all([
+        LawyerModel.find(match).sort(sortOption).skip((page - 1) * limit).limit(limit).exec(),
+        LawyerModel.countDocuments(match),
+      ]);
 
-    // SORT OPTIONS
-    const sortOption: any = {};
-
-    switch (sort) {
-      case "experience-asc":
-        sortOption["yearsOfPractice"] = 1;
-        break;
-      case "experience-desc":
-        sortOption["yearsOfPractice"] = -1;
-        break;
-      default:
-        sortOption["_id"] = -1;
+      const lawyers = lawyerDocs.map((doc) => this.mapToDomain(doc));
+      return { lawyers, total };
+    } catch (error) {
+      throw new InternalServerError("Database error while fetching lawyers.");
     }
-
-    const pipeline: any[] = [
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      { $match: match },
-      { $sort: sortOption }, 
-      { $skip: (page - 1) * limit },
-      { $limit: limit },
-    ];
-
-    const countPipeline = [...pipeline.slice(0, 3), { $count: "total" }];
-
-    const [lawyerDocs, countResult] = await Promise.all([
-      LawyerModel.aggregate(pipeline),
-      LawyerModel.aggregate(countPipeline),
-    ]);
-
-    const total = countResult[0]?.total || 0;
-
-    const lawyers = lawyerDocs.map((doc: any) => ({
-      id: doc._id.toString(),
-      userId: doc.user._id.toString(),
-      barNumber: doc.barNumber,
-      barAdmissionDate: doc.barAdmissionDate,
-      yearsOfPractice: doc.yearsOfPractice,
-      practiceAreas: doc.practiceAreas,
-      languages: doc.languages,
-      documentUrls: doc.documentUrls,
-      addresses: { address: "", city: "", state: "", pincode: 0 },
-      verificationStatus: doc.verificationStatus,
-      isVerified: doc.isAdminVerified,
-      profileImage: doc.Profileimageurl ?? "",
-      user: {
-        id: doc.user._id.toString(),
-        name: doc.user.name,
-        email: doc.user.email,
-        phone: doc.user.phone,
-        isBlock: doc.user.isBlock,
-      },
-    }));
-
-    return { lawyers, total };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Database error while fetching lawyers.");
   }
-}
-
 
   // ------------------------------------------------------------
   //  blockLawyer()
   // ------------------------------------------------------------
   async blockLawyer(id: string): Promise<void> {
     try {
-      const lawyer = await LawyerModel.findById(id);
-      if (!lawyer) throw new Error("Lawyer not found.");
-
-      await UserModel.findByIdAndUpdate(lawyer.userId, { isBlock: true });
+      await LawyerModel.findByIdAndUpdate(id, { isBlock: true });
     } catch (error: any) {
-      throw new Error("Database error while blocking lawyer.");
+      throw new InternalServerError("Database error while blocking lawyer.");
     }
   }
 
@@ -182,13 +163,9 @@ export class LawyerRepository implements ILawyerRepository {
   // ------------------------------------------------------------
   async unBlockLawyer(id: string): Promise<void> {
     try {
-      const lawyer = await LawyerModel.findById(id);
-      if (!lawyer) throw new Error("Lawyer not found.");
-
-      await UserModel.findByIdAndUpdate(lawyer.userId, { isBlock: false });
+      await LawyerModel.findByIdAndUpdate(id, { isBlock: false });
     } catch (error: any) {
-
-      throw new Error("Database error while unblocking lawyer.");
+      throw new InternalServerError("Database error while unblocking lawyer.");
     }
   }
 
@@ -197,15 +174,12 @@ export class LawyerRepository implements ILawyerRepository {
   // ------------------------------------------------------------
   async approveLawyer(id: string): Promise<void> {
     try {
-      const lawyer = await LawyerModel.findById(id);
-      if (!lawyer) throw new Error("Lawyer not found.");
-
-      lawyer.isAdminVerified = true;
-      lawyer.verificationStatus = "Approved";
-      await lawyer.save();
+      await LawyerModel.findByIdAndUpdate(id, {
+        isAdminVerified: true,
+        verificationStatus: "Approved"
+      });
     } catch (error: any) {
-
-      throw new Error("Database error while approving lawyer.");
+      throw new InternalServerError("Database error while approving lawyer.");
     }
   }
 
@@ -214,122 +188,46 @@ export class LawyerRepository implements ILawyerRepository {
   // ------------------------------------------------------------
   async rejectLawyer(id: string): Promise<void> {
     try {
-      const lawyer = await LawyerModel.findById(id);
-      if (!lawyer) throw new Error("Lawyer not found.");
-
-      lawyer.isAdminVerified = false;
-      lawyer.verificationStatus = "Rejected";
-      await lawyer.save();
+      await LawyerModel.findByIdAndUpdate(id, {
+        isAdminVerified: false,
+        verificationStatus: "Rejected"
+      });
     } catch (error: any) {
-      throw new Error("Database error while rejecting lawyer.");
+      throw new InternalServerError("Database error while rejecting lawyer.");
     }
   }
 
-
-
-
-
-
+  // ------------------------------------------------------------
+  //  findById()
+  // ------------------------------------------------------------
   async findById(id: string): Promise<Lawyer> {
-
     try {
-      if (!id) {
-        throw new Error("Invalid ID: ID not provided");
-      }
-
-      const doc = await LawyerModel.findOne({ userId: id })
-        .populate({
-          path: "userId",
-          select: "name email phone role isBlock",
-        })
-        .exec();
-      if (!doc) {
-        throw new Error(`Lawyer with ID ${id} not found`);
-      }
-
-
-
-      return {
-        id: (doc._id as Types.ObjectId).toString(),
-        userId: (doc.userId as any)._id.toString(),
-        barNumber: doc.barNumber,
-        barAdmissionDate: doc.barAdmissionDate,
-        yearsOfPractice: doc.yearsOfPractice,
-        practiceAreas: doc.practiceAreas,
-        languages: doc.languages,
-        documentUrls: doc.documentUrls,
-
-        addresses: doc.Address || {
-          address: "",
-          city: "",
-          state: "",
-          pincode: 0,
-        },
-
-        verificationStatus: doc.verificationStatus,
-        isVerified: doc.isAdminVerified,
-
-        user: {
-          name: (doc.userId as any).name,
-          email: (doc.userId as any).email,
-          phone: (doc.userId as any).phone,
-          isBlock: (doc.userId as any).isBlock,
-        },
-
-        profileImage: doc.Profileimageurl || "",
-        bio: doc.bio || "",
-        isPassword:(doc.userId as any).password?true:false
-      };
-
+      if (!id) throw new Error("Invalid ID: ID not provided");
+      const doc = await LawyerModel.findById(id);
+      if (!doc) throw new Error(`Lawyer with ID ${id} not found`);
+      return this.mapToDomain(doc);
     } catch (error: any) {
-
-
-      throw new Error(
-        error.message || "Database error while fetching lawyer profile."
-      );
+      throw new InternalServerError(error.message || "Database error while fetching lawyer profile.");
     }
   }
 
-
-
+  // ------------------------------------------------------------
+  //  updateProfile()
+  // ------------------------------------------------------------
   async updateProfile(id: string, dto: UpdateLawyerProfileDTO): Promise<void> {
     try {
       if (!id) throw new Error("Invalid ID: ID not provided");
 
-      const data = await LawyerModel.findOne({ userId: id }).populate("userId");
-
-      if (!data) {
-        throw new Error(`Lawyer with ID ${id} not found`);
-      }
-
-      if (!data.userId) {
-        throw new Error("User linked to this lawyer not found");
-      }
-
+      const data = await LawyerModel.findById(id);
+      if (!data) throw new Error(`Lawyer with ID ${id} not found`);
 
       if (!data.Address) {
-        data.Address = {
-          address: "",
-          city: "",
-          state: "",
-          pincode: 0,
-        };
+        data.Address = { address: "", city: "", state: "", pincode: 0 };
       }
 
-
-      if (dto.imageUrl) {
-        data.Profileimageurl = dto.imageUrl;
-      }
-
-
-      const user: any = data.userId;
-      user.name = dto.name;
-      user.phone = dto.phone;
-
-      await user.save().catch(() => {
-        throw new Error("Failed to update user details");
-      });
-
+      if (dto.imageUrl) data.Profileimageurl = dto.imageUrl;
+      data.name = dto.name;
+      data.phone = Number(dto.phone);
 
       data.Address.address = dto.address;
       data.Address.city = dto.city;
@@ -337,110 +235,73 @@ export class LawyerRepository implements ILawyerRepository {
       data.Address.pincode = Number(dto.pincode);
       if (dto.bio) data.bio = dto.bio;
 
-      await data.save().catch(() => {
-        throw new Error("Failed to update lawyer profile");
-      });
-
+      await data.save();
     } catch (error: any) {
-
-
-      throw new Error(
-        error.message || "Database error while updating lawyer profile."
-      );
+      throw new InternalServerError(error.message || "Database error while updating lawyer profile.");
     }
   }
 
+  // ------------------------------------------------------------
+  //  changePassword()
+  // ------------------------------------------------------------
   async changePassword(id: string, oldPass: string, newPass: string): Promise<void> {
     try {
-      const lawyer = await LawyerModel.findOne({ userId: id }).populate("userId");
+      const lawyer = await LawyerModel.findById(id);
       if (!lawyer) throw new Error('Lawyer not found');
 
-      const user: any = lawyer.userId;
-      if (!user) throw new Error('User not found');
-
-      const match = await bcrypt.compare(oldPass, user.password);
+      const match = await bcrypt.compare(oldPass, String(lawyer.password));
       if (!match) throw new Error('Incorrect old password');
 
-      user.password = await bcrypt.hash(newPass, 10);
-      await user.save();
+      lawyer.password = await bcrypt.hash(newPass, 10);
+      await lawyer.save();
     } catch (error: any) {
-      throw new Error('changePassword failed: ' + (error.message || error));
+      throw new InternalServerError('changePassword failed: ' + (error.message || error));
     }
   }
 
 
-
-  async getSingleLawyer(id: string): Promise<Lawyer> {
-
+  async updateGoogleId(id: string, googleId: string): Promise<void> {
     try {
-      if (!id) {
-        throw new Error("Invalid ID: ID not provided");
-      }
-
-      const doc = await LawyerModel.findOne({userId:id})
-        .populate({
-          path: "userId",
-          select: "name email phone role isBlock",
-        })
-        .exec();
-      if (!doc) {
-        throw new Error(`Lawyer with ID ${id} not found`);
-      }
-
-
-
-      return {
-        id: (doc._id as Types.ObjectId).toString(),
-        userId: (doc.userId as any)._id.toString(),
-        barNumber: doc.barNumber,
-        barAdmissionDate: doc.barAdmissionDate,
-        yearsOfPractice: doc.yearsOfPractice,
-        practiceAreas: doc.practiceAreas,
-        languages: doc.languages,
-        documentUrls: doc.documentUrls,
-
-        addresses: doc.Address || {
-          address: "",
-          city: "",
-          state: "",
-          pincode: 0,
-        },
-
-        verificationStatus: doc.verificationStatus,
-        isVerified: doc.isAdminVerified,
-
-        user: {
-          name: (doc.userId as any).name,
-          email: (doc.userId as any).email,
-          phone: (doc.userId as any).phone,
-          isBlock: (doc.userId as any).isBlock,
-        },
-
-        profileImage: doc.Profileimageurl || "",
-        bio: doc.bio || "",
-      };
-
+      await LawyerModel.findByIdAndUpdate(id, { googleId });
     } catch (error: any) {
-
-
-      throw new Error(
-        error.message || "Database error while fetching lawyer profile."
-      );
+      throw new InternalServerError("Database error while updating lawyer googleId.");
     }
   }
 
 
-async findOne(userId: string): Promise<string | null> {
-  try {
-    const lawyer = await LawyerModel.findOne({ userId });
-    return lawyer?._id?.toString() || null;
-  } catch (error) {
-    console.error("Error fetching lawyer:", error);
-    return null;
+
+  async forgotpassword(id: string, hashedpassword: string): Promise<void> {
+    try {
+      await LawyerModel.findByIdAndUpdate(id, { password: hashedpassword })
+    } catch (error) {
+
+    }
   }
-}
 
+  private mapToDomain(doc: ILawyerDocument): Lawyer {
+    return {
+      id: String(doc._id),
+      name: doc.name,
+      email: doc.email,
+      password: doc.password,
+      phone: doc.phone,
+      role: doc.role,
+      isBlock: doc.isBlock,
+      googleId: doc.googleId,
 
-
-
+      barNumber: doc.barNumber,
+      barAdmissionDate: doc.barAdmissionDate,
+      yearsOfPractice: doc.yearsOfPractice,
+      practiceAreas: doc.practiceAreas,
+      languages: doc.languages,
+      documentUrls: doc.documentUrls,
+      verificationStatus: doc.verificationStatus,
+      isVerified: doc.isVerified,
+      addresses: doc.Address,
+      profileImage: doc.Profileimageurl,
+      bio: doc.bio,
+      isPassword: doc.password ? true : false,
+      hasSubmittedVerification: doc.hasSubmittedVerification
+    };
+  }
 }

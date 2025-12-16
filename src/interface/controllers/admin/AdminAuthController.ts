@@ -1,7 +1,7 @@
 
 import { Request, Response } from 'express';
 import { LoginAdminUseCase } from '../../../application/useCases/Admin/LoginAdminUseCase';
-import  AdminLoginRequestDTO  from '../../../application/dtos/admin/AdminLoginRequestDTO';
+import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequestDTO';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
 
 
@@ -15,14 +15,9 @@ export class AdminAuthController {
   // ------------------------------------------------------------
 
 
-  async login(req: Request, res: Response) {
-
-
+  async login(req: Request, res: Response, next: any) {
     try {
-
       const dto = new AdminLoginRequestDTO(req.body);
-
-
       const result = await this._loginUseCase.execute(dto);
 
       res.cookie("adminAccessToken", result.token, {
@@ -41,7 +36,6 @@ export class AdminAuthController {
         maxAge: 1 * 24 * 60 * 60 * 1000
       })
 
-
       return res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Admin logged in successfully.",
@@ -49,22 +43,13 @@ export class AdminAuthController {
       });
 
     } catch (error: any) {
-
-
-
-      return res.status(HttpStatusCode.BAD_REQUEST).json({
-        success: false,
-        message: error.message || "Login failed. Please check your credentials and try again.",
-      });
+      next(error);
     }
   }
 
 
-  async logout(req: Request, res: Response): Promise<void> {
-    req
-
+  async logout(_req: Request, res: Response, next: any): Promise<void> {
     try {
-
       res.clearCookie("adminAccessToken", {
         httpOnly: true,
         secure: false,
@@ -79,19 +64,12 @@ export class AdminAuthController {
         path: '/'
       })
 
-
-
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Admin logged out successfully.",
       });
     } catch (error: any) {
-
-
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: "Failed to log out admin. Please try again later.",
-      });
+      next(error);
     }
   }
 

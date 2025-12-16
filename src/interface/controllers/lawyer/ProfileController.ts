@@ -1,5 +1,5 @@
 import { Request, Response,NextFunction } from "express";
-import { IGetProfileUseCase, IUpdateProfileUseCase, IChangePasswordUseCase } from "../../../application/useCases/interface/lawyer/IProfileUseCases";
+import { IGetProfileUseCase, IUpdateProfileUseCase, IChangePasswordUseCase } from "../../../application/interface/use-cases/lawyer/IProfileUseCases";
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 import { ChangePasswordDTO } from "../../../application/dtos/lawyer/ChangePasswordDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";

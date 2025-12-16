@@ -1,23 +1,23 @@
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { IChangePasswordUseCase } from "../../useCases/interface/lawyer/IProfileUseCases";
+import { IChangePasswordUseCase } from "../../interface/use-cases/lawyer/IProfileUseCases";
 import { ChangePasswordDTO } from "../../dtos/lawyer/ChangePasswordDTO";
 import { AppError } from "../../../infrastructure/errors/AppError";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class ChangePasswordUseCase implements IChangePasswordUseCase {
     constructor(private readonly _lawyer_repo: ILawyerRepository) { }
 
     async execute(dto: ChangePasswordDTO): Promise<{ message: string }> {
-        
+
         try {
 
-            
+
             if (!dto.id) {
-                throw new AppError("Lawyer ID is required.", HttpStatusCode.BAD_REQUEST);
+                throw new BadRequestError("Lawyer ID is required.");
             }
 
             if (!dto.oldPassword || !dto.newPassword) {
-                throw new AppError("Old and new password are required.", HttpStatusCode.BAD_REQUEST);
+                throw new BadRequestError("Old and new password are required.");
             }
 
 
@@ -27,19 +27,18 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
                 dto.newPassword
             );
 
-         
+
 
             return { message: "Password changed successfully." };
 
         } catch (err: any) {
 
-            
+
             if (err instanceof AppError) throw err;
 
-          
-            throw new AppError(
-                err.message || "Password change failed.",
-                HttpStatusCode.INTERNAL_SERVER_ERROR
+
+            throw new BadRequestError(
+                err.message || "Password change failed."
             );
         }
     }

@@ -6,7 +6,8 @@ export interface ILoginResponseDTO{
     email:string;
     phone:number;
     role:string;
-    hasSubmittedVerification:boolean
+    hasSubmittedVerification:boolean;
+    verificationStatus?:string;
 }
 
 
@@ -17,12 +18,14 @@ export interface ILoginResponseDTO{
 
 export class LoginResponseDTO implements ILoginResponseDTO{
     constructor(data:ILoginResponseDTO){
+        
         this.id = data.id!;
         this.name = data.name;
         this.email = data.email;
         this.phone = data.phone;
         this.role = data.role
         this.hasSubmittedVerification = data.hasSubmittedVerification
+        this.verificationStatus = data.verificationStatus
     }
 
     id:string;
@@ -31,6 +34,7 @@ export class LoginResponseDTO implements ILoginResponseDTO{
     phone: number;
     role: string;
     hasSubmittedVerification:boolean;
+    verificationStatus?: string | undefined;
 }
 
 

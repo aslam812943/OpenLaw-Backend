@@ -1,11 +1,11 @@
-import { Response, Request,NextFunction } from "express";
-import { IGetAllLawyersUseCase } from "../../../application/useCases/interface/admin/IGetAllLawyersUseCase";
+import { Response, Request, NextFunction } from "express";
+import { IGetAllLawyersUseCase } from "../../../application/interface/use-cases/admin/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class GetAllLawyersController {
    constructor(private _getallLawyersUseCase: IGetAllLawyersUseCase) { }
 
-   async GetAllLawyers(req: Request, res: Response,next:NextFunction) {
+   async GetAllLawyers(req: Request, res: Response, next: NextFunction) {
       try {
 
          const page = Number(req.query.page) || 1;
@@ -22,7 +22,7 @@ export class GetAllLawyersController {
             search,
             sort,
             filter,
-            fromAdmin:false
+            fromAdmin: false
          });
 
          return res.status(HttpStatusCode.OK).json({
@@ -33,7 +33,7 @@ export class GetAllLawyersController {
 
       } catch (error: any) {
 
-next(error)
+         next(error)
       }
    }
 }

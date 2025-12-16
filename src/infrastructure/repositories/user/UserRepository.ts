@@ -1,10 +1,13 @@
 
-import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { User } from "../../../domain/entities/ User";
 import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
 import UserModel, { IUserDocument } from "../../db/models/ UserModel";
 import { BaseRepository } from "../user/BaseRepository";
 import bcrypt from "bcrypt";
+import { ConflictError } from "../../errors/ConflictError";
+import { InternalServerError } from "../../errors/InternalServerError";
+import { NotFoundError } from "../../errors/NotFoundError";
 
 
 //  UserRepository
@@ -17,19 +20,19 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  verifyUser()
+  //  verifyUser() - Marks a user as verified.
   // ------------------------------------------------------------
 
   async verifyUser(userId: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(userId, { isVerified: true });
     } catch (error: any) {
-      throw new Error("Database error while verifying user.");
+      throw new InternalServerError("Database error while verifying user.");
     }
   }
 
   // ------------------------------------------------------------
-  //  findByEmail()
+  //  findByEmail() - Finds a user by their email.
   // ------------------------------------------------------------
 
   async findByEmail(email: string): Promise<User | null> {
@@ -47,21 +50,20 @@ export class UserRepository
         role: userDoc.role,
         isBlock: userDoc.isBlock,
         hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false,
-        isPassword:userDoc.password?true:false
+        isPassword: userDoc.password ? true : false
       };
     } catch (error: any) {
-
-      throw new Error("Database error while fetching user by email.");
+      throw new InternalServerError("Database error while fetching user by email.");
     }
   }
 
   // ------------------------------------------------------------
-  //  createUser()
+  //  createUser() - Creates a new user.
   // ------------------------------------------------------------
   async createUser(user: UserRegisterDTO): Promise<User> {
     try {
       const userDoc = new UserModel(user);
-     await userDoc.save();
+      await userDoc.save();
 
 
       return {
@@ -76,42 +78,37 @@ export class UserRepository
         hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false,
       };
     } catch (error: any) {
-
-
       if (error.code === 11000) {
-
-        throw new Error("A user with this email already exists.");
+        throw new ConflictError("A user with this email already exists.");
       }
-
-      throw new Error("Database error while creating a new user.");
+      throw new InternalServerError("Database error while creating a new user.");
     }
   }
 
   // ------------------------------------------------------------
-  // updateUserPassword()
+  // updateUserPassword() - Updates a user's password.
   // ------------------------------------------------------------
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
       await this.update(userId, { password: hashedPassword });
     } catch (error: any) {
-
-      throw new Error("Database error while updating user password.");
+      throw new InternalServerError("Database error while updating user password.");
     }
   }
 
   // ------------------------------------------------------------
-  //  markVerificationSubmitted()
+  //  markVerificationSubmitted() - Marks that a user has submitted verification details.
   // ------------------------------------------------------------
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
       await this.update(userId, { hasSubmittedVerification: true });
     } catch (error: any) {
-      throw new Error("Database error while marking verification submission.");
+      throw new InternalServerError("Database error while marking verification submission.");
     }
   }
 
   // ------------------------------------------------------------
-  //  findAll()
+  //  findAll() - Finds all users with pagination.
   // ------------------------------------------------------------
   async findAll(page: number, limit: number): Promise<{ users: User[]; total: number }> {
     try {
@@ -125,32 +122,29 @@ export class UserRepository
       const users = docs.map((doc) => this.mapToDomain(doc));
       return { users, total };
     } catch (error: any) {
-
-      throw new Error("Database error while fetching paginated users.");
+      throw new InternalServerError("Database error while fetching paginated users.");
     }
   }
 
   // ------------------------------------------------------------
-  //  blockUser()
+  //  blockUser() - Blocks a user.
   // ------------------------------------------------------------
   async blockUser(id: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: true });
     } catch (error: any) {
-
-      throw new Error("Database error while blocking user.");
+      throw new InternalServerError("Database error while blocking user.");
     }
   }
 
   // ------------------------------------------------------------
-  // unBlockUser()
+  // unBlockUser() - Unblocks a user.
   // ------------------------------------------------------------
   async unBlockUser(id: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: false });
     } catch (error: any) {
-
-      throw new Error("Database error while unblocking user.");
+      throw new InternalServerError("Database error while unblocking user.");
     }
   }
 
@@ -166,6 +160,7 @@ export class UserRepository
       role: doc.role,
       isBlock: doc.isBlock,
       hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
+      googleId: doc.googleId,
     };
   }
 
@@ -185,10 +180,10 @@ export class UserRepository
         hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
         profileImage: doc.profileImage ?? '',
         address: doc.address,
-        isPassword:doc.password?true:false
+        isPassword: doc.password ? true : false
       };
     } catch (error: any) {
-      throw new Error('findById failed: ' + (error.message || error));
+      throw new InternalServerError('findById failed: ' + (error.message || error));
     }
   }
 
@@ -203,8 +198,7 @@ export class UserRepository
       user.password = await bcrypt.hash(newPass, 10);
       await user.save();
     } catch (error: any) {
-
-      throw new Error('changePassword failed: ' + (error.message || error));
+      throw new InternalServerError('changePassword failed: ' + (error.message || error));
     }
   }
 
@@ -232,7 +226,7 @@ export class UserRepository
       user.address.pincode = Number(pincode);
       await user.save()
     } catch (error: any) {
-      console.log(error)
+      throw new InternalServerError("Database error while updating profile.");
     }
   }
 
@@ -248,18 +242,24 @@ export class UserRepository
     if (!user.id) throw new Error("User ID is required for update");
 
     const updateData: any = { ...user };
-    delete updateData.id; 
+    delete updateData.id;
 
     if (user.address) {
-      updateData.Address = user.address;
+      updateData.address = user.address; 
       delete updateData.address;
+
+
     }
+  
+ 
+ 
+
     if (user.profileImage) {
       updateData.profileImage = user.profileImage
     }
 
     const updatedDoc = await UserModel.findByIdAndUpdate(user.id, updateData, { new: true });
-    if (!updatedDoc) throw new Error("User not found for update");
+    if (!updatedDoc) throw new NotFoundError("User not found for update");
 
     return this.mapToDomain(updatedDoc);
   }

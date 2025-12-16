@@ -1,87 +1,97 @@
 import { IUserRepository } from '../../../domain/repositories/user/ IUserRepository';
+import { ILawyerRepository } from '../../../domain/repositories/lawyer/ILawyerRepository';
 import { User } from '../../../domain/entities/ User';
 import { GoogleAuthService } from '../../../infrastructure/services/googleAuth/GoogleAuthService';
 import { TokenService } from '../../../infrastructure/services/jwt/TokenService';
 import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
-import { AppError } from '../../../infrastructure/errors/AppError';
-import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
+import { BadRequestError } from '../../../infrastructure/errors/BadRequestError';
+import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
+import { ForbiddenError } from '../../../infrastructure/errors/ForbiddenError';
 
 export class GoogleAuthUsecase {
 
   constructor(
     private _userRepository: IUserRepository,
     private _googleAuthService: GoogleAuthService,
-    private _tokenService: TokenService
-  ) {}
+    private _tokenService: TokenService,
+    private _lawyerRepo: ILawyerRepository
+  ) { }
 
   async execute(idToken: string, role?: 'user' | 'lawyer'): Promise<GoogleAuthResponseDTO> {
-    
+
     if (!idToken) {
-      throw new AppError("Google token is missing.", HttpStatusCode.BAD_REQUEST);
+      throw new BadRequestError("Google token is missing.");
     }
 
+    
     const payload = await this._googleAuthService.verifyToken(idToken);
 
     if (!payload || !payload.email) {
-      throw new AppError("Invalid Google token.", HttpStatusCode.UNAUTHORIZED);
+      throw new UnauthorizedError("Invalid Google token.");
     }
 
     const { sub: googleId, email, given_name: firstName, family_name: lastName } = payload;
 
-    let user = await this._userRepository.findByGoogleId(googleId);
 
-    // Case 1: User exists by Google ID
-    if (user) {
-      if (user.isBlock) {
-        throw new AppError("Your account has been blocked. Contact support.", HttpStatusCode.FORBIDDEN);
-      }
-    }
+    let user: any = await this._userRepository.findByGoogleId(googleId);
 
-    
+
     if (!user) {
       user = await this._userRepository.findByEmail(email!);
 
-      if (user) {
 
-        if (user.isBlock) {
-          throw new AppError("Your account is blocked. Contact support.", HttpStatusCode.FORBIDDEN);
-        }
+      if (!user) {
+        user = await this._lawyerRepo.findByEmail(email!);
+
+      }
+    }
+
+    if (user) {
+
+      if (user.isBlock) {
+        throw new ForbiddenError("Your account has been blocked. Contact support.");
+      }
+
+
+      if (!user.googleId) {
 
         user.googleId = googleId;
 
-        if (!user.role && role) {
-          user.role = role;
+        if (user.role === 'lawyer') {
+          await this._lawyerRepo.updateGoogleId(user.id!, googleId);
+        } else {
+          user = await this._userRepository.save(user);
         }
+      }
+    } else {
 
-        user = await this._userRepository.save(user);
+      if (!role) {
+        return {
+          needsRoleSelection: true
+        } as GoogleAuthResponseDTO;
+      }
 
+      const newUser = {
+        name: `${firstName} ${lastName}`,
+        email: email!,
+        googleId,
+        role,
+        hasSubmittedVerification: false,
+        isVerified: true,
+        isBlock: false
+      };
+
+
+      if (role === 'lawyer') {
+        user = await this._lawyerRepo.create(newUser);
       } else {
-
-        if (!role) {
-          return {
-            needsRoleSelection: true
-          } as GoogleAuthResponseDTO;
-        }
-
-        const newUser: Partial<User> = {
-          name: `${firstName} ${lastName}`,
-          email: email!,
-          googleId,
-          role,
-          hasSubmittedVerification: false,
-          isVerified: true,
-          isBlock: false
-        };
-
         user = await this._userRepository.createUser(newUser as User);
       }
     }
 
-    
- 
 
-    const token = this._tokenService.generateAccessToken(user.id!,user.role,user.isBlock);
-    const refreshToken = this._tokenService.generateRefreshToken(user.id!,user.role,user.isBlock);
+    const token = this._tokenService.generateAccessToken(user.id!, user.role, user.isBlock);
+    const refreshToken = this._tokenService.generateRefreshToken(user.id!, user.role, user.isBlock);
 
     const response: GoogleAuthResponseDTO = {
       token,
@@ -92,13 +102,15 @@ export class GoogleAuthUsecase {
         role: user.role! as 'user' | 'lawyer',
         name: user.name,
         phone: user.phone,
-        hasSubmittedVerification: user.hasSubmittedVerification
+        hasSubmittedVerification: user.hasSubmittedVerification,
+        verificationStatus: user.verificationStatus
       },
       needsRoleSelection: false
     };
 
     if (user.role === 'lawyer') {
       response.needsVerificationSubmission = !user.hasSubmittedVerification;
+
     }
 
     return response;

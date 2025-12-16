@@ -1,8 +1,16 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface ILawyerDocument extends Document {
+  name: string;
+  email: string;
+  password?: string;
+  phone?: number;
+  isVerified: boolean;
+  role: string;
+  hasSubmittedVerification: boolean;
+  isBlock: boolean;
+  googleId?: string;
 
-  userId: Types.ObjectId;
   barNumber: string;
   barAdmissionDate: string;
   yearsOfPractice: number;
@@ -11,12 +19,10 @@ export interface ILawyerDocument extends Document {
   documentUrls: string[];
   dateOfBirth?: string;
   verificationStatus?: string;
-  addresses?: string[];
-  isAdminVerified: boolean
-  Address: Address
-  Profileimageurl: string
-  bio?: string
-
+  isAdminVerified: boolean;
+  Address: Address;
+  Profileimageurl: string;
+  bio?: string;
 }
 
 export interface Address {
@@ -26,8 +32,6 @@ export interface Address {
   pincode: number;
 }
 
-
-
 const AddressSchema: Schema<Address> = new Schema({
   address: { type: String, required: true },
   city: { type: String, required: true },
@@ -35,17 +39,23 @@ const AddressSchema: Schema<Address> = new Schema({
   pincode: { type: Number, required: true },
 }, { _id: false });
 
-
-
 const LawyerSchema = new Schema<ILawyerDocument>({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: false },
+  phone: { type: Number, required: false },
+  isVerified: { type: Boolean, default: false },
+  role: { type: String, default: "lawyer" },
+  hasSubmittedVerification: { type: Boolean, default: false },
+  isBlock: { type: Boolean, default: false },
+  googleId: { type: String, unique: true, sparse: true },
 
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  barNumber: { type: String, required: true },
-  barAdmissionDate: { type: String, required: true },
-  yearsOfPractice: { type: Number, required: true },
-  practiceAreas: { type: [String], required: true },
-  languages: { type: [String], required: true },
-  documentUrls: { type: [String], required: true },
+  barNumber: { type: String, required: false },
+  barAdmissionDate: { type: String, required: false },
+  yearsOfPractice: { type: Number, required: false },
+  practiceAreas: { type: [String], required: false },
+  languages: { type: [String], required: false },
+  documentUrls: { type: [String], required: false },
   dateOfBirth: { type: String },
   verificationStatus: { type: String, default: 'pending' },
   isAdminVerified: { type: Boolean, default: false },

@@ -1,6 +1,6 @@
 
-import { Request, Response,NextFunction } from "express";
-import { IRegisterUserUseCase } from "../../../application/interface/user/IRegisterUserUseCase";
+import { Request, Response, NextFunction } from "express";
+import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
 import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
@@ -9,7 +9,7 @@ import { ResendOtpUseCase } from "../../../application/useCases/user/auth/Resend
 import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
 import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
 import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
-import { UserRegisterDTO } from "../../../application/dtos/user/ RegisterUserDTO";
+import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
 
 
@@ -30,7 +30,7 @@ export class AuthController {
   //  Register a new user and send OTP to their email
   // -----------------------------------------------------------
 
-  async registerUser(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
 
       const dto = new UserRegisterDTO(req.body);
@@ -41,7 +41,7 @@ export class AuthController {
         message: result.message || "User registered successfully! OTP sent to email.",
       });
     } catch (error: any) {
-    next(error)
+      next(error)
     }
   }
 
@@ -49,10 +49,10 @@ export class AuthController {
   // Verify OTP for user registration
   // ------------------------------------------------------------
 
-  async verifyOtp(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, otp } = req.body;
-  console.log('this is from controlre')
+
       const result = await this.verifyOtpUseCase.execute(email, otp);
 
       res.status(HttpStatusCode.OK).json({
@@ -61,7 +61,7 @@ export class AuthController {
         user: result,
       });
     } catch (err: any) {
-     next(err)
+      next(err)
     }
   }
 
@@ -69,10 +69,10 @@ export class AuthController {
   //  Resend OTP to user email
   // ------------------------------------------------------------
 
-  async resendOtp(req: Request, res: Response, next:NextFunction): Promise<void> {
+  async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
-     
+
       const message = await this._resendOtpUseCase.execute(email);
 
       res.status(HttpStatusCode.OK).json({
@@ -88,7 +88,7 @@ export class AuthController {
   //  Request to reset password (sends OTP to user email)
   // ------------------------------------------------------------
 
-  async requestForgetPassword(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async requestForgetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = new ForgetPasswordRequestDTO(req.body);
       const message = await this._requestForgetPasswordUseCase.execute(dto);
@@ -98,7 +98,7 @@ export class AuthController {
         message: message || "Password reset OTP sent successfully.",
       });
     } catch (err: any) {
-     next(err)
+      next(err)
     }
   }
 
@@ -106,7 +106,7 @@ export class AuthController {
   //  Verify reset password OTP and update new password
   // ------------------------------------------------------------
 
-  async verifyResetPassword(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async verifyResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const message = await this._verifyResetPasswordUseCase.execute(req.body);
 
@@ -115,15 +115,16 @@ export class AuthController {
         message: message || "Password reset successful!",
       });
     } catch (err: any) {
-     next(err)
+      next(err)
     }
   }
 
   // ------------------------------------------------------------
   //  Login user and issue authentication tokens (access + refresh)
   // ------------------------------------------------------------
-  async loginUser(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUsecase.execute(dto);
 
@@ -173,8 +174,8 @@ export class AuthController {
         user,
       });
     } catch (err: any) {
-
-     next(err)
+     
+      next(err)
     }
   }
 
@@ -183,7 +184,7 @@ export class AuthController {
   // Logout user and clear authentication cookies
   // ------------------------------------------------------------
 
-  async logoutUser(_req: Request, res: Response,next:NextFunction): Promise<void> {
+  async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
 
       res.clearCookie("userAccessToken", {
@@ -208,15 +209,16 @@ export class AuthController {
     } catch (error: any) {
 
 
-   next(error)
+      next(error)
     }
   }
   // ------------------------------------------------------------
   //  Google Authentication
   // ------------------------------------------------------------
-  async googleAuth(req: Request, res: Response,next:NextFunction): Promise<void> {
+  async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token, role } = req.body;
+
       const result = await this._googleAuthUseCase.execute(token, role);
 
       if (result.needsRoleSelection) {
@@ -271,7 +273,7 @@ export class AuthController {
       });
 
     } catch (error: any) {
-    next(error)
+      next(error)
     }
   }
 }
