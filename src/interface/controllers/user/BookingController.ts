@@ -60,6 +60,7 @@ export class BookingController {
         try {
             const { id } = req.params;
             const { reason } = req.body;
+            
             if (!reason) {
                 throw new Error("Cancellation reason is required");
             }

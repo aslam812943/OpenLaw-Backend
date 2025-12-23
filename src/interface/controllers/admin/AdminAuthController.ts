@@ -5,7 +5,7 @@ import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequ
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
 
 
-// ✅ AdminAuthController
+//  AdminAuthController
 
 export class AdminAuthController {
   constructor(private readonly _loginUseCase: LoginAdminUseCase) { }

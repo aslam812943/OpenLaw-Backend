@@ -13,6 +13,7 @@ export interface IAvailabilityRuleRepository {
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>
     bookSlot(id: string): Promise<void>
+    cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void>
     getAppoiments(lawyerId: string): Promise<Booking[]>
     updateAppointmentStatus(id: string, status: string): Promise<void>;
 }

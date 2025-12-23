@@ -162,7 +162,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
       return slots;
     } catch (error) {
-     
+
       return [];
     }
   }
@@ -172,6 +172,25 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async bookSlot(id: string): Promise<void> {
     await SlotModel.findByIdAndUpdate(id, { isBooked: true })
+  }
+
+
+
+  async cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void> {
+    const result = await SlotModel.findOneAndUpdate(
+      {
+        startTime,
+        userId: lawyerId,
+        date,
+        isBooked: true
+      },
+      { isBooked: false },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Error("Slot not found or already cancelled");
+    }
   }
 
   async getAppoiments(lawyerId: string): Promise<Booking[]> {
@@ -207,6 +226,13 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async updateAppointmentStatus(id: string, status: string): Promise<void> {
     try {
       await BookingModel.findByIdAndUpdate(id, { status });
+
+      if (status === 'cancelled' || status === 'rejected') {
+        const booking = await BookingModel.findById(id);
+        if (booking) {
+          await this.cancelSlot(booking.startTime, booking.lawyerId.toString(), booking.date);
+        }
+      }
     } catch (error: any) {
       throw new Error("Failed to update appointment status: " + error.message);
     }

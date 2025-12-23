@@ -22,7 +22,7 @@ const availabilityRuleRepository = new AvailabilityRuleRepository()
 const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService);
 const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository);
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository,availabilityRuleRepository);
 
 const bookingController = new BookingController(
     createBookingPaymentUseCase,
@@ -42,3 +42,6 @@ router.get("/appointments", (req, res, next) => authMiddleware.execute(req, res,
 router.patch("/appointments/:id/cancel", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.cancelAppointment(req, res, next));
 
 export default router;
+
+
+

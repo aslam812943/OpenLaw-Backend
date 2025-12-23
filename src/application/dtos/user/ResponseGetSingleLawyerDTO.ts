@@ -28,10 +28,10 @@ export class ResponseGetSingleLawyerDTO {
     this.city = data.addresses?.city || "";
     this.state = data.addresses?.state || "";
 
-  
-    this.name = data.user?.name || "";
-    this.email = data.user?.email || "";
-    this.phone = String(data.user?.phone || "");
+
+    this.name = data.name || data.user?.name || "";
+    this.email = data.email || data.user?.email || "";
+    this.phone = String(data.phone || data.user?.phone || "");
 
     this.profileImage = data.profileImage || "";
     this.bio = data.bio || "";

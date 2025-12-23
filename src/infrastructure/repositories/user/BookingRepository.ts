@@ -5,7 +5,7 @@ import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class BookingRepository implements IBookingRepository {
-    // create() - Creates a new booking.
+
     async create(booking: Booking): Promise<Booking> {
         try {
 
@@ -33,7 +33,6 @@ export class BookingRepository implements IBookingRepository {
         }
     }
 
-    // findById() - Finds a booking by its ID.
     async findById(id: string): Promise<Booking | null> {
         try {
             const booking = await BookingModel.findById(id);
@@ -58,7 +57,6 @@ export class BookingRepository implements IBookingRepository {
         }
     }
 
-    // updateStatus() - Updates the status of a booking.
     async updateStatus(id: string, status: string, reason?: string): Promise<void> {
         try {
             const updateData: any = { status };
@@ -71,7 +69,7 @@ export class BookingRepository implements IBookingRepository {
         }
     }
 
-    // findByUserId() - Finds all bookings for a specific user.
+
     async findByUserId(userId: string): Promise<Booking[]> {
         try {
             const bookings = await BookingModel.find({ userId })

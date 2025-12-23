@@ -1,4 +1,4 @@
-// GetAllLawyersUseCase.ts
+
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { GetAllLawyerDTO } from "../../dtos/admin/GetAllLawyerDTO";
 import { AdminLawyerMapper } from "../../mapper/admin/AdminLawyerMapper";

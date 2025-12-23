@@ -1,4 +1,4 @@
-// DTO Interface Loign response
+
 
 export interface ILoginResponseDTO{
     id:string;
@@ -14,7 +14,7 @@ export interface ILoginResponseDTO{
 
 
 
-// DTO Class Login Response
+
 
 export class LoginResponseDTO implements ILoginResponseDTO{
     constructor(data:ILoginResponseDTO){
