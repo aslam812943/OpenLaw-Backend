@@ -88,12 +88,56 @@ export class BookingRepository implements IBookingRepository {
                 booking.paymentId,
                 booking.stripeSessionId,
                 booking.description,
-                undefined, 
+                undefined,
                 booking.cancellationReason,
                 (booking.lawyerId as any)?.name
             ));
         } catch (error: any) {
             throw new InternalServerError("Database error while fetching user bookings.");
+        }
+    }
+
+    async existsByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<boolean> {
+        try {
+            const count = await BookingModel.countDocuments({
+                userId,
+                lawyerId,
+                status: { $in: ['confirmed', 'pending'] },
+                paymentStatus: 'paid'
+            });
+            return count > 0;
+        } catch (error: any) {
+            throw new InternalServerError("Database error while checking booking existence.");
+        }
+    }
+
+    async findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null> {
+        try {
+            const booking = await BookingModel.findOne({
+                userId,
+                lawyerId,
+                status: { $in: ['confirmed', 'pending'] },
+                paymentStatus: 'paid'
+            }).sort({ createdAt: -1 });
+
+            if (!booking) return null;
+
+            return new Booking(
+                booking.id,
+                booking.userId,
+                booking.lawyerId,
+                booking.date,
+                booking.startTime,
+                booking.endTime,
+                booking.consultationFee,
+                booking.status as any,
+                booking.paymentStatus as any,
+                booking.paymentId,
+                booking.stripeSessionId,
+                booking.description
+            );
+        } catch (error: any) {
+            throw new InternalServerError("Database error while fetching active booking.");
         }
     }
 }
