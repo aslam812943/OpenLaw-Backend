@@ -1,6 +1,5 @@
 import { CreateAvailabilityRuleDTO } from "../../../dtos/lawyer/CreateAvailabilityRuleDTO";
 import { AvailabilityRule } from "../../../../domain/entities/AvailabilityRule";
-// import { Slot } from "../../../../domain/entities/Slot";
 import { UpdateAvailabilityRuleDTO } from "../../../dtos/lawyer/UpdateAvailabilityRuleDTO";
 
 

@@ -28,6 +28,15 @@ import { UpdateProfileUseCase } from "../../../application/useCases/lawyer/Updat
 import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/ChangePasswordUseCase";
 import { GetAppoimentsUseCase } from "../../../application/useCases/lawyer/GetAppoimentsUseCase";
 import { UpdateAppointmentStatusUseCase } from "../../../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
+// Chat Use Cases
+import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../application/useCases/chat/GetMessagesUseCase";
+
+import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
+import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoomRepository";
+import { MessageRepository } from "../../../infrastructure/repositories/messageRepository";
+import { ChatController } from "../../controllers/chat/ChatController";
 
 const router = Router();
 
@@ -40,6 +49,9 @@ const lawyerLogoutController = new LawyerLogoutController();
 // Repository instance
 const availabilityRuleRepository = new AvailabilityRuleRepository();
 const lawyerRepository = new LawyerRepository()
+const bookingRepository = new BookingRepository();
+const chatRoomRepository = new ChatRoomRepository();
+const messageRepository = new MessageRepository();
 
 
 // UseCase instances
@@ -55,6 +67,13 @@ const tokenService = new TokenService();
 const lawyerAuthMiddleware = new LawyerAuthMiddleware(checkLawyerStatusUseCase, tokenService);
 const getAppoimentsUseCase = new GetAppoimentsUseCase(availabilityRuleRepository)
 const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(availabilityRuleRepository);
+
+// Chat
+const checkChatAccessUseCase = new CheckChatAccessUseCase(bookingRepository);
+const getChatRoomUseCase = new GetChatRoomUseCase(chatRoomRepository, bookingRepository);
+const getMessagesUseCase = new GetMessagesUseCase(messageRepository);
+const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);
+
 
 // Availability Controller 
 const availabilityController = new AvailabilityController(
@@ -114,5 +133,11 @@ router.put('/profile/password', lawyerAuthMiddleware.execute, (req, res, next) =
 router.get('/appoiments', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.getAppoiments(req, res, next))
 
 router.patch('/appoiments/:id/status', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.updateStatus(req, res, next));
+
+// Chat Routes
+router.get("/chat/messages/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getMessages(req, res, next));
+router.get("/chat/rooms", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getLawyerRooms(req, res, next));
+router.get("/chat/room/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
+router.post("/chat/room", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
 
 export default router;

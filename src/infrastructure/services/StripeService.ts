@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { IPaymentService } from '../../application/interface/services/IPaymentService';
+import { BookingDTO } from '../../application/dtos/user/BookingDetailsDTO';
 
 export class StripeService implements IPaymentService {
     private stripe: Stripe;
@@ -10,10 +11,10 @@ export class StripeService implements IPaymentService {
         });
     }
 
-    async createCheckoutSession(bookingDetails: any): Promise<string> {
+    async createCheckoutSession(bookingDetails: BookingDTO): Promise<string> {
         try {
-            const clientUrl = process.env.CLIENT_URL ;
-   
+            const clientUrl = process.env.CLIENT_URL;
+
 
             const session = await this.stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
@@ -23,9 +24,9 @@ export class StripeService implements IPaymentService {
                             currency: 'inr',
                             product_data: {
                                 name: `Consultation with ${bookingDetails.lawyerName}`,
-                                description: bookingDetails.description ,
+                                description: bookingDetails.description,
                             },
-                            unit_amount: Math.max(bookingDetails.consultationFee * 100, 100), 
+                            unit_amount: Math.max(Number(bookingDetails.consultationFee) * 100, 100),
                         },
                         quantity: 1,
                     },
@@ -39,23 +40,26 @@ export class StripeService implements IPaymentService {
                     date: bookingDetails.date,
                     startTime: bookingDetails.startTime,
                     endTime: bookingDetails.endTime,
-                    description:bookingDetails.description,
-                    slotId:bookingDetails.slotId
+                    description: bookingDetails.description,
+                    slotId: bookingDetails.slotId
                 },
             });
 
-            return session.url as string;
+            if (!session.url) {
+                throw new Error("Failed to create Stripe session URL");
+            }
+            return session.url;
         } catch (error) {
-           
+            console.error("Stripe createCheckoutSession error:", error);
             throw error;
         }
     }
-    async retrieveSession(sessionId: string): Promise<any> {
+    async retrieveSession(sessionId: string): Promise<Stripe.Checkout.Session> {
         try {
             const session = await this.stripe.checkout.sessions.retrieve(sessionId);
             return session;
         } catch (error) {
-           
+            console.error("Stripe retrieveSession error:", error);
             throw error;
         }
     }

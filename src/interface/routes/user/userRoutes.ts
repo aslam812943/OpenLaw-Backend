@@ -18,6 +18,11 @@ import { GetAllLawyersUseCase } from "../../../application/useCases/user/GetAllL
 import { GetSingleLawyerUseCase } from "../../../application/useCases/user/GetSingleLawyerUseCase";
 import { GetAllSlotsUseCase } from "../../../application/useCases/user/GetAllSlotsUseCase";
 import { CheckUserStatusUseCase } from "../../../application/useCases/user/checkUserStatusUseCase";
+// Chat Use Cases
+import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../application/useCases/chat/GetMessagesUseCase";
+
 // Cloudinary Upload Service
 import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
 
@@ -26,11 +31,16 @@ import { UserAuthMiddleware } from "../../middlewares/UserAuthMiddleware";
 import { GetProfileUseCase } from "../../../application/useCases/user/GetProfileUseCase";
 import { GetProfileController } from "../../controllers/user/GetProfileController";
 import { GetAllLawyersController } from "../../controllers/user/GetAllLawyersController";
+import { ChatController } from "../../controllers/chat/ChatController";
 
 //  Importing Repositories and Services 
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
 import { AvailabilityRuleRepository } from "../../../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
 import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
+import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
+import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoomRepository";
+import { MessageRepository } from "../../../infrastructure/repositories/messageRepository";
+
 import { RedisCacheService } from "../../../infrastructure/services/otp/RedisCacheService";
 import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";
@@ -51,9 +61,13 @@ const loginResponseMapper = new LoginResponseMapper();
 const tokenService = new TokenService();
 const lawyerRepository = new LawyerRepository()
 const availabilityRuleRepository = new AvailabilityRuleRepository()
+const bookingRepository = new BookingRepository();
+const chatRoomRepository = new ChatRoomRepository();
+const messageRepository = new MessageRepository();
+
 //  Initialize use case instances 
-const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase(userRepository, otpService, mailService,lawyerRepository);
-const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase(userRepository, otpService,lawyerRepository);
+const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase(userRepository, otpService, mailService, lawyerRepository);
+const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase(userRepository, otpService, lawyerRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(userRepository, lawyerRepository, otpService);
 const registerUserUsecase = new RegisterUserUsecase(userRepository, lawyerRepository, generateOtpUseCase, mailService);
 const loginUserUsecase = new LoginUserUsecase(userRepository, loginResponseMapper, tokenService, lawyerRepository);
@@ -71,6 +85,12 @@ const getAllSlotsUseCase = new GetAllSlotsUseCase(availabilityRuleRepository)
 const getSingleLawyerController = new GetSingleLawyerController(getSingleLawyerUseCase, getAllSlotsUseCase)
 const checkUserStatusUseCase = new CheckUserStatusUseCase(userRepository);
 const authMiddleware = new UserAuthMiddleware(checkUserStatusUseCase, tokenService);
+
+// Chat
+const checkChatAccessUseCase = new CheckChatAccessUseCase(bookingRepository);
+const getChatRoomUseCase = new GetChatRoomUseCase(chatRoomRepository, bookingRepository);
+const getMessagesUseCase = new GetMessagesUseCase(messageRepository);
+const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);
 
 const authController = new AuthController(
   registerUserUsecase,
@@ -124,7 +144,15 @@ router.put('/profile/password', authMiddleware.execute, (req, res, next) => getP
 router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.GetAllLawyers(req, res, next))
 
 
- router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getlawyer(req, res, next))
+router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getlawyer(req, res, next))
 
 router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getallslots(req, res, next))
+
+// Chat Routes
+router.get("/chat/access/:lawyerId", authMiddleware.execute, (req, res, next) => chatController.checkAccess(req, res, next));
+router.get("/chat/messages/:roomId", authMiddleware.execute, (req, res, next) => chatController.getMessages(req, res, next));
+router.get("/chat/rooms", authMiddleware.execute, (req, res, next) => chatController.getUserRooms(req, res, next));
+router.get("/chat/room/:roomId", authMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
+router.post("/chat/room", authMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
+
 export default router;
