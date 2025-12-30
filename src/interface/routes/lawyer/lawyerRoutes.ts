@@ -9,6 +9,7 @@ import { LawyerLogoutController } from "../../controllers/lawyer/lawyerLogoutCon
 import { AvailabilityController } from "../../controllers/lawyer/AvailabilityController";
 import { GetProfileController } from "../../controllers/lawyer/ProfileController";
 import { AppoimentsController } from "../../controllers/lawyer/AppoimentsController";
+import { SubscriptionController } from "../../controllers/lawyer/SubscriptionController";
 // Cloudinary Upload Service
 
 import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
@@ -28,6 +29,8 @@ import { UpdateProfileUseCase } from "../../../application/useCases/lawyer/Updat
 import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/ChangePasswordUseCase";
 import { GetAppoimentsUseCase } from "../../../application/useCases/lawyer/GetAppoimentsUseCase";
 import { UpdateAppointmentStatusUseCase } from "../../../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
+import { GetSubscriptionPlansUseCase } from "../../../application/useCases/lawyer/GetSubscriptionPlansUseCase";
+import { SubscriptionRepository } from "../../../infrastructure/repositories/admin/SubscriptionRepository";
 // Chat Use Cases
 import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
 import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
@@ -52,6 +55,9 @@ const lawyerRepository = new LawyerRepository()
 const bookingRepository = new BookingRepository();
 const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
+const subscriptionRepository = new SubscriptionRepository();
+const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
+const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase);
 
 
 // UseCase instances
@@ -139,5 +145,12 @@ router.get("/chat/messages/:roomId", lawyerAuthMiddleware.execute, (req, res, ne
 router.get("/chat/rooms", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getLawyerRooms(req, res, next));
 router.get("/chat/room/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
 router.post("/chat/room", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
+
+
+
+
+router.get('/subscriptions', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionController.getPlans(req, res, next));
+
+
 
 export default router;

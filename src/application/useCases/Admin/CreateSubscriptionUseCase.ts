@@ -3,6 +3,7 @@ import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISub
 import { ConflictError } from "../../../infrastructure/errors/ConflictError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 import { CreateSubscriptionDTO } from "../../dtos/admin/CreateSubscriptionDTO";
+import { Subscription } from "../../../domain/entities/Subscription";
 export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     constructor(private subscriptionRepository: ISubscriptionRepository) { }
 async execute(data: CreateSubscriptionDTO): Promise<void> {
@@ -14,7 +15,8 @@ async execute(data: CreateSubscriptionDTO): Promise<void> {
 
      
         try {
-            await this.subscriptionRepository.create(data);
+            const subscription = new Subscription('',data.planName,Number(data.duration),data.durationUnit,Number(data.price),Number(data.commissionPercent))
+            await this.subscriptionRepository.create(subscription);
         } catch (error: any) {
             if (error.code === 11000) { 
                 throw new ConflictError("Subscription plan with this name already exists.");

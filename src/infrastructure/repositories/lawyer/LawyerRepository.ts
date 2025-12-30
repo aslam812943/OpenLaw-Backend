@@ -301,7 +301,8 @@ export class LawyerRepository implements ILawyerRepository {
       profileImage: doc.Profileimageurl,
       bio: doc.bio,
       isPassword: doc.password ? true : false,
-      hasSubmittedVerification: doc.hasSubmittedVerification
+      hasSubmittedVerification: doc.hasSubmittedVerification,
+      paymentVerify: doc.paymentVerify
     };
   }
 }
