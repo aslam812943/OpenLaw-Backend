@@ -30,7 +30,12 @@ import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/Chan
 import { GetAppoimentsUseCase } from "../../../application/useCases/lawyer/GetAppoimentsUseCase";
 import { UpdateAppointmentStatusUseCase } from "../../../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
 import { GetSubscriptionPlansUseCase } from "../../../application/useCases/lawyer/GetSubscriptionPlansUseCase";
+import { CreateSubscriptionCheckoutUseCase } from "../../../application/useCases/lawyer/CreateSubscriptionCheckoutUseCase";
+import { VerifySubscriptionPaymentUseCase } from "../../../application/useCases/lawyer/VerifySubscriptionPaymentUseCase";
+import { SubscriptionPaymentController } from "../../controllers/lawyer/SubscriptionPaymentController";
 import { SubscriptionRepository } from "../../../infrastructure/repositories/admin/SubscriptionRepository";
+import { PaymentRepository } from "../../../infrastructure/repositories/PaymentRepository";
+import { StripeService } from "../../../infrastructure/services/StripeService";
 // Chat Use Cases
 import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
 import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
@@ -56,8 +61,15 @@ const bookingRepository = new BookingRepository();
 const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
 const subscriptionRepository = new SubscriptionRepository();
+const stripeService = new StripeService();
+const paymentRepository = new PaymentRepository();
+
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
+const createSubscriptionCheckoutUseCase = new CreateSubscriptionCheckoutUseCase(stripeService);
+const verifySubscriptionPaymentUseCase = new VerifySubscriptionPaymentUseCase(stripeService, lawyerRepository, paymentRepository);
+
 const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase);
+const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 
 
 // UseCase instances
@@ -150,6 +162,8 @@ router.post("/chat/room", lawyerAuthMiddleware.execute, (req, res, next) => chat
 
 
 router.get('/subscriptions', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionController.getPlans(req, res, next));
+router.post('/subscription/checkout', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.createCheckout(req, res, next));
+router.post('/subscription/success', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.handleSuccess(req, res, next));
 
 
 

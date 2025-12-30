@@ -278,6 +278,17 @@ export class LawyerRepository implements ILawyerRepository {
     }
   }
 
+  async updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean): Promise<void> {
+    try {
+      await LawyerModel.findByIdAndUpdate(id, {
+        subscriptionId: subscriptionId,
+        paymentVerify: paymentVerified
+      });
+    } catch (error: any) {
+      throw new InternalServerError("Database error while updating lawyer subscription status.");
+    }
+  }
+
   private mapToDomain(doc: ILawyerDocument): Lawyer {
     return {
       id: String(doc._id),

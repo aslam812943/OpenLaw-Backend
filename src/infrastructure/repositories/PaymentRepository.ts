@@ -3,7 +3,7 @@ import { Payment } from "../../domain/entities/Payment";
 import { PaymentModel, IPaymentDocument } from "../db/models/admin/PaymentModel";
 
 export class PaymentRepository implements IPaymentRepository {
-    async create(payment: Payment): Promise<Payment> {
+    async create(payment: Partial<Payment>): Promise<Payment> {
         const newPayment = await PaymentModel.create(payment);
         return this.mapToEntity(newPayment);
     }
@@ -18,6 +18,11 @@ export class PaymentRepository implements IPaymentRepository {
         return payment ? this.mapToEntity(payment) : null;
     }
 
+    async findByTransactionId(transactionId: string): Promise<Payment | null> {
+        const payment = await PaymentModel.findOne({ transactionId });
+        return payment ? this.mapToEntity(payment) : null;
+    }
+
     async findAll(): Promise<Payment[]> {
         const payments = await PaymentModel.find();
         return payments.map(p => this.mapToEntity(p));
@@ -26,16 +31,18 @@ export class PaymentRepository implements IPaymentRepository {
     private mapToEntity(doc: IPaymentDocument): Payment {
         return new Payment(
             doc._id as string,
-            doc.bookingId,
-            doc.userId,
-            doc.lawyerId,
-            doc.amount,
-            doc.currency,
+            doc.userId ? String(doc.userId) : '',
+            doc.lawyerId,                         
+            doc.amount,                           
+            doc.currency,                        
             doc.status as 'pending' | 'completed' | 'failed' | 'refunded',
-            doc.transactionId,
-            doc.paymentMethod,
-            (doc as any).createdAt,
-            (doc as any).updatedAt
+            doc.transactionId,                   
+            doc.paymentMethod,                   
+            (doc as any).createdAt,               
+            (doc as any).updatedAt,              
+            doc.bookingId ? String(doc.bookingId) : undefined,
+            doc.subscriptionId ? String(doc.subscriptionId) : undefined,
+            doc.type as 'booking' | 'subscription' | undefined 
         );
     }
 }

@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { IPaymentService } from '../../application/interface/services/IPaymentService';
 import { BookingDTO } from '../../application/dtos/user/BookingDetailsDTO';
+import { InternalServerError } from '../errors/InternalServerError';
 
 export class StripeService implements IPaymentService {
     private stripe: Stripe;
@@ -64,22 +65,13 @@ export class StripeService implements IPaymentService {
         }
     }
 
-    /**
-     * Verifies the webhook signature from Stripe
-     * This ensures the webhook event is actually from Stripe and hasn't been tampered with
-     * 
-     * @param payload - Raw request body as string
-     * @param signature - Stripe signature from request headers
-     * @returns Stripe event object if signature is valid
-     * @throws Error if signature verification fails
-     */
     async verifyWebhookSignature(
         payload: string | Buffer,
         signature: string
     ): Promise<Stripe.Event> {
         try {
             const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-            
+
             if (!webhookSecret) {
                 throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
             }
@@ -92,8 +84,55 @@ export class StripeService implements IPaymentService {
 
             return event;
         } catch (error: any) {
-          
+
             throw new Error(`Webhook signature verification failed: ${error.message}`);
+        }
+    }
+
+    async createSubscriptionCheckoutSession(
+        lawyerId: string,
+        email: string,
+        planName: string,
+        price: number,
+        subscriptionId: string
+    ): Promise<string> {
+        try {
+            const clientUrl = process.env.CLIENT_URL;
+
+            const session = await this.stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'inr',
+                            product_data: {
+                                name: `Subscription: ${planName}`,
+                                description: `Monthly subscription for ${planName} plan`,
+                            },
+                            unit_amount: Math.round(price * 100),
+                        },
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${clientUrl}/lawyer/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${clientUrl}/lawyer/dashboard`,
+                customer_email: email,
+                metadata: {
+                    lawyerId,
+                    planName,
+                    subscriptionId,
+                    type: 'subscription'
+                },
+            });
+
+            if (!session.url) {
+                throw new Error("Failed to create Stripe session URL");
+            }
+            return session.url;
+        } catch (error: any) {
+            console.error("Stripe createSubscriptionCheckoutSession error:", error);
+            throw new InternalServerError(error.message || "Stripe subscription checkout failed");
         }
     }
 }
