@@ -121,4 +121,18 @@ router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerC
 router.post('/subscription/create', adminAuth, (req, res, next) => createSubscriptionController.create(req, res, next));
 
 
+// ------------------------------------------------------
+// Payment Management Setup
+// ------------------------------------------------------
+import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
+import { GetPaymentsUseCase } from '../../../application/useCases/Admin/GetPaymentsUseCase';
+import { AdminPaymentController } from '../../controllers/admin/AdminPaymentController';
+
+const paymentRepo = new PaymentRepository();
+const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo);
+const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
+
+router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.getAllPayments(req, res, next));
+
+
 export default router

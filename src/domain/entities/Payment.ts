@@ -12,6 +12,8 @@ export class Payment {
         public updatedAt: Date,
         public bookingId?: string,
         public subscriptionId?: string,
-        public type?: 'booking' | 'subscription'
+        public type?: 'booking' | 'subscription',
+        public lawyerName?: string,
+        public userName?: string
     ) { }
 }

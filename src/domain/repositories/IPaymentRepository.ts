@@ -5,5 +5,5 @@ export interface IPaymentRepository {
     findById(id: string): Promise<Payment | null>;
     findByBookingId(bookingId: string): Promise<Payment | null>;
     findByTransactionId(transactionId: string): Promise<Payment | null>;
-    findAll(): Promise<Payment[]>;
+    findAll(filters?: any): Promise<{ payments: Payment[]; total: number }>;
 }
