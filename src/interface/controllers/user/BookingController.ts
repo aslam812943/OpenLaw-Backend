@@ -27,7 +27,6 @@ export class BookingController {
 
     async confirmBooking(req: Request, res: Response, next: NextFunction) {
         try {
-
             const { sessionId } = req.body;
             if (!sessionId) {
                 throw new Error("Session ID is required");
@@ -35,7 +34,7 @@ export class BookingController {
             const booking = await this.confirmBookingUseCase.execute(sessionId);
             res.status(HttpStatusCode.CREATED).json({ success: true, booking });
         } catch (error) {
-
+          
             next(error);
         }
     }

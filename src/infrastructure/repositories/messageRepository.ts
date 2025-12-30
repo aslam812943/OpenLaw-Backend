@@ -10,6 +10,11 @@ export class MessageRepository implements IMessageRepository {
       senderId: message.senderId,
       senderRole: message.senderRole,
       content: message.content,
+      type: message.type,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      fileSize: message.fileSize,
+      readAt: message.readAt || null,
       createdAt: message.createdAt
     });
   }
@@ -26,8 +31,26 @@ export class MessageRepository implements IMessageRepository {
         doc.senderId.toString(),
         doc.senderRole,
         doc.content,
-        doc.createdAt
+        doc.createdAt,
+        doc.type,
+        doc.fileUrl,
+        doc.fileName,
+        doc.fileSize,
+        doc.readAt
       )
+    );
+  }
+
+  async markMessagesAsRead(roomId: string, userId: string): Promise<void> {
+    await MessageModel.updateMany(
+      {
+        roomId,
+        senderId: { $ne: userId },
+        readAt: null
+      },
+      {
+        $set: { readAt: new Date() }
+      }
     );
   }
 }

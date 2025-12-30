@@ -9,6 +9,7 @@ import userRoutes from "./src/interface/routes/user/userRoutes";
 import lawyerRoutes from "./src/interface/routes/lawyer/lawyerRoutes";
 import adminRoutes from "./src/interface/routes/admin/adminRoutes";
 import bookingRoutes from "./src/interface/routes/user/bookingRoutes";
+import webhookRoutes from "./src/interface/routes/user/webhookRoutes";
 
 import { DbConnection } from "./src/config/mongoose/DbConnection";
 import { errorHandler } from "./src/interface/middlewares/errorHandler";
@@ -26,6 +27,13 @@ DbConnection.connect();
 //  MIDDLEWARES
 
 app.use(cookieParser());
+
+// IMPORTANT: Webhook route must be registered BEFORE express.json() middleware
+// Stripe webhooks require raw body buffer for signature verification
+// Use express.raw() specifically for webhook route
+app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes);
+
+// Parse JSON for all other routes
 app.use(express.json());
 
 app.use(
@@ -66,5 +74,5 @@ socketServerService.setupSocketServer(io);
 const PORT = process.env.PORT
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
+  console.log(` Server + Socket.IO running on port ${PORT}`);
 });

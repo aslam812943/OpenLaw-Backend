@@ -5,6 +5,8 @@ import { StripeService } from "../../../infrastructure/services/StripeService";
 
 import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
 import { AvailabilityRuleRepository } from "../../../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
+import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
+import { PaymentRepository } from "../../../infrastructure/repositories/PaymentRepository";
 import { ConfirmBookingUseCase } from "../../../application/useCases/user/booking/ConfirmBookingUseCase";
 import { GetUserAppointmentsUseCase } from "../../../application/useCases/user/GetUserAppointmentsUseCase";
 import { CancelAppointmentUseCase } from "../../../application/useCases/user/CancelAppointmentUseCase";
@@ -17,12 +19,14 @@ const router = Router();
 
 const stripeService = new StripeService();
 const bookingRepository = new BookingRepository();
-const availabilityRuleRepository = new AvailabilityRuleRepository()
+const availabilityRuleRepository = new AvailabilityRuleRepository();
+const lawyerRepository = new LawyerRepository();
+const paymentRepository = new PaymentRepository();
 
 const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService);
-const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository);
+const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository, lawyerRepository, paymentRepository);
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository,availabilityRuleRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository);
 
 const bookingController = new BookingController(
     createBookingPaymentUseCase,

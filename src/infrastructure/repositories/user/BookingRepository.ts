@@ -140,4 +140,28 @@ export class BookingRepository implements IBookingRepository {
             throw new InternalServerError("Database error while fetching active booking.");
         }
     }
+
+    async findByStripeSessionId(sessionId: string): Promise<Booking | null> {
+        try {
+            const booking = await BookingModel.findOne({ stripeSessionId: sessionId });
+            if (!booking) return null;
+
+            return new Booking(
+                booking.id,
+                booking.userId,
+                booking.lawyerId,
+                booking.date,
+                booking.startTime,
+                booking.endTime,
+                booking.consultationFee,
+                booking.status as any,
+                booking.paymentStatus as any,
+                booking.paymentId,
+                booking.stripeSessionId,
+                booking.description
+            );
+        } catch (error: any) {
+            throw new InternalServerError("Database error while fetching booking by session ID.");
+        }
+    }
 }

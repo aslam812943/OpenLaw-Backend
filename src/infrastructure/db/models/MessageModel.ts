@@ -6,6 +6,11 @@ export interface IMessageDocument extends Document {
   senderId: Types.ObjectId;
   senderRole: "user" | "lawyer";
   content: string;
+  type: "text" | "image" | "video" | "document";
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: string;
+  readAt?: Date | null;
   createdAt: Date;
 }
 
@@ -33,6 +38,24 @@ const messageSchema = new Schema<IMessageDocument>(
     content: {
       type: String,
       required: true
+    },
+    type: {
+      type: String,
+      enum: ["text", "image", "video", "document"],
+      default: "text"
+    },
+    fileUrl: {
+      type: String
+    },
+    fileName: {
+      type: String
+    },
+    fileSize: {
+      type: String
+    },
+    readAt: {
+      type: Date,
+      default: null
     },
     createdAt: {
       type: Date,

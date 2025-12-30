@@ -9,7 +9,12 @@ export class MessageMapper {
             message.senderId,
             message.senderRole,
             message.content,
-            message.createdAt
+            message.createdAt,
+            message.type,
+            message.fileUrl,
+            message.fileName,
+            message.fileSize,
+            message.readAt
         );
     }
 

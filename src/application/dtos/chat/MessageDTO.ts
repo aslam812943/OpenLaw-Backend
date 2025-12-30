@@ -5,6 +5,11 @@ export class MessageDTO {
         public senderId: string,
         public senderRole: "user" | "lawyer",
         public content: string,
-        public createdAt: Date
+        public createdAt: Date,
+        public type: "text" | "image" | "video" | "document",
+        public fileUrl?: string,
+        public fileName?: string,
+        public fileSize?: string,
+        public readAt?: Date | null
     ) { }
 }

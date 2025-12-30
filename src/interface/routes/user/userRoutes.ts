@@ -154,5 +154,6 @@ router.get("/chat/messages/:roomId", authMiddleware.execute, (req, res, next) =>
 router.get("/chat/rooms", authMiddleware.execute, (req, res, next) => chatController.getUserRooms(req, res, next));
 router.get("/chat/room/:roomId", authMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
 router.post("/chat/room", authMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
+router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req, res, next) => chatController.uploadFile(req, res, next));
 
 export default router;

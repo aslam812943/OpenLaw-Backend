@@ -2,6 +2,7 @@ import { Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from './socketTypes';
 import { ISocketAuth } from '../../../application/interface/services/ISocketAuth';
+import { UnauthorizedError } from '../../errors/UnauthorizedError';
 
 export class SocketAuthService implements ISocketAuth {
     public socketAuth(socket: Socket, next: (err?: Error) => void): void {
@@ -22,7 +23,7 @@ export class SocketAuthService implements ISocketAuth {
             }
 
             if (!token) {
-                return next(new Error('Authentication error: Token missing'));
+                return next(new UnauthorizedError('Authentication error: Token missing'));
             }
 
             const decoded = jwt.verify(
@@ -35,7 +36,7 @@ export class SocketAuthService implements ISocketAuth {
 
             next();
         } catch (error) {
-            next(new Error('Authentication error: Invalid token'));
+            next(new UnauthorizedError('Authentication error: Invalid token'));
         }
     }
 }

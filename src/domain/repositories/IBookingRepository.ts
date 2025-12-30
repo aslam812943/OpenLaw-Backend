@@ -7,4 +7,5 @@ export interface IBookingRepository {
     updateStatus(id: string, status: string, reason?: string): Promise<void>;
     existsByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<boolean>;
     findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null>;
+    findByStripeSessionId(sessionId: string): Promise<Booking | null>;
 }

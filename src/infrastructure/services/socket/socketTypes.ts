@@ -4,7 +4,15 @@ export interface JoinRoomPayload {
 
 export interface SendMessagePayload {
     roomId: string;
-    content: string
+    content: string;
+    type?: "text" | "image" | "video" | "document";
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: string;
+}
+
+export interface MarkReadPayload {
+    roomId: string;
 }
 
 export interface JwtPayload {

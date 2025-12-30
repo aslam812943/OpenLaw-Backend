@@ -79,4 +79,27 @@ export class ChatController {
             next(error);
         }
     }
+
+    async uploadFile(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.file) {
+                throw new Error("No file uploaded");
+            }
+            
+            const fileUrl = (req.file as any).path;
+            const fileName = req.file.originalname;
+            const fileSize = req.file.size;
+
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                data: {
+                    fileUrl,
+                    fileName,
+                    fileSize
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

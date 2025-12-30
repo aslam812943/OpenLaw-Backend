@@ -63,4 +63,37 @@ export class StripeService implements IPaymentService {
             throw error;
         }
     }
+
+    /**
+     * Verifies the webhook signature from Stripe
+     * This ensures the webhook event is actually from Stripe and hasn't been tampered with
+     * 
+     * @param payload - Raw request body as string
+     * @param signature - Stripe signature from request headers
+     * @returns Stripe event object if signature is valid
+     * @throws Error if signature verification fails
+     */
+    async verifyWebhookSignature(
+        payload: string | Buffer,
+        signature: string
+    ): Promise<Stripe.Event> {
+        try {
+            const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+            
+            if (!webhookSecret) {
+                throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
+            }
+
+            const event = this.stripe.webhooks.constructEvent(
+                payload,
+                signature,
+                webhookSecret
+            );
+
+            return event;
+        } catch (error: any) {
+          
+            throw new Error(`Webhook signature verification failed: ${error.message}`);
+        }
+    }
 }
