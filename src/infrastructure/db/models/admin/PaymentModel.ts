@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IPaymentDocument extends Document {
-    bookingId: string;
-    userId: string;
+    bookingId?: string;
+    subscriptionId?: string;
+    type?: 'booking' | 'subscription';
+    userId?: string;
     lawyerId: string;
     amount: number;
     currency: string;
@@ -12,8 +14,12 @@ export interface IPaymentDocument extends Document {
 }
 
 const PaymentSchema: Schema = new Schema({
-    bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: false },
+    subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription", required: false },
+    type: { type: String, enum: ['booking', 'subscription'], default: 'booking' },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    
+
     lawyerId: { type: Schema.Types.ObjectId, ref: "Lawyer", required: true },
     amount: { type: Number, required: true },
     currency: { type: String, required: true },

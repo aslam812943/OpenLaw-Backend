@@ -23,6 +23,8 @@ export interface ILawyerDocument extends Document {
   Address: Address;
   Profileimageurl: string;
   bio?: string;
+  paymentVerify?:boolean
+  subscriptionId?:Types.ObjectId
 }
 
 export interface Address {
@@ -61,7 +63,9 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   isAdminVerified: { type: Boolean, default: false },
   Address: { type: AddressSchema },
   Profileimageurl: { type: String },
-  bio: { type: String }
+  bio: { type: String },
+  paymentVerify:{type:Boolean, default:false},
+  subscriptionId:{type:Schema.Types.ObjectId, ref:'Subscription'}
 
 }, { timestamps: true });
 

@@ -13,9 +13,10 @@ export interface ILawyerRepository {
   findById(id: string): Promise<Lawyer>;
   updateProfile(id: string, dto: UpdateLawyerProfileDTO): Promise<void>
   changePassword(id: string, oldPass: string, newPass: string): Promise<void>
-  forgotpassword(id:string,password:string):Promise<void>
+  forgotpassword(id: string, password: string): Promise<void>
   // getSingleLawyer(id: string): Promise<Lawyer>;
   // findOne(userId: string): Promise<string | null>
   updateGoogleId(id: string, googleId: string): Promise<void>;
+  updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean): Promise<void>;
 }
 

@@ -20,20 +20,16 @@ dotenv.config();
 const app = express();
 
 
-//  DATABASE
+
 
 DbConnection.connect();
 
-//  MIDDLEWARES
 
 app.use(cookieParser());
 
-// IMPORTANT: Webhook route must be registered BEFORE express.json() middleware
-// Stripe webhooks require raw body buffer for signature verification
-// Use express.raw() specifically for webhook route
+
 app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes);
 
-// Parse JSON for all other routes
 app.use(express.json());
 
 app.use(
@@ -66,7 +62,7 @@ const io = new Server(server, {
   }
 });
 
-//  Attach socket logic
+
 const socketServerService = new SocketServerService();
 socketServerService.setupSocketServer(io);
 

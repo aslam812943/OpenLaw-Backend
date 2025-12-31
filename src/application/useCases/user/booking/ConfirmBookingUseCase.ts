@@ -21,7 +21,7 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
     ) { }
 
     async execute(sessionId: string): Promise<ResponseBookingDetilsDTO> {
-       
+
         const session = await this._paymentService.retrieveSession(sessionId);
 
         if (session.payment_status !== 'paid') {
@@ -38,14 +38,14 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             throw new BadRequestError("Missing required booking details in session metadata");
         }
 
-        
+
         const lawyer = await this._lawyerRepository.findById(metadata.lawyerId);
 
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found");
         }
 
-      
+
         const booking = new Booking(
             '',
             metadata.userId,
@@ -61,28 +61,30 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             metadata.description
         );
 
-        
+
         const data = await this._bookingRepository.create(booking);
         await this._slotRepository.bookSlot(metadata.slotId);
 
-        
+
         const payment = new Payment(
             '',
-            data.id,
             metadata.userId,
             metadata.lawyerId,
-            session.amount_total ? session.amount_total / 100 : 0,
+            session.amount_total ? Number(session.amount_total / 100) : 0,
             session.currency?.toUpperCase() || 'INR',
             'completed',
             session.payment_intent as string,
             session.payment_method_types?.[0] || 'card',
             new Date(),
-            new Date()
+            new Date(),
+            data.id,
+            undefined,
+            'booking'
         );
 
         await this._paymentRepository.create(payment);
 
-      
+
         return new ResponseBookingDetilsDTO(
             data.id,
             data.date,

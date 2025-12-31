@@ -15,6 +15,7 @@ export class GetProfileMapper {
       : [];
 
     const response = new ResponseGetProfileDTO(
+      data.id ?? "",
       data.barNumber ?? "",
       data.barAdmissionDate ?? "",
       data.yearsOfPractice ?? 0,

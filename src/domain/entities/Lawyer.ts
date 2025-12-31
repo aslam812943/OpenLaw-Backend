@@ -21,4 +21,5 @@ export interface Lawyer {
   bio?: string;
   isPassword?: boolean;
   hasSubmittedVerification?: boolean;
+  paymentVerify?: boolean;
 }

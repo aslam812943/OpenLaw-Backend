@@ -1,7 +1,7 @@
 
 import { IAdminRepository } from "../../../domain/repositories/admin/IAdminRepository";
 import { Admin } from "../../../domain/entities/Admin";
-import { AdminModel } from "../../db/models/AdminModel";
+import { AdminModel } from "../../db/models/admin/AdminModel";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
 

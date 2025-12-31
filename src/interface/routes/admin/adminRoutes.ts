@@ -34,7 +34,12 @@ import { RejectLawyerController } from '../../controllers/admin/RejectLawyerCont
 
 
 
-
+// Subscription Management
+import { SubscriptionRepository } from '../../../infrastructure/repositories/admin/SubscriptionRepository';
+import { CreateSubscriptionUseCase } from '../../../application/useCases/Admin/CreateSubscriptionUseCase';
+import { GetSubscriptionsUseCase } from '../../../application/useCases/Admin/GetSubscriptionsUseCase';
+import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/Admin/ToggleSubscriptionStatusUseCase';
+import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
 const router = express.Router();
 
 // ------------------------------------------------------
@@ -76,11 +81,30 @@ const approveLawyerController = new ApproveLawyerController(approveLawyerUseCase
 const rejectLawyerUseCase = new RejectLawyerUseCase(lawyerRepo, nodeMailerEmailService);
 const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
 
+
+
+
+
+
+
+
+// ------------------------------------------------------
+// Subscription Management Setup
+// ------------------------------------------------------
+// Subscription Management Setup
+// ------------------------------------------------------
+const subscriptionRepo = new SubscriptionRepository();
+const createSubscriptionUseCase = new CreateSubscriptionUseCase(subscriptionRepo);
+const getSubscriptionsUseCase = new GetSubscriptionsUseCase(subscriptionRepo);
+const toggleSubscriptionStatusUseCase = new ToggleSubscriptionStatusUseCase(subscriptionRepo);
+const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase);
+
+
 // ------------------------------------------------------
 //  Admin Routes
 // ------------------------------------------------------
 
-//  Admin Login and Logout
+
 //  Admin Login and Logout
 router.post('/login', (req, res, next) => controller.login(req, res, next));
 router.post('/logout', (req, res, next) => controller.logout(req, res, next))
@@ -98,4 +122,25 @@ router.patch('/lawyers/:id/approve', adminAuth, (req, res, next) => approveLawye
 router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerController.handle(req, res, next));
 
 
-export default router;
+
+// Subscription Managment Routes
+router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAll(req, res, next));
+router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.create(req, res, next));
+router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleStatus(req, res, next));
+
+
+// ------------------------------------------------------
+// Payment Management Setup
+// ------------------------------------------------------
+import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
+import { GetPaymentsUseCase } from '../../../application/useCases/Admin/GetPaymentsUseCase';
+import { AdminPaymentController } from '../../controllers/admin/AdminPaymentController';
+
+const paymentRepo = new PaymentRepository();
+const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo);
+const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
+
+router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.getAllPayments(req, res, next));
+
+
+export default router
