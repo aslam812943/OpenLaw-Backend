@@ -164,4 +164,29 @@ export class BookingRepository implements IBookingRepository {
             throw new InternalServerError("Database error while fetching booking by session ID.");
         }
     }
+    async findByLawyerId(lawyerId: string): Promise<Booking[]> {
+        try {
+            const bookings = await BookingModel.find({ lawyerId })
+                .populate('userId', 'name')
+                .sort({ createdAt: -1 });
+
+            return bookings.map(booking => new Booking(
+                booking.id,
+                (booking.userId as any)._id.toString(),
+                booking.lawyerId,
+                booking.date,
+                booking.startTime,
+                booking.endTime,
+                booking.consultationFee,
+                booking.status as any,
+                booking.paymentStatus as any,
+                booking.paymentId,
+                booking.stripeSessionId,
+                booking.description,
+                (booking.userId as any)?.name
+            ));
+        } catch (error: any) {
+            throw new InternalServerError("Database error while fetching lawyer bookings.");
+        }
+    }
 }
