@@ -46,6 +46,13 @@ import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoo
 import { MessageRepository } from "../../../infrastructure/repositories/messageRepository";
 import { ChatController } from "../../controllers/chat/ChatController";
 
+
+
+import { ReviewRepository } from "../../../infrastructure/repositories/ReviewRepository";
+import { GetAllReviewsUseCase } from "../../../application/useCases/lawyer/review/GetAllReviewsUseCase";
+import { ReviewController } from "../../controllers/lawyer/ReviewController";
+import { GetLawyerCasesUseCase } from "../../../application/useCases/lawyer/GetLawyerCasesUseCase";
+import { LawyerCasesController } from "../../controllers/lawyer/LawyerCasesController";
 const router = Router();
 
 // ============================================================================
@@ -92,6 +99,17 @@ const getChatRoomUseCase = new GetChatRoomUseCase(chatRoomRepository, bookingRep
 const getMessagesUseCase = new GetMessagesUseCase(messageRepository);
 const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);
 
+
+
+
+// Review
+const reviewRepository = new ReviewRepository()
+const getAllReviewsUsecCase = new GetAllReviewsUseCase(reviewRepository)
+const reviewController = new ReviewController(getAllReviewsUsecCase)
+
+// Cases
+const getLawyerCasesUseCase = new GetLawyerCasesUseCase(bookingRepository);
+const lawyerCasesController = new LawyerCasesController(getLawyerCasesUseCase);
 
 // Availability Controller 
 const availabilityController = new AvailabilityController(
@@ -165,6 +183,8 @@ router.get('/subscriptions', lawyerAuthMiddleware.execute, (req, res, next) => s
 router.post('/subscription/checkout', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.createCheckout(req, res, next));
 router.post('/subscription/success', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.handleSuccess(req, res, next));
 
+router.get(`/review/:id`, lawyerAuthMiddleware.execute, (req, res, next) => reviewController.getAllReview(req, res, next))
 
+router.get('/cases', lawyerAuthMiddleware.execute, (req, res, next) => lawyerCasesController.getCases(req, res, next));
 
 export default router;

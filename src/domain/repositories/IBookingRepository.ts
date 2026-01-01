@@ -8,4 +8,5 @@ export interface IBookingRepository {
     existsByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<boolean>;
     findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null>;
     findByStripeSessionId(sessionId: string): Promise<Booking | null>;
+    findByLawyerId(lawyerId: string): Promise<Booking[]>;
 }
