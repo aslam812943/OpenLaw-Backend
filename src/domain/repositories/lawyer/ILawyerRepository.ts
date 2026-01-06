@@ -18,5 +18,5 @@ export interface ILawyerRepository {
   // findOne(userId: string): Promise<string | null>
   updateGoogleId(id: string, googleId: string): Promise<void>;
   updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean): Promise<void>;
+  updateWalletBalance(lawyerId: string, amount: number): Promise<void>;
 }
-

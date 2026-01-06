@@ -1,9 +1,9 @@
-import { ResponseGetAppoiments } from "../../dtos/user/ResponseGetAppoiments";
+import { ResponseGetAppointments } from "../../dtos/user/ResponseGetAppointments";
 
 export class UserAppointmentsMapper {
-    static mapToDto(data: any[]): ResponseGetAppoiments[] {
+    static mapToDto(data: any[]): ResponseGetAppointments[] {
         return data.map((booking) => {
-            return new ResponseGetAppoiments(
+            return new ResponseGetAppointments(
                 booking.id || booking._id.toString(),
                 booking.lawyerId._id ? booking.lawyerId._id.toString() : booking.lawyerId.toString(),
                 booking.date,
@@ -11,9 +11,11 @@ export class UserAppointmentsMapper {
                 booking.endTime,
                 booking.consultationFee,
                 booking.status,
-                booking.description,
+                booking.description || "",
                 booking.lawyerName || booking.lawyerId.name || "",
-                booking.cancellationReason
+                booking.cancellationReason,
+                booking.refundAmount,
+                booking.refundStatus
             );
         });
     }

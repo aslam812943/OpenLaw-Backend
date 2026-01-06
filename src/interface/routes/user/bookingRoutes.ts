@@ -26,7 +26,7 @@ const paymentRepository = new PaymentRepository();
 const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService);
 const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository, lawyerRepository, paymentRepository);
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository);
 
 const bookingController = new BookingController(
     createBookingPaymentUseCase,

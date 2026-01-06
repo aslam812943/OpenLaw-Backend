@@ -1,4 +1,4 @@
-import { Request, Response,NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IGetProfileUseCase, IUpdateProfileUseCase, IChangePasswordUseCase } from "../../../application/interface/use-cases/lawyer/IProfileUseCases";
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 import { ChangePasswordDTO } from "../../../application/dtos/lawyer/ChangePasswordDTO";
@@ -14,7 +14,7 @@ export class GetProfileController {
   // ------------------------------------------
   //   GET PROFILE
   // ------------------------------------------
-  async getDetils(req: Request, res: Response,next:NextFunction) {
+  async getDetils(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.user?.id;
 
@@ -26,6 +26,7 @@ export class GetProfileController {
       }
 
       const data = await this._getprofileusecase.execute(id);
+      
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
@@ -36,14 +37,14 @@ export class GetProfileController {
     } catch (error: any) {
 
 
-    next(error)
+      next(error)
     }
   }
 
   // ------------------------------------------
   //   UPDATE PROFILE
   // ------------------------------------------
-  async updateProfile(req: Request, res: Response,next:NextFunction) {
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
     const id = req.user?.id
 
     if (!id) {
@@ -64,7 +65,8 @@ export class GetProfileController {
         req.body.state,
         req.body.pincode,
         imageUrl,
-        req.body.bio
+        req.body.bio,
+        Number(req.body.consultationFee)
       );
 
       await this._updateprofileusecase.execute(id, dto);
@@ -77,14 +79,14 @@ export class GetProfileController {
     } catch (error: any) {
 
 
-  next(error)
+      next(error)
     }
   }
 
   // ------------------------------------------
   //   CHANGE PASSWORD
   // ------------------------------------------
-  async changePassword(req: Request, res: Response,next:NextFunction) {
+  async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -104,7 +106,7 @@ export class GetProfileController {
       });
     } catch (error: any) {
 
-   next(error)
+      next(error)
     }
   }
 }

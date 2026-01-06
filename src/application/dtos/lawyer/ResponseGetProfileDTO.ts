@@ -15,6 +15,8 @@ export class ResponseGetProfileDTO {
         public phone: number,
         public profileImage?: string,
         public bio?: string,
-        public isPassword?: boolean
+        public isPassword?: boolean,
+        public paymentVerify?:boolean,
+        public consultationFee?:number
     ) { }
 }

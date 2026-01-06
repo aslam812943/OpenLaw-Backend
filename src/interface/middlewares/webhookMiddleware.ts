@@ -24,7 +24,7 @@ export const webhookSignatureVerification = (paymentService: IPaymentService) =>
                 throw new Error('Raw body is required for webhook signature verification');
             }
 
-            // Verify webhook signature and get event
+         
             const event = await paymentService.verifyWebhookSignature(rawBody, signature);
 
           

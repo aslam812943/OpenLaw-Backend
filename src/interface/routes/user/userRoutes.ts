@@ -35,7 +35,7 @@ import { UserAuthMiddleware } from "../../middlewares/UserAuthMiddleware";
 import { GetProfileUseCase } from "../../../application/useCases/user/GetProfileUseCase";
 import { GetProfileController } from "../../controllers/user/GetProfileController";
 import { GetAllLawyersController } from "../../controllers/user/GetAllLawyersController";
-import { ChatController } from "../../controllers/chat/ChatController";
+import { ChatController } from "../../controllers/common/chat/ChatController";
 
 //  Importing Repositories and Services 
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
@@ -103,7 +103,7 @@ const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUse
 const reviewRepository = new ReviewRepository();
 const getAllReviewsUseCase = new GetAllReviewsUseCase(reviewRepository)
 const addReviewUseCase = new AddReviewUseCase(reviewRepository);
-const reviewController = new ReviewController(addReviewUseCase,getAllReviewsUseCase);
+const reviewController = new ReviewController(addReviewUseCase, getAllReviewsUseCase);
 
 const authController = new AuthController(
   registerUserUsecase,
@@ -171,5 +171,5 @@ router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req,
 
 // Review Routes
 router.post("/review", authMiddleware.execute, (req, res, next) => reviewController.addReview(req, res, next));
-router.get('/review/:id',authMiddleware.execute,(req,res,next)=>reviewController.getAllReview(req,res,next))
+router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReview(req, res, next))
 export default router;

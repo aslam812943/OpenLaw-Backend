@@ -11,7 +11,7 @@ export class UpdateProfileUseCase implements IUpdateProfileUseCase {
     async execute(id: string, dto: UpdateLawyerProfileDTO): Promise<void> {
         if (!id) throw new BadRequestError("Invalid request: User ID is missing");
         if (!dto) throw new BadRequestError('data missing ')
-        // Update the lawyer profile in the repository
+      
         await this._repo.updateProfile(id, dto)
     }
 }

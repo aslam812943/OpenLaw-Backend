@@ -9,7 +9,7 @@ export class GetAllAvailableRuleUseCase implements IGetAllAvailableRuleUseCase {
     constructor(private readonly _repo: IAvailabilityRuleRepository) { }
 
     async execute(id: string): Promise<AvailabilityRule[]> {
-        // Fetch all availability rules for the lawyer
+    
         const rules = await this._repo.getAllRules(id)
 
         return AvailabilityRuleMapper.toDTOList(rules)

@@ -9,10 +9,10 @@ export class ApproveLawyerUseCase implements IApproveLawyerUseCase {
   ) { }
 
   async execute(id: string, email: string): Promise<void> {
-    // Approve the lawyer in the repository
+  
     await this._lawyerRepo.approveLawyer(id);
 
-    // Send approval email to the lawyer
+ 
 
 
     const subject = "✅ Congratulations! Your LegalConnect Profile Has Been Approved";

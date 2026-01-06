@@ -34,22 +34,32 @@ export class BookingController {
             const booking = await this.confirmBookingUseCase.execute(sessionId);
             res.status(HttpStatusCode.CREATED).json({ success: true, booking });
         } catch (error) {
-          
+
             next(error);
         }
     }
 
     async getAppointments(req: Request, res: Response, next: NextFunction) {
-
         try {
             const userId = req.user?.id;
             if (!userId) {
                 throw new Error("User not authenticated");
             }
 
-            const appointments = await this.getUserAppointmentsUseCase.execute(userId);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 5;
 
-            res.status(HttpStatusCode.OK).json(appointments);
+            const result = await this.getUserAppointmentsUseCase.execute(userId, page, limit);
+
+            res.status(HttpStatusCode.OK).json({
+                appointments: result.appointments,
+                pagination: {
+                    currentPage: page,
+                    totalItems: result.total,
+                    totalPages: Math.ceil(result.total / limit),
+                    limit
+                }
+            });
         } catch (error) {
             next(error);
         }
@@ -59,7 +69,7 @@ export class BookingController {
         try {
             const { id } = req.params;
             const { reason } = req.body;
-            
+
             if (!reason) {
                 throw new Error("Cancellation reason is required");
             }

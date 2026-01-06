@@ -1,4 +1,4 @@
-export class ResponseGetAppoiments {
+export class ResponseGetAppointments {
     constructor(
         public id: string,
         public lawyerId: string,
@@ -9,9 +9,8 @@ export class ResponseGetAppoiments {
         public status: string,
         public description: string,
         public lawyerName: string,
-        public cancellationTeason: string | undefined
-
-    ) {
-
-    }
+        public cancellationReason: string | undefined,
+        public refundAmount?: number,
+        public refundStatus?: string
+    ) { }
 }

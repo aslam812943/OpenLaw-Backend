@@ -7,7 +7,8 @@ export class UpdateLawyerProfileDTO {
         public state: string,
         public pincode: string,
         public imageUrl?: string,
-        public bio?: string
+        public bio?: string,
+        public consultationFee?: number
     ) { }
 }
 

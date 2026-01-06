@@ -13,6 +13,8 @@ export interface IBookingDocument extends Document {
     stripeSessionId?: string;
     description?: string;
     cancellationReason?: string;
+    refundAmount?: number;
+    refundStatus?: string;
 
 }
 
@@ -24,12 +26,14 @@ const BookingSchema: Schema = new Schema({
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
     consultationFee: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'confirmed', 'cancelled', 'completed', 'rejected'], default: 'pending' },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     paymentId: { type: String },
     stripeSessionId: { type: String, unique: true },
     description: { type: String },
     cancellationReason: { type: String },
+    refundAmount: { type: Number },
+    refundStatus: { type: String, enum: ['none', 'full', 'partial'], default: 'none' },
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);

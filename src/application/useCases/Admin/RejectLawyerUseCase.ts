@@ -9,7 +9,7 @@ export class RejectLawyerUseCase implements IRejectLawyerUseCase {
   ) { }
 
   async execute(id: string, email: string, reason: string): Promise<void> {
-    // Reject the lawyer in the repository
+
     await this._lawyerRepo.rejectLawyer(id);
 
 

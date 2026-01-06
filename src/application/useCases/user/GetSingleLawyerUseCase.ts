@@ -16,11 +16,11 @@ export class GetSingleLawyerUseCase implements IGetSingleLawyerUseCase {
       throw new BadRequestError("Lawyer ID is required.");
     }
 
-   
+
     const lawyer = await this._repo.findById(id);
 
-    if (!lawyer) {
-      throw new NotFoundError("Lawyer not found.");
+    if (!lawyer || lawyer.isBlock || !lawyer.isAdminVerified || !lawyer.paymentVerify || !lawyer.isVerified) {
+      throw new NotFoundError("Lawyer not found or is currently inactive.");
     }
 
     return LawyerMapper.toSingle(lawyer);

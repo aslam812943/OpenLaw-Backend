@@ -165,7 +165,6 @@ export class AuthController {
       }
 
 
-
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Login successful.",

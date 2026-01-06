@@ -40,6 +40,10 @@ import { CreateSubscriptionUseCase } from '../../../application/useCases/Admin/C
 import { GetSubscriptionsUseCase } from '../../../application/useCases/Admin/GetSubscriptionsUseCase';
 import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/Admin/ToggleSubscriptionStatusUseCase';
 import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
+import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
+import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
+import { ApprovePayoutUseCase } from '../../../application/useCases/admin/ApprovePayoutUseCase';
+import { PayoutController } from '../../controllers/common/payout/PayoutController';
 const router = express.Router();
 
 // ------------------------------------------------------
@@ -88,8 +92,7 @@ const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
 
 
 
-// ------------------------------------------------------
-// Subscription Management Setup
+
 // ------------------------------------------------------
 // Subscription Management Setup
 // ------------------------------------------------------
@@ -98,6 +101,29 @@ const createSubscriptionUseCase = new CreateSubscriptionUseCase(subscriptionRepo
 const getSubscriptionsUseCase = new GetSubscriptionsUseCase(subscriptionRepo);
 const toggleSubscriptionStatusUseCase = new ToggleSubscriptionStatusUseCase(subscriptionRepo);
 const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase);
+
+
+
+
+// ------------------------------------------------------
+// Payment Management Setup
+// ------------------------------------------------------
+import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
+import { GetPaymentsUseCase } from '../../../application/useCases/Admin/GetPaymentsUseCase';
+import { AdminPaymentController } from '../../controllers/admin/AdminPaymentController';
+
+const paymentRepo = new PaymentRepository();
+const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo);
+const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
+
+// Payout Management Setup
+const withdrawalRepo = new WithdrawalRepository();
+const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo, subscriptionRepo);
+const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepo);
+
+
+
 
 
 // ------------------------------------------------------
@@ -129,18 +155,13 @@ router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscrip
 router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleStatus(req, res, next));
 
 
-// ------------------------------------------------------
-// Payment Management Setup
-// ------------------------------------------------------
-import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
-import { GetPaymentsUseCase } from '../../../application/useCases/Admin/GetPaymentsUseCase';
-import { AdminPaymentController } from '../../controllers/admin/AdminPaymentController';
 
-const paymentRepo = new PaymentRepository();
-const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo);
-const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
 
 router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.getAllPayments(req, res, next));
+
+// Payout Routes
+router.get('/payout/pending', adminAuth, (req, res, next) => payoutController.getPendingWithdrawals(req, res, next));
+router.patch('/payout/:id/approve', adminAuth, (req, res, next) => payoutController.approvePayout(req, res, next));
 
 
 export default router

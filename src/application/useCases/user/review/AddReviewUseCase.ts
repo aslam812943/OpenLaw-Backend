@@ -3,12 +3,17 @@ import { AddReviewDTO } from "../../../dtos/user/review/AddReviewDTO";
 import { ReviewResponseDTO } from "../../../dtos/user/review/ReviewResponseDTO";
 import { IReviewRepository } from "../../../../domain/repositories/IReviewRepository";
 import { Review } from "../../../../domain/entities/Review";
+import { ConflictError } from "../../../../infrastructure/errors/ConflictError";
 
 export class AddReviewUseCase implements IAddReviewUseCase {
     constructor(private reviewRepository: IReviewRepository) { }
 
     async execute(reviewData: AddReviewDTO): Promise<ReviewResponseDTO> {
-      
+        const existingReview = await this.reviewRepository.findByUserIdAndLawyerId(reviewData.userId, reviewData.lawyerId);
+        if (existingReview) {
+            throw new ConflictError("You have already reviewed this lawyer");
+        }
+
         const review = new Review(
             reviewData.userId,
             reviewData.lawyerId,

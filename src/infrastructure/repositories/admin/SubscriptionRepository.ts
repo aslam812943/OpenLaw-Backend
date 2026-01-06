@@ -38,4 +38,18 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     async toggleStatus(id: string, status: boolean): Promise<void> {
         await subscriptionModel.findByIdAndUpdate(id, { isActive: status });
     }
+
+    async findById(id: string): Promise<Subscription | null> {
+        const d: any = await subscriptionModel.findById(id);
+        if (!d) return null;
+        return {
+            id: d._id.toString(),
+            planName: d.planName,
+            duration: d.duration,
+            durationUnit: d.durationUnit,
+            price: d.price,
+            commissionPercent: d.commissionPercent || 0,
+            isActive: d.isActive
+        };
+    }
 }

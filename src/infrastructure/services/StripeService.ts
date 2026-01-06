@@ -131,8 +131,20 @@ export class StripeService implements IPaymentService {
             }
             return session.url;
         } catch (error: any) {
-            console.error("Stripe createSubscriptionCheckoutSession error:", error);
+        
             throw new InternalServerError(error.message || "Stripe subscription checkout failed");
+        }
+    }
+
+    async refundPayment(paymentIntentId: string, amount?: number): Promise<void> {
+        try {
+            await this.stripe.refunds.create({
+                payment_intent: paymentIntentId,
+                ...(amount && { amount: Math.round(amount * 100) })
+            });
+        } catch (error: any) {
+        
+            throw new InternalServerError(error.message || "Stripe refund failed");
         }
     }
 }

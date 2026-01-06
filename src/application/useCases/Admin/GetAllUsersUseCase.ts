@@ -13,9 +13,7 @@ export class GetAllUsersUseCase
   constructor(private _userRepo: IUserRepository) { }
 
   async execute({ page, limit }: PaginationInput): Promise<{ users: GetAllUserDTO[]; total: number }> {
-    // Fetch all users from the repository with pagination
     const { users, total } = await this._userRepo.findAll(page, limit);
-    // Map the users to DTOs
     const userDTOs = AdminUserMapper.toUserSummaryListDTO(users);
     return { users: userDTOs, total };
   }

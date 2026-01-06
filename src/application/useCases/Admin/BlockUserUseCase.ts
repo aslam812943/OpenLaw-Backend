@@ -7,7 +7,6 @@ export class BlockUserUseCase implements IBlockUserUseCase {
 
   async execute(id: string): Promise<void> {
 
-    // Block the user in the repository
     await this._userRepo.blockUser(id)
   }
 

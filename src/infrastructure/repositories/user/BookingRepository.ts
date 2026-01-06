@@ -26,7 +26,12 @@ export class BookingRepository implements IBookingRepository {
                 savedBooking.paymentId,
                 savedBooking.stripeSessionId,
                 savedBooking.description,
-
+                undefined,
+                savedBooking.cancellationReason,
+                undefined,
+                savedBooking.refundAmount,
+                savedBooking.refundStatus as any,
+                (savedBooking as any).createdAt
             );
         } catch (error: any) {
             throw new InternalServerError("Database error while creating booking.");
@@ -50,18 +55,27 @@ export class BookingRepository implements IBookingRepository {
                 booking.paymentId,
                 booking.stripeSessionId,
                 booking.description,
-
+                undefined,
+                booking.cancellationReason,
+                undefined,
+                booking.refundAmount,
+                booking.refundStatus as any,
+                (booking as any).createdAt
             );
         } catch (error: any) {
             throw new InternalServerError("Database error while fetching booking by ID.");
         }
     }
 
-    async updateStatus(id: string, status: string, reason?: string): Promise<void> {
+    async updateStatus(id: string, status: string, reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }): Promise<void> {
         try {
             const updateData: any = { status };
             if (reason) {
                 updateData.cancellationReason = reason;
+            }
+            if (refundDetails) {
+                updateData.refundAmount = refundDetails.amount;
+                updateData.refundStatus = refundDetails.status;
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
         } catch (error: any) {
@@ -70,28 +84,42 @@ export class BookingRepository implements IBookingRepository {
     }
 
 
-    async findByUserId(userId: string): Promise<Booking[]> {
+    async findByUserId(userId: string, page: number = 1, limit: number = 10): Promise<{ bookings: Booking[], total: number }> {
         try {
-            const bookings = await BookingModel.find({ userId })
-                .populate('lawyerId', 'name')
-                .sort({ createdAt: -1 });
-            return bookings.map(booking => new Booking(
-                booking.id,
-                booking.userId,
-                booking.lawyerId,
-                booking.date,
-                booking.startTime,
-                booking.endTime,
-                booking.consultationFee,
-                booking.status as any,
-                booking.paymentStatus as any,
-                booking.paymentId,
-                booking.stripeSessionId,
-                booking.description,
-                undefined,
-                booking.cancellationReason,
-                (booking.lawyerId as any)?.name
-            ));
+            const skip = (page - 1) * limit;
+
+            const [bookings, total] = await Promise.all([
+                BookingModel.find({ userId })
+                    .populate('lawyerId', 'name')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit),
+                BookingModel.countDocuments({ userId })
+            ]);
+
+            return {
+                bookings: bookings.map(booking => new Booking(
+                    booking.id,
+                    booking.userId,
+                    booking.lawyerId,
+                    booking.date,
+                    booking.startTime,
+                    booking.endTime,
+                    booking.consultationFee,
+                    booking.status as any,
+                    booking.paymentStatus as any,
+                    booking.paymentId,
+                    booking.stripeSessionId,
+                    booking.description,
+                    undefined,
+                    booking.cancellationReason,
+                    (booking.lawyerId as any)?.name,
+                    booking.refundAmount,
+                    booking.refundStatus as any,
+                    (booking as any).createdAt
+                )),
+                total
+            };
         } catch (error: any) {
             throw new InternalServerError("Database error while fetching user bookings.");
         }
@@ -183,7 +211,12 @@ export class BookingRepository implements IBookingRepository {
                 booking.paymentId,
                 booking.stripeSessionId,
                 booking.description,
-                (booking.userId as any)?.name
+                (booking.userId as any)?.name,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                (booking as any).createdAt
             ));
         } catch (error: any) {
             throw new InternalServerError("Database error while fetching lawyer bookings.");

@@ -30,7 +30,8 @@ export interface IGetAllLawyerDTO {
   verificationStatus?: string;
   isVerified: boolean;
   isBlock: boolean;
-  profileImage :string
+  profileImage :string;
+  consultationFee:number
 }
 export class ResponseGetLawyersDTO{
    id: string;
@@ -42,7 +43,7 @@ export class ResponseGetLawyersDTO{
      practiceAreas: string[];
      languages: string[];
    profileImage:string
-   
+    consultationFee:number
      constructor(data: IGetAllLawyerDTO) {
        this.id = data.id;
        this.userId = data.userId
@@ -53,7 +54,7 @@ export class ResponseGetLawyersDTO{
        this.practiceAreas = data.practiceAreas;
        this.languages = data.languages;
        this.profileImage = data.profileImage??''
- 
+       this .consultationFee = data.consultationFee
      }
 
 }

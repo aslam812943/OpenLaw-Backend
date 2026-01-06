@@ -16,10 +16,7 @@ export class LawyerController {
     this.registerLawyerUseCase = new RegisterLawyerUseCase(repo);
   }
 
-  // ------------------------------------------------------------
-  // registerLawyer()
-  // Handles lawyer verification and registration details.
-  // ------------------------------------------------------------
+
 
 
   

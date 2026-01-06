@@ -11,7 +11,7 @@ export class CheckLawyerStatusUseCase {
             throw new BadRequestError("Lawyer ID is required.");
         }
 
-        // Check if the lawyer exists
+      
         const lawyer = await this._repo.findById(id);
 
         if (!lawyer) {

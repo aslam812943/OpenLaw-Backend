@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
-import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
-import { GetMessagesUseCase } from "../../../application/useCases/chat/GetMessagesUseCase";
-import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { CheckChatAccessUseCase } from "../../../../application/useCases/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../../application/useCases/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../../application/useCases/chat/GetMessagesUseCase";
+import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class ChatController {
     constructor(
@@ -85,7 +85,7 @@ export class ChatController {
             if (!req.file) {
                 throw new Error("No file uploaded");
             }
-            
+
             const fileUrl = (req.file as any).path;
             const fileName = req.file.originalname;
             const fileSize = req.file.size;

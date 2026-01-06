@@ -14,7 +14,8 @@ export class UserLawyerMapper {
             yearsOfPractice: lawyer.yearsOfPractice ?? 0,
             practiceAreas: lawyer.practiceAreas ?? [],
             languages: lawyer.languages ?? [],
-            profileImage: lawyer.profileImage ?? ''
+            profileImage: lawyer.profileImage ?? '',
+            consultationFee:lawyer.consultationFee??0
         }
 
         return dto

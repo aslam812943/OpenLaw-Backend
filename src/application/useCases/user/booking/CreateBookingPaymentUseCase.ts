@@ -4,7 +4,7 @@ export class CreateBookingPaymentUseCase implements ICreateBookingPaymentUseCase
     constructor(private paymentService: IPaymentService) { }
 
     async execute(bookingDetails: any): Promise<string> {
-        // Create a checkout session for the booking
+  
         return await this.paymentService.createCheckoutSession(bookingDetails);
     }
 }

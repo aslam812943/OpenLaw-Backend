@@ -74,7 +74,7 @@ export class SocketServerService implements ISocketServer {
 
           await this.markMessagesAsReadUseCase.execute(roomId, userId);
 
-          // Notify all participants who read the messages
+        
           io.to(roomId).emit("messages-read", { roomId, readBy: userId });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : "Failed to mark messages as read";

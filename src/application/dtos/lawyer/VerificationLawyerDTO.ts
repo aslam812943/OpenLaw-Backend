@@ -18,9 +18,7 @@ if(!data.userId){
 }
 
 
-//   if(!data.phone) throw new Error('Number is required')
-//     if (!data.fullName) throw new Error('Name is required');
-// if (!data.email) throw new Error('Email is required');
+
 
          if(!data.barNumber||data.barNumber.trim().length<3){
             throw new Error('Bar number is required and must be valid')

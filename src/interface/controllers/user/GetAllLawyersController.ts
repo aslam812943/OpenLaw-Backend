@@ -25,10 +25,17 @@ export class GetAllLawyersController {
             fromAdmin: false
          });
 
+       
+
          return res.status(HttpStatusCode.OK).json({
             success: true,
             message: "Lawyers fetched successfully.",
-            response,
+            response: {
+               lawyers: response.lawyers,
+               totalCount: response.total,
+               currentPage: page,
+               totalPages: Math.ceil(response.total / limit)
+            }
          });
 
       } catch (error: any) {

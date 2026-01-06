@@ -23,7 +23,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     const startMin = this.toMinutes(dto.startTime);
     const endMin = this.toMinutes(dto.endTime);
 
-    // ---- VALIDATIONS ----
+   
     if (startMin >= endMin) errors.push("Start time must be before end time.");
     if (Number(dto.slotDuration) < 30 || Number(dto.slotDuration) > 120)
       errors.push("Slot duration must be 30–120 minutes.");

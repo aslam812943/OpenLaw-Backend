@@ -5,4 +5,5 @@ export interface ISubscriptionRepository {
     findAll(): Promise<any[]>
     findActive(): Promise<any[]>
     toggleStatus(id: string, status: boolean): Promise<void>
+    findById(id: string): Promise<Subscription | null>
 }
