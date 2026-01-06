@@ -28,7 +28,9 @@ export class GetProfileMapper {
       data.phone ?? 0,
       data.profileImage ?? "",
       data.bio ?? "",
-      data.isPassword ?? false
+      data.isPassword ?? false,
+      data.paymentVerify??false,
+      Number(data.consultationFee)??0
     );
 
     return response;

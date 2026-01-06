@@ -4,22 +4,29 @@ import { ReviewModel, IReview } from "../db/models/ReviewModel";
 
 export class ReviewRepository implements IReviewRepository {
     async addReview(review: Review): Promise<Review> {
+        try {
+            const newReview = new ReviewModel({
+                userId: review.userId,
+                lawyerId: review.lawyerId,
+                rating: review.rating,
+                comment: review.comment,
+                createdAt: review.createdAt || new Date()
+            });
 
+            const savedReview = await newReview.save();
 
-        const newReview = new ReviewModel(review);
-
-        const savedReview = await newReview.save();
-
-
-        return new Review(
-            savedReview.userId.toString(),
-            savedReview.lawyerId.toString(),
-            savedReview.rating,
-            savedReview.comment,
-            savedReview.createdAt,
-            (savedReview as any)._id.toString()
-        );
-
+            return new Review(
+                savedReview.userId.toString(),
+                savedReview.lawyerId.toString(),
+                savedReview.rating,
+                savedReview.comment,
+                savedReview.createdAt,
+                (savedReview as any)._id.toString()
+            );
+        } catch (error) {
+          
+            throw error;
+        }
     }
 
 
@@ -40,6 +47,12 @@ export class ReviewRepository implements IReviewRepository {
                 user?.profileImage || ""
             )
         });
+    }
+
+    async findByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<Review | null> {
+        const doc = await ReviewModel.findOne({ userId, lawyerId });
+        if (!doc) return null;
+        return this.mapToEntity(doc);
     }
 
     private mapToEntity(doc: IReview): Review {

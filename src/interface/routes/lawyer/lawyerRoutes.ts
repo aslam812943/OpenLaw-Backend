@@ -53,6 +53,8 @@ import { GetAllReviewsUseCase } from "../../../application/useCases/lawyer/revie
 import { ReviewController } from "../../controllers/lawyer/ReviewController";
 import { GetLawyerCasesUseCase } from "../../../application/useCases/lawyer/GetLawyerCasesUseCase";
 import { LawyerCasesController } from "../../controllers/lawyer/LawyerCasesController";
+import { GetLawyerEarningsUseCase } from "../../../application/useCases/lawyer/GetLawyerEarningsUseCase";
+import { LawyerEarningsController } from "../../controllers/lawyer/LawyerEarningsController";
 const router = Router();
 
 // ============================================================================
@@ -110,6 +112,10 @@ const reviewController = new ReviewController(getAllReviewsUsecCase)
 // Cases
 const getLawyerCasesUseCase = new GetLawyerCasesUseCase(bookingRepository);
 const lawyerCasesController = new LawyerCasesController(getLawyerCasesUseCase);
+
+// Earnings
+const getLawyerEarningsUseCase = new GetLawyerEarningsUseCase(bookingRepository);
+const lawyerEarningsController = new LawyerEarningsController(getLawyerEarningsUseCase);
 
 // Availability Controller 
 const availabilityController = new AvailabilityController(
@@ -186,5 +192,7 @@ router.post('/subscription/success', lawyerAuthMiddleware.execute, (req, res, ne
 router.get(`/review/:id`, lawyerAuthMiddleware.execute, (req, res, next) => reviewController.getAllReview(req, res, next))
 
 router.get('/cases', lawyerAuthMiddleware.execute, (req, res, next) => lawyerCasesController.getCases(req, res, next));
+
+router.get('/earnings', lawyerAuthMiddleware.execute, (req, res, next) => lawyerEarningsController.getEarnings(req, res, next));
 
 export default router;

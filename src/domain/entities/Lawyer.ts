@@ -20,6 +20,8 @@ export interface Lawyer {
   profileImage?: string;
   bio?: string;
   isPassword?: boolean;
+  isAdminVerified?: boolean;
   hasSubmittedVerification?: boolean;
   paymentVerify?: boolean;
+  consultationFee?: number;
 }

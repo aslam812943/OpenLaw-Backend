@@ -90,62 +90,78 @@ export class LawyerRepository implements ILawyerRepository {
     fromAdmin?: boolean;
   }): Promise<{ lawyers: Lawyer[]; total: number }> {
     try {
-      const page = query?.page ?? 1;
-      const limit = query?.limit ?? 10;
-      const search = query?.search ?? "";
-      const sort = query?.sort ?? "";
-      const filter = query?.filter ?? "";
+      const page = Math.max(Number(query?.page) || 1, 1);
+      const limit = Math.max(Number(query?.limit) || 10, 1);
+      const search = query?.search?.trim();
+      const sort = query?.sort;
+      const filter = query?.filter?.trim();
 
-      // MATCH CONDITIONS
-      const match: any = {
-        ...(search && {
+      const andConditions: any[] = [];
+
+
+      if (search) {
+        andConditions.push({
           $or: [
             { practiceAreas: { $regex: search, $options: "i" } },
             { languages: { $regex: search, $options: "i" } },
             { name: { $regex: search, $options: "i" } },
             { email: { $regex: search, $options: "i" } },
           ],
-        }),
-      };
+        });
+      }
+
+
+      if (filter) {
+        andConditions.push({
+          practiceAreas: { $regex: filter, $options: "i" },
+        });
+      }
+
 
       if (!query?.fromAdmin) {
-        match.isBlock = false;
-        match.isAdminVerified = true;
-        match.verificationStatus = 'Approved';
+        andConditions.push(
+          { isBlock: false },
+          { isAdminVerified: true },
+          { paymentVerify: true },
+          { isVerified: true },
+          { verificationStatus: "Approved" },
+          { bio: { $exists: true, $ne: "" } }
+        );
       }
 
-      // FILTER FEATURE
-      if (filter) {
-        match.$or = [
-          { practiceAreas: { $regex: filter, $options: "i" } },
-          { practiceAreas: { $elemMatch: { $regex: filter, $options: "i" } } },
-        ];
-      }
+      const match = andConditions.length ? { $and: andConditions } : {};
 
-      // SORT OPTIONS
+
       const sortOption: any = {};
       switch (sort) {
         case "experience-asc":
-          sortOption["yearsOfPractice"] = 1;
+          sortOption.yearsOfPractice = 1;
           break;
         case "experience-desc":
-          sortOption["yearsOfPractice"] = -1;
+          sortOption.yearsOfPractice = -1;
           break;
         default:
-          sortOption["_id"] = -1;
+          sortOption._id = -1;
       }
 
       const [lawyerDocs, total] = await Promise.all([
-        LawyerModel.find(match).sort(sortOption).skip((page - 1) * limit).limit(limit).exec(),
+        LawyerModel.find(match)
+          .sort(sortOption)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .exec(),
         LawyerModel.countDocuments(match),
       ]);
 
-      const lawyers = lawyerDocs.map((doc) => this.mapToDomain(doc));
-      return { lawyers, total };
+      return {
+        lawyers: lawyerDocs.map((doc) => this.mapToDomain(doc)),
+        total,
+      };
     } catch (error) {
       throw new InternalServerError("Database error while fetching lawyers.");
     }
   }
+
 
   // ------------------------------------------------------------
   //  blockLawyer()
@@ -234,6 +250,8 @@ export class LawyerRepository implements ILawyerRepository {
       data.Address.state = dto.state;
       data.Address.pincode = Number(dto.pincode);
       if (dto.bio) data.bio = dto.bio;
+      if (dto.consultationFee !== undefined) data.consultationFee = dto.consultationFee;
+      data.isVerified = true;
 
       await data.save();
     } catch (error: any) {
@@ -308,12 +326,14 @@ export class LawyerRepository implements ILawyerRepository {
       documentUrls: doc.documentUrls,
       verificationStatus: doc.verificationStatus,
       isVerified: doc.isVerified,
+      isAdminVerified: doc.isAdminVerified,
       addresses: doc.Address,
       profileImage: doc.Profileimageurl,
       bio: doc.bio,
       isPassword: doc.password ? true : false,
       hasSubmittedVerification: doc.hasSubmittedVerification,
-      paymentVerify: doc.paymentVerify
+      paymentVerify: doc.paymentVerify,
+      consultationFee: doc.consultationFee
     };
   }
 }
