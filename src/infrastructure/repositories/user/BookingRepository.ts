@@ -31,6 +31,8 @@ export class BookingRepository implements IBookingRepository {
                 undefined,
                 savedBooking.refundAmount,
                 savedBooking.refundStatus as any,
+                savedBooking.isCallActive,
+                savedBooking.lawyerJoined,
                 (savedBooking as any).createdAt
             );
         } catch (error: any) {
@@ -60,6 +62,8 @@ export class BookingRepository implements IBookingRepository {
                 undefined,
                 booking.refundAmount,
                 booking.refundStatus as any,
+                booking.isCallActive,
+                booking.lawyerJoined,
                 (booking as any).createdAt
             );
         } catch (error: any) {
@@ -116,6 +120,8 @@ export class BookingRepository implements IBookingRepository {
                     (booking.lawyerId as any)?.name,
                     booking.refundAmount,
                     booking.refundStatus as any,
+                    booking.isCallActive,
+                    booking.lawyerJoined,
                     (booking as any).createdAt
                 )),
                 total
@@ -216,10 +222,24 @@ export class BookingRepository implements IBookingRepository {
                 undefined,
                 undefined,
                 undefined,
+                booking.isCallActive,
+                booking.lawyerJoined,
                 (booking as any).createdAt
             ));
         } catch (error: any) {
             throw new InternalServerError("Database error while fetching lawyer bookings.");
+        }
+    }
+
+    async updateCallStatus(id: string, lawyerJoined: boolean, isCallActive?: boolean): Promise<void> {
+        try {
+            const updateData: any = { lawyerJoined };
+            if (isCallActive !== undefined) {
+                updateData.isCallActive = isCallActive;
+            }
+            await BookingModel.findByIdAndUpdate(id, updateData);
+        } catch (error: any) {
+            throw new InternalServerError("Database error while updating call status.");
         }
     }
 }

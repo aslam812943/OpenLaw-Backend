@@ -19,3 +19,12 @@ export interface JwtPayload {
     id: string;
     role: 'user' | 'lawyer';
 }
+
+export interface VideoJoinPayload {
+    bookingId: string;
+}
+
+export interface VideoSignalPayload {
+    bookingId: string;
+    signal: any;
+}

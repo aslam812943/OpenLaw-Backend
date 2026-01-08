@@ -3,7 +3,7 @@ import { SendMessageUseCase } from '../../../application/useCases/chat/SendMessa
 import { MarkMessagesAsReadUseCase } from '../../../application/useCases/chat/MarkMessagesAsReadUseCase';
 import { MessageRepository } from '../../repositories/messageRepository';
 import { SocketAuthService } from './socketAuth';
-import { JoinRoomPayload, SendMessagePayload, MarkReadPayload } from './socketTypes';
+import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 
@@ -74,7 +74,7 @@ export class SocketServerService implements ISocketServer {
 
           await this.markMessagesAsReadUseCase.execute(roomId, userId);
 
-        
+
           io.to(roomId).emit("messages-read", { roomId, readBy: userId });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : "Failed to mark messages as read";
@@ -82,6 +82,57 @@ export class SocketServerService implements ISocketServer {
             message: errorMessage
           });
         }
+      });
+
+      // VIDEO CALL SIGNALING
+      socket.on("video-call-join", ({ bookingId }: VideoJoinPayload) => {
+        if (!bookingId) return;
+        const videoRoomId = `video-${bookingId}`;
+        const role = socket.data.role;
+
+        if (role === 'user') {
+        
+          const clients = io.sockets.adapter.rooms.get(videoRoomId);
+          let lawyerPresent = false;
+          if (clients) {
+            for (const clientId of clients) {
+              const clientSocket = io.sockets.sockets.get(clientId);
+              if (clientSocket?.data.role === 'lawyer') {
+                lawyerPresent = true;
+                break;
+              }
+            }
+          }
+
+          if (!lawyerPresent) {
+            socket.emit("lawyer-not-joined");
+          }
+        }
+
+        socket.join(videoRoomId);
+       
+        socket.to(videoRoomId).emit("video-call-peer-joined", {
+          userId: socket.data.userId,
+          socketId: socket.id,
+          role: role
+        });
+      });
+
+      socket.on("video-call-signal", ({ bookingId, signal }: VideoSignalPayload) => {
+        const videoRoomId = `video-${bookingId}`;
+       
+        socket.to(videoRoomId).emit("video-call-signal", {
+          signal,
+          from: socket.data.userId,
+          fromSocket: socket.id,
+          role: socket.data.role
+        });
+      });
+
+      socket.on("video-call-end", ({ bookingId }: VideoJoinPayload) => {
+        const videoRoomId = `video-${bookingId}`;
+        io.to(videoRoomId).emit("video-call-ended");
+     
       });
 
       socket.on("disconnect", () => {

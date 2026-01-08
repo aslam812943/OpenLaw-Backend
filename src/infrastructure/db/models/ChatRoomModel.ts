@@ -1,4 +1,4 @@
-import mongoose,{Document,model,Schema,Types} from "mongoose";
+import mongoose, { Document, model, Schema, Types } from "mongoose";
 
 
 
@@ -28,8 +28,7 @@ const chatSchema = new Schema<IChatRoomDocument>(
     bookingId: {
       type: Schema.Types.ObjectId,
       ref: "Booking",
-      required: true,
-      unique: true   
+      required: true
     },
 
     isActive: {

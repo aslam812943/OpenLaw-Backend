@@ -72,6 +72,14 @@ export class ChatRoomRepository implements IChatRoomRepository {
         }
     }
 
+    async updateBookingId(roomId: string, bookingId: string): Promise<void> {
+        try {
+            await ChatRoomModel.findByIdAndUpdate(roomId, { bookingId });
+        } catch (error) {
+            throw new InternalServerError("Error updating chat room booking ID");
+        }
+    }
+
     private mapToEntity(doc: IChatRoomDocument): ChatRoom {
         return new ChatRoom(doc.id.toString(), doc.userId.toString(), doc.lawyerId.toString(), doc.bookingId.toString());
     }

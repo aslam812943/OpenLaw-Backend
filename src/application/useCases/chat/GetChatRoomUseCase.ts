@@ -15,19 +15,23 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
 
     async execute(userId: string, lawyerId: string): Promise<ChatRoomDTO> {
         
-        let room = await this.chatRoomRepo.findByUserAndLawyer(userId, lawyerId);
-
-        if (room) {
-            return ChatRoomMapper.toDTO(room);
-        }
-
-  
         const activeBooking = await this.bookingRepo.findActiveBooking(userId, lawyerId);
         if (!activeBooking) {
             throw new NotFoundError("No active booking found with this lawyer.");
         }
 
     
+        let room = await this.chatRoomRepo.findByUserAndLawyer(userId, lawyerId);
+
+        if (room) {
+            
+            if (room.bookingId !== activeBooking.id) {
+                await this.chatRoomRepo.updateBookingId(room.id, activeBooking.id);
+            
+                room.bookingId = activeBooking.id;
+            }
+            return ChatRoomMapper.toDTO(room);
+        }
         const newRoom = await this.chatRoomRepo.save({
             id: "",
             userId,

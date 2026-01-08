@@ -9,4 +9,5 @@ export interface IBookingRepository {
     findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null>;
     findByStripeSessionId(sessionId: string): Promise<Booking | null>;
     findByLawyerId(lawyerId: string): Promise<Booking[]>;
+    updateCallStatus(id: string, lawyerJoined: boolean, isCallActive?: boolean): Promise<void>;
 }
