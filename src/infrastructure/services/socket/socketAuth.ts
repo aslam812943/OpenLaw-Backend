@@ -18,7 +18,7 @@ export class SocketAuthService implements ISocketAuth {
                         return acc;
                     }, {} as Record<string, string>);
 
-                    token = cookies['userAccessToken'] || cookies['lawyerAccessToken'];
+                    token = cookies['accessToken'];
                 }
             }
 

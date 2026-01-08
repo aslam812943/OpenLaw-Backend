@@ -1,9 +1,9 @@
-import { Message } from "../../../domain/entities/Message";
-import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
-import { MessageDTO } from "../../dtos/chat/MessageDTO";
-import { MessageMapper } from "../../mapper/chat/MessageMapper";
-import { ISendMessageUseCase } from "../../interface/use-cases/common/chat/ISendMessageUseCase";
-import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { Message } from "../../../../domain/entities/Message";
+import { IMessageRepository } from "../../../../domain/repositories/IMessageRepository";
+import { MessageDTO } from "../../../dtos/chat/MessageDTO";
+import { MessageMapper } from "../../../mapper/chat/MessageMapper";
+import { ISendMessageUseCase } from "../../../interface/use-cases/common/chat/ISendMessageUseCase";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import crypto from "crypto";
 
 

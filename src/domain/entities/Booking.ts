@@ -17,6 +17,8 @@ export class Booking {
         public lawyerName?: string,
         public refundAmount?: number,
         public refundStatus?: 'none' | 'full' | 'partial',
+        public isCallActive?: boolean,
+        public lawyerJoined?: boolean,
         public createdAt?: Date
     ) { }
 }

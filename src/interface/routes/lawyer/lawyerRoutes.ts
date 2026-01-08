@@ -37,9 +37,9 @@ import { SubscriptionRepository } from "../../../infrastructure/repositories/adm
 import { PaymentRepository } from "../../../infrastructure/repositories/PaymentRepository";
 import { StripeService } from "../../../infrastructure/services/StripeService";
 // Chat Use Cases
-import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
-import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
-import { GetMessagesUseCase } from "../../../application/useCases/chat/GetMessagesUseCase";
+import { CheckChatAccessUseCase } from "../../../application/useCases/common/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../application/useCases/common/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../application/useCases/common/chat/GetMessagesUseCase";
 
 import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
 import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoomRepository";
@@ -98,7 +98,7 @@ const checkLawyerStatusUseCase = new CheckLawyerStatusUseCase(lawyerRepository);
 const tokenService = new TokenService();
 const lawyerAuthMiddleware = new LawyerAuthMiddleware(checkLawyerStatusUseCase, tokenService);
 const getAppoimentsUseCase = new GetAppoimentsUseCase(availabilityRuleRepository)
-const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(availabilityRuleRepository, bookingRepository, stripeService, lawyerRepository, subscriptionRepository);
+const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(availabilityRuleRepository, bookingRepository, stripeService, lawyerRepository, subscriptionRepository, chatRoomRepository);
 
 // Chat
 const checkChatAccessUseCase = new CheckChatAccessUseCase(bookingRepository);

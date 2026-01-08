@@ -11,6 +11,8 @@ import { InternalServerError } from "../errors/InternalServerError";
 import { Types } from "mongoose";
 
 
+import { IBookingRepository } from "../../domain/repositories/IBookingRepository";
+
 export class ChatRoomRepository implements IChatRoomRepository {
     async save(chatRoom: ChatRoom): Promise<ChatRoom> {
         try {
@@ -69,6 +71,28 @@ export class ChatRoomRepository implements IChatRoomRepository {
             }));
         } catch (error) {
             throw new InternalServerError("Error finding user chat rooms");
+        }
+    }
+
+    async updateBookingId(roomId: string, bookingId: string): Promise<void> {
+        try {
+            await ChatRoomModel.findByIdAndUpdate(roomId, { bookingId });
+        } catch (error) {
+            throw new InternalServerError("Error updating chat room booking ID");
+        }
+    }
+
+    async syncChatRoom(userId: string, lawyerId: string, bookingRepo: IBookingRepository): Promise<void> {
+        try {
+            const activeBooking = await bookingRepo.findActiveBooking(userId, lawyerId);
+            if (!activeBooking) return;
+
+            const room = await ChatRoomModel.findOne({ userId, lawyerId });
+            if (room && room.bookingId.toString() !== activeBooking.id) {
+                await ChatRoomModel.findByIdAndUpdate(room._id, { bookingId: activeBooking.id });
+            }
+        } catch (error) {
+            throw new InternalServerError("Error synchronizing chat room booking ID");
         }
     }
 

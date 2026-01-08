@@ -14,6 +14,7 @@ import { UserAuthMiddleware } from "../../middlewares/UserAuthMiddleware";
 import { TokenService } from "../../../infrastructure/services/jwt/TokenService";
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
 import { CheckUserStatusUseCase } from "../../../application/useCases/user/checkUserStatusUseCase";
+import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoomRepository";
 
 const router = Router();
 
@@ -22,11 +23,12 @@ const bookingRepository = new BookingRepository();
 const availabilityRuleRepository = new AvailabilityRuleRepository();
 const lawyerRepository = new LawyerRepository();
 const paymentRepository = new PaymentRepository();
+const chatRoomRepository = new ChatRoomRepository();
 
 const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService);
-const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository, lawyerRepository, paymentRepository);
+const confirmBookingUseCase = new ConfirmBookingUseCase(bookingRepository, stripeService, availabilityRuleRepository, lawyerRepository, paymentRepository, chatRoomRepository);
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository);
 
 const bookingController = new BookingController(
     createBookingPaymentUseCase,

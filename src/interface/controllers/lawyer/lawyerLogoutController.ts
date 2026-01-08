@@ -1,22 +1,22 @@
-import { Request, Response, NextFunction} from "express";
+import { Request, Response, NextFunction } from "express";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
 
 
 export class LawyerLogoutController {
-    async handle(_req: Request, res: Response,next:NextFunction): Promise<void> {
+    async handle(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
 
 
 
-            res.clearCookie('lawyerAccessToken', {
+            res.clearCookie('accessToken', {
                 httpOnly: true,
                 secure: false,
                 sameSite: 'lax',
                 path: '/'
             })
 
-            res.clearCookie('lawyerRefreshToken', {
+            res.clearCookie('refreshToken', {
                 httpOnly: true,
                 secure: false,
                 sameSite: 'lax',
@@ -29,6 +29,7 @@ export class LawyerLogoutController {
             });
 
         } catch (error) {
-next(error)        }
+            next(error)
+        }
     }
 }

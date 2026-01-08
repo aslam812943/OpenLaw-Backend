@@ -2,6 +2,7 @@ import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
+import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
@@ -12,7 +13,8 @@ export class UpdateAppointmentStatusUseCase {
         private _bookingRepository: IBookingRepository,
         private _paymentService: IPaymentService,
         private _lawyerRepository: ILawyerRepository,
-        private _subscriptionRepository: ISubscriptionRepository
+        private _subscriptionRepository: ISubscriptionRepository,
+        private _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(id: string, status: string): Promise<void> {
@@ -43,7 +45,7 @@ export class UpdateAppointmentStatusUseCase {
                 throw new BadRequestError("Only confirmed appointments can be marked as completed.");
             }
 
-            
+
             const appointmentDate = new Date(booking.date);
             const [time, modifier] = booking.startTime.split(' ');
             let [hours, minutes] = time.split(':').map(Number);
@@ -57,7 +59,7 @@ export class UpdateAppointmentStatusUseCase {
 
             await this._bookingRepository.updateStatus(id, 'completed');
 
-            
+
             const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
             let commissionPercent = 10;
 
@@ -73,8 +75,10 @@ export class UpdateAppointmentStatusUseCase {
 
             await this._lawyerRepository.updateWalletBalance(booking.lawyerId, netAmount);
         } else {
-            
             await this._bookingRepository.updateStatus(id, status);
         }
+
+        
+        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

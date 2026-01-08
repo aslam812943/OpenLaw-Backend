@@ -128,41 +128,21 @@ export class AuthController {
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUsecase.execute(dto);
 
-      if (user.role == 'user') {
-        res.cookie("userAccessToken", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 15 * 60 * 1000, // 15 minutes
-        });
+      res.cookie("accessToken", token, {
+        httpOnly: true,
+        secure: false, // Set to true in production
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+      });
 
-
-        res.cookie("userRefreshToken", refreshToken, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-      } else {
-        res.cookie("lawyerAccessToken", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 15 * 60 * 1000, // 15 minutes
-        });
-
-
-        res.cookie("lawyerRefreshToken", refreshToken, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-      }
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false, // Set to true in production
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
 
 
       res.status(HttpStatusCode.OK).json({
@@ -173,7 +153,7 @@ export class AuthController {
         user,
       });
     } catch (err: any) {
-     
+
       next(err)
     }
   }
@@ -186,14 +166,14 @@ export class AuthController {
   async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
 
-      res.clearCookie("userAccessToken", {
+      res.clearCookie("accessToken", {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
         path: '/'
       });
 
-      res.clearCookie("userRefreshToken", {
+      res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
@@ -230,37 +210,20 @@ export class AuthController {
       }
 
       // Set Cookies
-      if (result.user.role === 'user') {
-        res.cookie("userAccessToken", result.token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 15 * 60 * 1000,
-        });
-        res.cookie("userRefreshToken", result.refreshToken, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-      } else {
-        res.cookie("lawyerAccessToken", result.token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 15 * 60 * 1000,
-        });
-        res.cookie("lawyerRefreshToken", result.refreshToken, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-      }
+      res.cookie("accessToken", result.token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000,
+      });
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       res.status(HttpStatusCode.OK).json({
         success: true,

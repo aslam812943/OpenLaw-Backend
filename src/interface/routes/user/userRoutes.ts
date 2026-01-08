@@ -19,9 +19,9 @@ import { GetSingleLawyerUseCase } from "../../../application/useCases/user/GetSi
 import { GetAllSlotsUseCase } from "../../../application/useCases/user/GetAllSlotsUseCase";
 import { CheckUserStatusUseCase } from "../../../application/useCases/user/checkUserStatusUseCase";
 // Chat Use Cases
-import { CheckChatAccessUseCase } from "../../../application/useCases/chat/CheckChatAccessUseCase";
-import { GetChatRoomUseCase } from "../../../application/useCases/chat/GetChatRoomUseCase";
-import { GetMessagesUseCase } from "../../../application/useCases/chat/GetMessagesUseCase";
+import { CheckChatAccessUseCase } from "../../../application/useCases/common/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../application/useCases/common/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../application/useCases/common/chat/GetMessagesUseCase";
 
 // Review Use Cases
 import { AddReviewUseCase } from "../../../application/useCases/user/review/AddReviewUseCase";

@@ -7,6 +7,7 @@ import { AvailabilityRuleRepository } from '../../../infrastructure/repositories
 import { LawyerRepository } from '../../../infrastructure/repositories/lawyer/LawyerRepository';
 import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
 import { StripeService } from '../../../infrastructure/services/StripeService';
+import { ChatRoomRepository } from '../../../infrastructure/repositories/ChatRoomRepository';
 import { webhookSignatureVerification } from '../../middlewares/webhookMiddleware';
 
 const router = Router();
@@ -17,6 +18,7 @@ const bookingRepository = new BookingRepository();
 const availabilityRuleRepository = new AvailabilityRuleRepository();
 const lawyerRepository = new LawyerRepository();
 const paymentRepository = new PaymentRepository();
+const chatRoomRepository = new ChatRoomRepository();
 
 // Initialize use cases
 const confirmBookingUseCase = new ConfirmBookingUseCase(
@@ -24,7 +26,8 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     stripeService,
     availabilityRuleRepository,
     lawyerRepository,
-    paymentRepository
+    paymentRepository,
+    chatRoomRepository
 );
 
 const handleWebhookUseCase = new HandleWebhookUseCase(confirmBookingUseCase);

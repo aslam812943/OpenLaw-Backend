@@ -10,6 +10,7 @@ import lawyerRoutes from "./src/interface/routes/lawyer/lawyerRoutes";
 import adminRoutes from "./src/interface/routes/admin/adminRoutes";
 import bookingRoutes from "./src/interface/routes/user/bookingRoutes";
 import webhookRoutes from "./src/interface/routes/user/webhookRoutes";
+import videoCallRoutes from "./src/interface/routes/common/videoCallRoutes";
 
 import { DbConnection } from "./src/config/mongoose/DbConnection";
 import { errorHandler } from "./src/interface/middlewares/errorHandler";
@@ -48,6 +49,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/lawyer", lawyerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/booking", bookingRoutes);
+app.use("/api/video-call", videoCallRoutes);
 
 
 app.use(errorHandler);

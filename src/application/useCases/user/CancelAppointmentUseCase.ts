@@ -1,6 +1,7 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
+import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { ICancelAppointmentUseCase } from "../../interface/use-cases/user/ICancelAppointmentUseCase";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
@@ -11,7 +12,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private bookingRepository: IBookingRepository,
         private _slotRepo: IAvailabilityRuleRepository,
         private _paymentService: IPaymentService,
-        private _lawyerRepo: ILawyerRepository
+        private _lawyerRepo: ILawyerRepository,
+        private _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -35,7 +37,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         appointmentDate.setHours(hours, minutes, 0, 0);
 
         const now = new Date();
-        const createdAt = booking.createdAt || now; 
+        const createdAt = booking.createdAt || now;
         const timeSinceBooking = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
         const diffInHours = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -65,5 +67,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             status: refundStatus
         });
         await this._slotRepo.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
+
+    
+        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this.bookingRepository);
     }
 }

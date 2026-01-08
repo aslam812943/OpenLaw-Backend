@@ -27,7 +27,7 @@ export class LawyerAuthMiddleware {
 
         try {
             let token =
-                req.cookies?.lawyerAccessToken ||
+                req.cookies?.accessToken ||
                 req.headers.authorization?.split(" ")[1];
 
             if (!token) {
@@ -45,7 +45,7 @@ export class LawyerAuthMiddleware {
 
                 if (error.name === "TokenExpiredError") {
 
-                    const refreshToken = req.cookies?.lawyerRefreshToken;
+                    const refreshToken = req.cookies?.refreshToken;
 
                     if (!refreshToken) {
                         res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "Session expired. Please login again." });
@@ -63,7 +63,7 @@ export class LawyerAuthMiddleware {
 
                         const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
-                        res.cookie("lawyerAccessToken", newAccessToken, {
+                        res.cookie("accessToken", newAccessToken, {
                             httpOnly: true,
                             secure: process.env.NODE_ENV === "production",
                             sameSite: "lax",
@@ -94,14 +94,14 @@ export class LawyerAuthMiddleware {
 
             if (!status.isActive) {
 
-                res.clearCookie("lawyerAccessToken", {
+                res.clearCookie("accessToken", {
                     httpOnly: true,
                     secure: false,
                     sameSite: "lax",
                     path: '/'
                 });
 
-                res.clearCookie("lawyerRefreshToken", {
+                res.clearCookie("refreshToken", {
                     httpOnly: true,
                     secure: false,
                     sameSite: "lax",

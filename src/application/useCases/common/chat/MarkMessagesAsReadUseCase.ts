@@ -1,5 +1,5 @@
-import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
-import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { IMessageRepository } from "../../../../domain/repositories/IMessageRepository";
+import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 
 export class MarkMessagesAsReadUseCase {
     constructor(private messageRepository: IMessageRepository) { }

@@ -1,4 +1,4 @@
-import { IUseCase } from "../../../useCases/common/IUseCase";
+import { IUseCase } from "../common/IUseCase";
 import { GetAllLawyerDTO } from "../../../dtos/admin/GetAllLawyerDTO";
 
 export interface IGetAllLawyersUseCase

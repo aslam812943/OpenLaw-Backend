@@ -28,7 +28,7 @@ export class UserAuthMiddleware {
 
     try {
       let token =
-        req.cookies?.userAccessToken ||
+        req.cookies?.accessToken ||
         req.headers.authorization?.split(" ")[1];
 
       if (!token) {
@@ -47,7 +47,7 @@ export class UserAuthMiddleware {
 
         if (error.name === "TokenExpiredError") {
 
-          const refreshToken = req.cookies?.userRefreshToken;
+          const refreshToken = req.cookies?.refreshToken;
 
           if (!refreshToken) {
             res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "Session expired. Please login again." });
@@ -62,7 +62,7 @@ export class UserAuthMiddleware {
             const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
             if (refreshDecoded.role === 'user') {
-              res.cookie("userAccessToken", newAccessToken, {
+              res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "lax",
@@ -97,14 +97,14 @@ export class UserAuthMiddleware {
       if (!status.isActive) {
 
         if (decoded.role == 'user') {
-          res.clearCookie("userAccessToken", {
+          res.clearCookie("accessToken", {
             httpOnly: true,
             secure: false,
             sameSite: "lax",
             path: '/'
           });
 
-          res.clearCookie("userRefreshToken", {
+          res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: false,
             sameSite: "lax",

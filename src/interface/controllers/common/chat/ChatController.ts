@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { CheckChatAccessUseCase } from "../../../../application/useCases/chat/CheckChatAccessUseCase";
-import { GetChatRoomUseCase } from "../../../../application/useCases/chat/GetChatRoomUseCase";
-import { GetMessagesUseCase } from "../../../../application/useCases/chat/GetMessagesUseCase";
+import { CheckChatAccessUseCase } from "../../../../application/useCases/common/chat/CheckChatAccessUseCase";
+import { GetChatRoomUseCase } from "../../../../application/useCases/common/chat/GetChatRoomUseCase";
+import { GetMessagesUseCase } from "../../../../application/useCases/common/chat/GetMessagesUseCase";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class ChatController {

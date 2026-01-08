@@ -1,6 +1,6 @@
 
-import { ICheckChatAccessUseCase } from "../../interface/use-cases/common/chat/ICheckChatAccessUseCase";
-import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
+import { ICheckChatAccessUseCase } from "../../../interface/use-cases/common/chat/ICheckChatAccessUseCase";
+import { IBookingRepository } from "../../../../domain/repositories/IBookingRepository";
 
 export class CheckChatAccessUseCase implements ICheckChatAccessUseCase {
     constructor(private bookingRepository: IBookingRepository) { }
