@@ -315,10 +315,10 @@ export class LawyerRepository implements ILawyerRepository {
       password: doc.password,
       phone: doc.phone,
       role: doc.role,
-      hasSubmittedVerification:doc.hasSubmittedVerification,
+      hasSubmittedVerification: doc.hasSubmittedVerification,
       isBlock: doc.isBlock,
       googleId: doc.googleId,
-      
+
       barNumber: doc.barNumber,
       barAdmissionDate: doc.barAdmissionDate,
       yearsOfPractice: doc.yearsOfPractice,
@@ -334,7 +334,8 @@ export class LawyerRepository implements ILawyerRepository {
       isPassword: doc.password ? true : false,
       paymentVerify: doc.paymentVerify,
       consultationFee: doc.consultationFee,
-      walletBalance: doc.walletBalance
+      walletBalance: doc.walletBalance,
+      subscriptionId: doc.subscriptionId ? String(doc.subscriptionId) : undefined
     };
   }
 

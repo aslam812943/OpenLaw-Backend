@@ -25,4 +25,5 @@ export interface Lawyer {
   paymentVerify?: boolean;
   consultationFee?: number;
   walletBalance?: number;
+  subscriptionId?: string;
 }

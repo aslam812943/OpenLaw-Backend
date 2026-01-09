@@ -54,13 +54,15 @@ export class WithdrawalRepository implements IWithdrawalRepository {
     async findAllPending(): Promise<Withdrawal[]> {
         try {
             const docs = await WithdrawalModel.find({ status: 'pending' })
-                .populate('lawyerId', 'name')
+                .populate('lawyerId', 'name isBlock email')
                 .sort({ createdAt: 1 });
 
             return docs.map(doc => {
                 const withdrawal = this.mapToDomain(doc);
-                if (doc.lawyerId && (doc.lawyerId as any).name) {
+                if (doc.lawyerId && typeof doc.lawyerId === 'object') {
                     withdrawal.lawyerName = (doc.lawyerId as any).name;
+                    (withdrawal as any).isBlock = (doc.lawyerId as any).isBlock;
+                    (withdrawal as any).email = (doc.lawyerId as any).email;
                 }
                 return withdrawal;
             });

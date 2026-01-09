@@ -23,7 +23,7 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
             throw new NotFoundError("Lawyer not found.");
         }
 
-        let commissionPercent = 10; 
+        let commissionPercent = 0;
         if ((lawyer as any).subscriptionId) {
             const subscription = await this.subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
             if (subscription) {
