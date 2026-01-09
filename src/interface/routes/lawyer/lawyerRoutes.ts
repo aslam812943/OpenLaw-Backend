@@ -59,6 +59,8 @@ import { WithdrawalRepository } from "../../../infrastructure/repositories/Withd
 import { RequestPayoutUseCase } from "../../../application/useCases/lawyer/RequestPayoutUseCase";
 import { ApprovePayoutUseCase } from "../../../application/useCases/Admin/ApprovePayoutUseCase";
 import { PayoutController } from "../../controllers/common/payout/PayoutController";
+import { GetLawyerDashboardStatsUseCase } from "../../../application/useCases/lawyer/GetLawyerDashboardStatsUseCase";
+import { LawyerDashboardController } from "../../controllers/lawyer/LawyerDashboardController";
 
 const router = Router();
 
@@ -127,6 +129,9 @@ const withdrawalRepository = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawyerRepository);
 const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository, subscriptionRepository);
 const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepository);
+
+const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);
+const lawyerDashboardController = new LawyerDashboardController(getLawyerDashboardStatsUseCase);
 
 // Availability Controller 
 const availabilityController = new AvailabilityController(
@@ -208,5 +213,7 @@ router.get('/earnings', lawyerAuthMiddleware.execute, (req, res, next) => lawyer
 
 router.post('/payout/request', lawyerAuthMiddleware.execute, (req, res, next) => payoutController.requestPayout(req, res, next));
 router.get('/payout/history', lawyerAuthMiddleware.execute, (req, res, next) => payoutController.getLawyerWithdrawals(req, res, next));
+
+router.get('/dashboard/stats', lawyerAuthMiddleware.execute, (req, res, next) => lawyerDashboardController.getStats(req, res, next));
 
 export default router;

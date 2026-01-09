@@ -180,7 +180,7 @@ export class PaymentRepository implements IPaymentRepository {
                 }
             ]),
 
-           
+
             BookingModel.aggregate([
                 {
                     $match: {
@@ -232,6 +232,140 @@ export class PaymentRepository implements IPaymentRepository {
             },
             topLawyers: topLawyers,
             monthlyRevenue: formattedMonthlyRevenue
+        };
+    }
+
+    async getLawyerDashboardStats(lawyerId: string, startDate?: Date, endDate?: Date): Promise<any> {
+        const dateFilter: any = {};
+        if (startDate || endDate) {
+            const range: any = {};
+            if (startDate) range.$gte = startDate;
+            if (endDate) range.$lte = endDate;
+            dateFilter.createdAt = range;
+        }
+
+        const lawyerObjectId = new mongoose.Types.ObjectId(lawyerId);
+
+        const [revenueStats, bookingStats, monthlyEarnings] = await Promise.all([
+        
+            BookingModel.aggregate([
+                { $match: { lawyerId: lawyerObjectId, paymentStatus: 'paid', ...dateFilter } },
+                {
+                    $lookup: {
+                        from: 'lawyers',
+                        localField: 'lawyerId',
+                        foreignField: '_id',
+                        as: 'lawyer'
+                    }
+                },
+                { $unwind: '$lawyer' },
+                {
+                    $lookup: {
+                        from: 'subscriptions',
+                        localField: 'lawyer.subscriptionId',
+                        foreignField: '_id',
+                        as: 'subscription'
+                    }
+                },
+                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: null,
+                        totalEarnings: {
+                            $sum: {
+                                $multiply: [
+                                    '$consultationFee',
+                                    { $subtract: [1, { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }] }
+                                ]
+                            }
+                        },
+                        count: { $sum: 1 }
+                    }
+                }
+            ]),
+
+            // Booking Breakdown
+            BookingModel.aggregate([
+                { $match: { lawyerId: lawyerObjectId, ...dateFilter } },
+                {
+                    $group: {
+                        _id: '$status',
+                        count: { $sum: 1 }
+                    }
+                }
+            ]),
+
+            // Monthly Earnings Trend
+            BookingModel.aggregate([
+                {
+                    $match: {
+                        lawyerId: lawyerObjectId,
+                        paymentStatus: 'paid',
+                        createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1) }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'lawyers',
+                        localField: 'lawyerId',
+                        foreignField: '_id',
+                        as: 'lawyer'
+                    }
+                },
+                { $unwind: '$lawyer' },
+                {
+                    $lookup: {
+                        from: 'subscriptions',
+                        localField: 'lawyer.subscriptionId',
+                        foreignField: '_id',
+                        as: 'subscription'
+                    }
+                },
+                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' }
+                        },
+                        earnings: {
+                            $sum: {
+                                $multiply: [
+                                    '$consultationFee',
+                                    { $subtract: [1, { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }] }
+                                ]
+                            }
+                        }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ])
+        ]);
+
+        const formattedBookingStats = {
+            completed: 0,
+            cancelled: 0,
+            pending: 0,
+            rejected: 0,
+            confirmed: 0
+        };
+        bookingStats.forEach((stat: any) => {
+            if (stat._id in formattedBookingStats) {
+                formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
+            }
+        });
+
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const formattedMonthlyEarnings = monthlyEarnings.map((m: any) => ({
+            month: monthNames[m._id.month - 1],
+            earnings: m.earnings
+        }));
+
+        return {
+            totalEarnings: revenueStats[0]?.totalEarnings || 0,
+            totalConsultations: revenueStats[0]?.count || 0,
+            bookingStats: formattedBookingStats,
+            monthlyEarnings: formattedMonthlyEarnings
         };
     }
 
