@@ -57,7 +57,7 @@ import { GetLawyerEarningsUseCase } from "../../../application/useCases/lawyer/G
 import { LawyerEarningsController } from "../../controllers/lawyer/LawyerEarningsController";
 import { WithdrawalRepository } from "../../../infrastructure/repositories/WithdrawalRepository";
 import { RequestPayoutUseCase } from "../../../application/useCases/lawyer/RequestPayoutUseCase";
-import { ApprovePayoutUseCase } from "../../../application/useCases/admin/ApprovePayoutUseCase";
+import { ApprovePayoutUseCase } from "../../../application/useCases/Admin/ApprovePayoutUseCase";
 import { PayoutController } from "../../controllers/common/payout/PayoutController";
 
 const router = Router();

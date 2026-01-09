@@ -1,6 +1,9 @@
 import { IPaymentRepository } from "../../domain/repositories/IPaymentRepository";
 import { Payment } from "../../domain/entities/Payment";
 import { PaymentModel, IPaymentDocument } from "../db/models/admin/PaymentModel";
+import { BookingModel } from "../db/models/BookingModel";
+import { WithdrawalModel } from "../db/models/admin/WithdrawalModel";
+import mongoose from "mongoose";
 
 export class PaymentRepository implements IPaymentRepository {
     async create(payment: Partial<Payment>): Promise<Payment> {
@@ -64,6 +67,161 @@ export class PaymentRepository implements IPaymentRepository {
         return {
             payments: payments.map(p => this.mapToEntity(p)),
             total
+        };
+    }
+
+    async getDashboardStats(): Promise<any> {
+        const now = new Date();
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+        const [revenueStats, bookingStats, withdrawalStats, topLawyers, monthlyRevenue] = await Promise.all([
+            
+            BookingModel.aggregate([
+                { $match: { paymentStatus: 'paid' } },
+                {
+                    $lookup: {
+                        from: 'lawyers',
+                        localField: 'lawyerId',
+                        foreignField: '_id',
+                        as: 'lawyer'
+                    }
+                },
+                { $unwind: '$lawyer' },
+                {
+                    $lookup: {
+                        from: 'subscriptions',
+                        localField: 'lawyer.subscriptionId',
+                        foreignField: '_id',
+                        as: 'subscription'
+                    }
+                },
+                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: null,
+                        totalRevenue: { $sum: '$consultationFee' },
+                        totalCommission: {
+                            $sum: {
+                                $multiply: [
+                                    '$consultationFee',
+                                    { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]),
+
+            // Booking Stats
+            BookingModel.aggregate([
+                {
+                    $group: {
+                        _id: '$status',
+                        count: { $sum: 1 }
+                    }
+                }
+            ]),
+
+            // Withdrawal Stats
+            WithdrawalModel.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalWithdrawn: {
+                            $sum: {
+                                $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0]
+                            }
+                        },
+                        pendingWithdrawals: {
+                            $sum: {
+                                $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0]
+                            }
+                        }
+                    }
+                }
+            ]),
+
+            // Top Performing Lawyers
+            BookingModel.aggregate([
+                { $match: { paymentStatus: 'paid' } },
+                {
+                    $group: {
+                        _id: '$lawyerId',
+                        revenue: { $sum: '$consultationFee' },
+                        bookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { revenue: -1 } },
+                { $limit: 5 },
+                {
+                    $lookup: {
+                        from: 'lawyers',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'lawyer'
+                    }
+                },
+                { $unwind: '$lawyer' },
+                {
+                    $project: {
+                        name: '$lawyer.name',
+                        revenue: 1,
+                        bookings: 1
+                    }
+                }
+            ]),
+
+            // Monthly Revenue (last 6 months)
+            BookingModel.aggregate([
+                {
+                    $match: {
+                        paymentStatus: 'paid',
+                        createdAt: { $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' }
+                        },
+                        revenue: { $sum: '$consultationFee' }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ])
+        ]);
+
+        // Format Booking Stats
+        const formattedBookingStats = {
+            completed: 0,
+            cancelled: 0,
+            pending: 0,
+            rejected: 0
+        };
+        bookingStats.forEach((stat: any) => {
+            if (stat._id in formattedBookingStats) {
+                formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
+            }
+        });
+
+        // Format Monthly Revenue
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const formattedMonthlyRevenue = monthlyRevenue.map((m: any) => ({
+            month: monthNames[m._id.month - 1],
+            revenue: m.revenue
+        }));
+
+        return {
+            totalRevenue: revenueStats[0]?.totalRevenue || 0,
+            totalCommission: revenueStats[0]?.totalCommission || 0,
+            bookingStats: formattedBookingStats,
+            withdrawalStats: {
+                totalWithdrawn: withdrawalStats[0]?.totalWithdrawn || 0,
+                pendingWithdrawals: withdrawalStats[0]?.pendingWithdrawals || 0
+            },
+            topLawyers: topLawyers,
+            monthlyRevenue: formattedMonthlyRevenue
         };
     }
 

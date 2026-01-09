@@ -13,9 +13,7 @@ import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel } from "../../db/models/BookingModel";
 export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
-  /**
-   * Create a new availability rule
-   */
+ 
   async createRule(rule: CreateAvailabilityRuleDTO): Promise<any> {
     try {
       return await AvailabilityRuleModel.create(rule);
@@ -27,9 +25,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Create all slots generated for the rule
-   */
+
   async createSlots(ruleId: string, lawyerId: string, slots: any[]): Promise<any> {
     try {
       const formatted = slots.map(s => ({ ...s, ruleId, userId: lawyerId }));
@@ -40,9 +36,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Update an availability rule
-   */
+  
   async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<any> {
     try {
       const rule = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
@@ -60,9 +54,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Delete all slots generated for a rule
-   */
+ 
   async deleteSlotsByRuleId(ruleId: string): Promise<void> {
     try {
       await SlotModel.deleteMany({ ruleId });
@@ -71,9 +63,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Get a specific rule by ID
-   */
+ 
   async getRuleById(ruleId: string): Promise<any> {
     try {
       const rule = await AvailabilityRuleModel.findById(ruleId);
@@ -91,9 +81,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Get all rules belonging to a specific lawyer
-   */
+
   async getAllRules(id: string): Promise<AvailabilityRule[]> {
     try {
       const docs = await AvailabilityRuleModel.find({
@@ -123,9 +111,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  /**
-   * Delete rule by ID
-   */
+
   async deleteRuleById(ruleId: string): Promise<void> {
     try {
       const deleted = await AvailabilityRuleModel.findByIdAndDelete(ruleId);

@@ -20,7 +20,7 @@ export class CanJoinCallUseCase implements ICanJoinCallUseCase {
             return { canJoin: false, message: "Unauthorized: You are not the assigned lawyer for this booking" };
         }
 
-        console.log(booking)
+        
         if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
             return { canJoin: false, message: "Valid confirmed booking required" };
         }

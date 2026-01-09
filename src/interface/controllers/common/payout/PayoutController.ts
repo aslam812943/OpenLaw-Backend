@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { RequestPayoutUseCase } from "../../../../application/useCases/lawyer/RequestPayoutUseCase";
-import { ApprovePayoutUseCase } from "../../../../application/useCases/admin/ApprovePayoutUseCase";
+import { ApprovePayoutUseCase } from "../../../../application/useCases/Admin/ApprovePayoutUseCase";
 import { IWithdrawalRepository } from "../../../../domain/repositories/IWithdrawalRepository";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
 

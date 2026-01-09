@@ -42,8 +42,10 @@ import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/A
 import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
 import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
 import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
-import { ApprovePayoutUseCase } from '../../../application/useCases/admin/ApprovePayoutUseCase';
+import { ApprovePayoutUseCase } from '../../../application/useCases/Admin/ApprovePayoutUseCase';
 import { PayoutController } from '../../controllers/common/payout/PayoutController';
+import { GetAdminDashboardStatsUseCase } from '../../../application/useCases/Admin/GetAdminDashboardStatsUseCase';
+import { AdminDashboardController } from '../../controllers/admin/AdminDashboardController';
 const router = express.Router();
 
 // ------------------------------------------------------
@@ -121,6 +123,8 @@ const withdrawalRepo = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
 const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo, subscriptionRepo);
 const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepo);
+const getAdminDashboardStatsUseCase = new GetAdminDashboardStatsUseCase(paymentRepo);
+const adminDashboardController = new AdminDashboardController(getAdminDashboardStatsUseCase);
 
 
 
@@ -162,6 +166,9 @@ router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.ge
 // Payout Routes
 router.get('/payout/pending', adminAuth, (req, res, next) => payoutController.getPendingWithdrawals(req, res, next));
 router.patch('/payout/:id/approve', adminAuth, (req, res, next) => payoutController.approvePayout(req, res, next));
+
+// Dashboard Stats Route
+router.get('/dashboard/stats', adminAuth, (req, res, next) => adminDashboardController.getStats(req, res, next));
 
 
 export default router
