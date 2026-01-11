@@ -30,6 +30,7 @@ import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/Chan
 import { GetAppoimentsUseCase } from "../../../application/useCases/lawyer/GetAppoimentsUseCase";
 import { UpdateAppointmentStatusUseCase } from "../../../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
 import { GetSubscriptionPlansUseCase } from "../../../application/useCases/lawyer/GetSubscriptionPlansUseCase";
+import { GetCurrentSubscriptionUseCase } from "../../../application/useCases/lawyer/GetCurrentSubscriptionUseCase";
 import { CreateSubscriptionCheckoutUseCase } from "../../../application/useCases/lawyer/CreateSubscriptionCheckoutUseCase";
 import { VerifySubscriptionPaymentUseCase } from "../../../application/useCases/lawyer/VerifySubscriptionPaymentUseCase";
 import { SubscriptionPaymentController } from "../../controllers/lawyer/SubscriptionPaymentController";
@@ -81,10 +82,11 @@ const stripeService = new StripeService();
 const paymentRepository = new PaymentRepository();
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
+const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
 const createSubscriptionCheckoutUseCase = new CreateSubscriptionCheckoutUseCase(stripeService);
 const verifySubscriptionPaymentUseCase = new VerifySubscriptionPaymentUseCase(stripeService, lawyerRepository, paymentRepository);
 
-const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase);
+const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 
 
@@ -202,6 +204,7 @@ router.post("/chat/room", lawyerAuthMiddleware.execute, (req, res, next) => chat
 
 
 router.get('/subscriptions', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionController.getPlans(req, res, next));
+router.get('/subscription/current', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionController.getCurrentSubscription(req, res, next));
 router.post('/subscription/checkout', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.createCheckout(req, res, next));
 router.post('/subscription/success', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.handleSuccess(req, res, next));
 

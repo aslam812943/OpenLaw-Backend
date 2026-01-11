@@ -15,6 +15,7 @@ export class ResponseGetSingleLawyerDTO {
   phone: string;
   profileImage: string;
   bio: string;
+  consultationFee:number
 
   constructor(data: any) {
     this.id = String(data.id);
@@ -35,5 +36,6 @@ export class ResponseGetSingleLawyerDTO {
 
     this.profileImage = data.profileImage || "";
     this.bio = data.bio || "";
+    this.consultationFee = data.consultationFee
   }
 }
