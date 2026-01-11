@@ -83,8 +83,8 @@ const paymentRepository = new PaymentRepository();
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
 const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
-const createSubscriptionCheckoutUseCase = new CreateSubscriptionCheckoutUseCase(stripeService);
-const verifySubscriptionPaymentUseCase = new VerifySubscriptionPaymentUseCase(stripeService, lawyerRepository, paymentRepository);
+const createSubscriptionCheckoutUseCase = new CreateSubscriptionCheckoutUseCase(stripeService, lawyerRepository, subscriptionRepository);
+const verifySubscriptionPaymentUseCase = new VerifySubscriptionPaymentUseCase(stripeService, lawyerRepository, paymentRepository, subscriptionRepository);
 
 const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);

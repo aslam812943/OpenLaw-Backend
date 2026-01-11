@@ -2,12 +2,14 @@ import { StripeService } from "../../../infrastructure/services/StripeService";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IPaymentRepository } from "../../../domain/repositories/IPaymentRepository";
 import { IVerifySubscriptionPaymentUseCase } from "../../interface/use-cases/lawyer/IVerifySubscriptionPaymentUseCase";
+import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 
 export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaymentUseCase {
     constructor(
         private stripeService: StripeService,
         private lawyerRepository: ILawyerRepository,
-        private paymentRepository: IPaymentRepository
+        private paymentRepository: IPaymentRepository,
+        private subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(sessionId: string): Promise<boolean> {
@@ -27,6 +29,21 @@ export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaym
                 return true;
             }
 
+            const subscription = await this.subscriptionRepository.findById(subscriptionId);
+            if (!subscription) throw new Error("Subscription plan not found");
+
+            let expiryDate = new Date();
+            const startDate = new Date();
+
+            if (subscription.durationUnit === 'month') {
+                expiryDate.setMonth(expiryDate.getMonth() + subscription.duration);
+            } else if (subscription.durationUnit === 'year') {
+                expiryDate.setFullYear(expiryDate.getFullYear() + subscription.duration);
+            } else {
+                // Default to 30 days if unit is unknown, though validation should prevent this
+                expiryDate.setDate(expiryDate.getDate() + (subscription.duration * 30));
+            }
+
 
             await this.paymentRepository.create({
                 userId: lawyerId,
@@ -42,7 +59,7 @@ export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaym
             });
 
 
-            await this.lawyerRepository.updateSubscriptionStatus(lawyerId, subscriptionId, true);
+            await this.lawyerRepository.updateSubscriptionStatus(lawyerId, subscriptionId, true, startDate, expiryDate);
 
             return true;
         }

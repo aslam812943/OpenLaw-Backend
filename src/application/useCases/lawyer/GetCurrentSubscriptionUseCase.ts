@@ -24,6 +24,6 @@ export class GetCurrentSubscriptionUseCase implements IGetCurrentSubscriptionUse
             return null;
         }
 
-        return SubscriptionMapper.toDTO(subscription);
+        return SubscriptionMapper.toDTO(subscription, lawyer.subscriptionExpiryDate);
     }
 }

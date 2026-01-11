@@ -2,7 +2,7 @@ import { Subscription } from "../../../domain/entities/Subscription";
 import { SubscriptionDTO } from "../../dtos/lawyer/SubscriptionDTO";
 
 export class SubscriptionMapper {
-    static toDTO(subscription: Subscription): SubscriptionDTO {
+    static toDTO(subscription: Subscription, expiryDate?: Date): SubscriptionDTO {
         return new SubscriptionDTO(
             subscription.id,
             subscription.planName,
@@ -10,7 +10,8 @@ export class SubscriptionMapper {
             subscription.durationUnit,
             subscription.price,
             subscription.commissionPercent,
-            subscription.isActive
+            subscription.isActive,
+            expiryDate
         );
     }
 

@@ -296,11 +296,13 @@ export class LawyerRepository implements ILawyerRepository {
     }
   }
 
-  async updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean): Promise<void> {
+  async updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean, startDate: Date, expiryDate: Date): Promise<void> {
     try {
       await LawyerModel.findByIdAndUpdate(id, {
         subscriptionId: subscriptionId,
-        paymentVerify: paymentVerified
+        paymentVerify: paymentVerified,
+        subscriptionStartDate: startDate,
+        subscriptionExpiryDate: expiryDate
       });
     } catch (error: any) {
       throw new InternalServerError("Database error while updating lawyer subscription status.");
@@ -335,7 +337,9 @@ export class LawyerRepository implements ILawyerRepository {
       paymentVerify: doc.paymentVerify,
       consultationFee: doc.consultationFee,
       walletBalance: doc.walletBalance,
-      subscriptionId: doc.subscriptionId ? String(doc.subscriptionId) : undefined
+      subscriptionId: doc.subscriptionId ? String(doc.subscriptionId) : undefined,
+      subscriptionStartDate: doc.subscriptionStartDate,
+      subscriptionExpiryDate: doc.subscriptionExpiryDate
     };
   }
 

@@ -26,4 +26,6 @@ export interface Lawyer {
   consultationFee?: number;
   walletBalance?: number;
   subscriptionId?: string;
+  subscriptionStartDate?: Date;
+  subscriptionExpiryDate?: Date;
 }

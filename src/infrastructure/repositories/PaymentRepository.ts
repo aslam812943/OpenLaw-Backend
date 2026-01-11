@@ -247,38 +247,20 @@ export class PaymentRepository implements IPaymentRepository {
         const lawyerObjectId = new mongoose.Types.ObjectId(lawyerId);
 
         const [revenueStats, bookingStats, monthlyEarnings] = await Promise.all([
-        
+
             BookingModel.aggregate([
-                { $match: { lawyerId: lawyerObjectId, paymentStatus: 'paid', ...dateFilter } },
                 {
-                    $lookup: {
-                        from: 'lawyers',
-                        localField: 'lawyerId',
-                        foreignField: '_id',
-                        as: 'lawyer'
+                    $match: {
+                        lawyerId: lawyerObjectId,
+                        paymentStatus: 'paid',
+                        status: { $in: ['confirmed', 'completed'] },
+                        ...dateFilter
                     }
                 },
-                { $unwind: '$lawyer' },
-                {
-                    $lookup: {
-                        from: 'subscriptions',
-                        localField: 'lawyer.subscriptionId',
-                        foreignField: '_id',
-                        as: 'subscription'
-                    }
-                },
-                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
                 {
                     $group: {
                         _id: null,
-                        totalEarnings: {
-                            $sum: {
-                                $multiply: [
-                                    '$consultationFee',
-                                    { $subtract: [1, { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }] }
-                                ]
-                            }
-                        },
+                        totalEarnings: { $sum: '$consultationFee' },
                         count: { $sum: 1 }
                     }
                 }
@@ -301,41 +283,17 @@ export class PaymentRepository implements IPaymentRepository {
                     $match: {
                         lawyerId: lawyerObjectId,
                         paymentStatus: 'paid',
+                        status: { $in: ['confirmed', 'completed'] },
                         createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1) }
                     }
                 },
-                {
-                    $lookup: {
-                        from: 'lawyers',
-                        localField: 'lawyerId',
-                        foreignField: '_id',
-                        as: 'lawyer'
-                    }
-                },
-                { $unwind: '$lawyer' },
-                {
-                    $lookup: {
-                        from: 'subscriptions',
-                        localField: 'lawyer.subscriptionId',
-                        foreignField: '_id',
-                        as: 'subscription'
-                    }
-                },
-                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
                 {
                     $group: {
                         _id: {
                             month: { $month: '$createdAt' },
                             year: { $year: '$createdAt' }
                         },
-                        earnings: {
-                            $sum: {
-                                $multiply: [
-                                    '$consultationFee',
-                                    { $subtract: [1, { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }] }
-                                ]
-                            }
-                        }
+                        earnings: { $sum: '$consultationFee' }
                     }
                 },
                 { $sort: { '_id.year': 1, '_id.month': 1 } }

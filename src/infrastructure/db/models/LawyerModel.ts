@@ -25,6 +25,8 @@ export interface ILawyerDocument extends Document {
   bio?: string;
   paymentVerify?: boolean
   subscriptionId?: Types.ObjectId
+  subscriptionStartDate?: Date;
+  subscriptionExpiryDate?: Date;
   consultationFee: number;
   walletBalance: number;
 }
@@ -68,6 +70,8 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   bio: { type: String },
   paymentVerify: { type: Boolean, default: false },
   subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
+  subscriptionStartDate: { type: Date },
+  subscriptionExpiryDate: { type: Date },
   consultationFee: { type: Number, default: 0 },
   walletBalance: { type: Number, default: 0 }
 
