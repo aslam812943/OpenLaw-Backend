@@ -19,9 +19,7 @@ export class AvailabilityController {
     private readonly _deleteavailableusecase: IDeleteAvailableRuleUseCase
   ) { }
 
-  /**
-   * Create a new availability rule
-   */
+
   async createRule(req: Request, res: Response, next: NextFunction) {
     try {
       const data = req.body.ruleData;

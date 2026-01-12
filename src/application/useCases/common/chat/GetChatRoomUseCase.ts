@@ -42,11 +42,11 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
         return ChatRoomMapper.toDTO(newRoom);
     }
 
-    async getById(roomId: string): Promise<ChatRoomDTO> {
-        const room = await this.chatRoomRepo.findById(roomId);
+    async getById(roomId: string): Promise<PopulatedChatRoomDTO> {
+        const room = await this.chatRoomRepo.findByIdPopulated(roomId);
         if (!room) throw new NotFoundError("Chat room not found");
 
-        return ChatRoomMapper.toDTO(room);
+        return PopulatedChatRoomMapper.toDTO(room);
     }
 
     async getByUser(userId: string): Promise<PopulatedChatRoomDTO[]> {

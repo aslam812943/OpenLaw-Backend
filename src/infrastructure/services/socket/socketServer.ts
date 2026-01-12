@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { SendMessageUseCase } from '../../../application/useCases/common/chat/SendMessageUseCase';
 import { MarkMessagesAsReadUseCase } from '../../../application/useCases/common/chat/MarkMessagesAsReadUseCase';
 import { MessageRepository } from '../../repositories/messageRepository';
+import { ChatRoomRepository } from '../../repositories/ChatRoomRepository';
 import { SocketAuthService } from './socketAuth';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
@@ -9,13 +10,15 @@ import { UnauthorizedError } from '../../errors/UnauthorizedError';
 
 export class SocketServerService implements ISocketServer {
   private messageRepo: MessageRepository;
+  private chatRoomRepo: ChatRoomRepository;
   private sendMessageUseCase: SendMessageUseCase;
   private markMessagesAsReadUseCase: MarkMessagesAsReadUseCase;
   private socketAuthService: SocketAuthService;
 
   constructor() {
     this.messageRepo = new MessageRepository();
-    this.sendMessageUseCase = new SendMessageUseCase(this.messageRepo);
+    this.chatRoomRepo = new ChatRoomRepository();
+    this.sendMessageUseCase = new SendMessageUseCase(this.messageRepo, this.chatRoomRepo);
     this.markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(this.messageRepo);
     this.socketAuthService = new SocketAuthService();
   }
