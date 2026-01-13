@@ -1,5 +1,5 @@
 import { LoginResponseDTO } from "../../dtos/user/LoginResponseDTO";
-import { User } from '../../../domain/entities/ User'
+import { User } from '../../../domain/entities/User'
 
 
 

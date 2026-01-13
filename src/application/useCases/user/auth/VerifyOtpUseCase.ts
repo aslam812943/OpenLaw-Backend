@@ -6,6 +6,7 @@ import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { IVerifyOtpUseCase } from "../../../interface/use-cases/user/IVerifyOtpUseCase";
+import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
 
 
 //  VerifyOtpUseCase
@@ -43,7 +44,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
       const userEntity = UserMapper.toEntity(userData);
 
       let savedUser;
-      if (userData.role === 'lawyer') {
+      if (userData.role === UserRole.LAWYER) {
         savedUser = await this._lawyerRepo.create(userEntity);
 
       } else {

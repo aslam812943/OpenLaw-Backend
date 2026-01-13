@@ -1,6 +1,6 @@
 import { IUserRepository } from '../../../domain/repositories/user/IUserRepository';
 import { ILawyerRepository } from '../../../domain/repositories/lawyer/ILawyerRepository';
-import { User } from '../../../domain/entities/ User';
+import { User } from '../../../domain/entities/User';
 import { IGoogleAuthService } from '../../interface/services/IGoogleAuthService';
 import { ITokenService } from '../../interface/services/TokenServiceInterface';
 import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
@@ -8,6 +8,7 @@ import { BadRequestError } from '../../../infrastructure/errors/BadRequestError'
 import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
 import { ForbiddenError } from '../../../infrastructure/errors/ForbiddenError';
 import { IGoogleAuthUseCase } from '../../interface/use-cases/user/IGoogleAuthUseCase';
+import { UserRole } from '../../../infrastructure/interface/enums/UserRole';
 
 export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
@@ -18,7 +19,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
     private _lawyerRepo: ILawyerRepository
   ) { }
 
-  async execute(idToken: string, role?: 'user' | 'lawyer'): Promise<GoogleAuthResponseDTO> {
+  async execute(idToken: string, role?: UserRole): Promise<GoogleAuthResponseDTO> {
 
     if (!idToken) {
       throw new BadRequestError("Google token is missing.");
@@ -58,7 +59,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
         user.googleId = googleId;
 
-        if (user.role === 'lawyer') {
+        if (user.role === UserRole.LAWYER) {
           await this._lawyerRepo.updateGoogleId(user.id!, googleId);
         } else {
           user = await this._userRepository.save(user);
@@ -83,7 +84,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
       };
 
 
-      if (role === 'lawyer') {
+      if (role === UserRole.LAWYER) {
         user = await this._lawyerRepo.create(newUser);
       } else {
         user = await this._userRepository.createUser(newUser as User);
@@ -100,7 +101,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
       user: {
         id: user.id!,
         email: user.email,
-        role: user.role! as 'user' | 'lawyer',
+        role: user.role! as UserRole,
         name: user.name,
         phone: user.phone,
         hasSubmittedVerification: user.hasSubmittedVerification,
@@ -109,7 +110,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
       needsRoleSelection: false
     };
 
-    if (user.role === 'lawyer') {
+    if (user.role === UserRole.LAWYER) {
       response.needsVerificationSubmission = !user.hasSubmittedVerification;
 
     }

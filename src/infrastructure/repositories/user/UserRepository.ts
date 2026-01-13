@@ -1,8 +1,8 @@
 
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
-import { User } from "../../../domain/entities/ User";
+import { User } from "../../../domain/entities/User";
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
-import UserModel, { IUserDocument } from "../../db/models/ UserModel";
+import UserModel, { IUserDocument } from "../../db/models/UserModel";
 import { BaseRepository } from "../user/BaseRepository";
 import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";

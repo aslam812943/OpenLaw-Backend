@@ -4,18 +4,8 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { CheckUserStatusUseCase } from "../../application/useCases/user/checkUserStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
-interface JwtPayload {
-  id: string;
-  role: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
-  }
-}
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
+import { JwtPayload } from "../../types/express/index";
 
 export class UserAuthMiddleware {
   constructor(
@@ -61,7 +51,7 @@ export class UserAuthMiddleware {
 
             const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
-            if (refreshDecoded.role === 'user') {
+            if (refreshDecoded.role === UserRole.USER) {
               res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
@@ -96,7 +86,7 @@ export class UserAuthMiddleware {
 
       if (!status.isActive) {
 
-        if (decoded.role == 'user') {
+        if (decoded.role == UserRole.USER) {
           res.clearCookie("accessToken", {
             httpOnly: true,
             secure: false,

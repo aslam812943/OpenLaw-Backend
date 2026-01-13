@@ -12,20 +12,23 @@ export class AdminAuthController {
       const loginDto = new AdminLoginRequestDTO(req.body);
       const result = await this._loginUseCase.execute(loginDto);
 
+      const cookieSecure = process.env.COOKIE_SECURE === 'true';
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: false, // Set to true in production
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 15 * 60 * 1000,
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
       });
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false, // Set to true in production
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000
       });
 
       return res.status(HttpStatusCode.OK).json({
@@ -41,17 +44,20 @@ export class AdminAuthController {
 
   async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const cookieSecure = process.env.COOKIE_SECURE === 'true';
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
       res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/'
       });
 
       res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/'
       });
 

@@ -1,5 +1,5 @@
 
-import { User } from "../../entities/ User";
+import { User } from "../../entities/User";
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { GetAllUserDTO } from "../../../application/dtos/admin/GetAllUserDTO";
 

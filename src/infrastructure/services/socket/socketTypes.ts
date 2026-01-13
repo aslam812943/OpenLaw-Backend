@@ -1,3 +1,5 @@
+import { UserRole } from "../../interface/enums/UserRole";
+
 export interface JoinRoomPayload {
     roomId: string;
 }
@@ -17,7 +19,7 @@ export interface MarkReadPayload {
 
 export interface JwtPayload {
     id: string;
-    role: 'user' | 'lawyer';
+    role: UserRole;
 }
 
 export interface VideoJoinPayload {

@@ -1,24 +1,18 @@
+import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
 
-
-export interface ILoginResponseDTO{
-    id:string;
-    name:string;
-    email:string;
-    phone:number;
-    role:string;
-    hasSubmittedVerification:boolean;
-    verificationStatus?:string;
+export interface ILoginResponseDTO {
+    id: string;
+    name: string;
+    email: string;
+    phone: number;
+    role: UserRole;
+    hasSubmittedVerification: boolean;
+    verificationStatus?: string;
 }
 
+export class LoginResponseDTO implements ILoginResponseDTO {
+    constructor(data: ILoginResponseDTO) {
 
-
-
-
-
-
-export class LoginResponseDTO implements ILoginResponseDTO{
-    constructor(data:ILoginResponseDTO){
-        
         this.id = data.id!;
         this.name = data.name;
         this.email = data.email;
@@ -28,13 +22,11 @@ export class LoginResponseDTO implements ILoginResponseDTO{
         this.verificationStatus = data.verificationStatus
     }
 
-    id:string;
-    name:string;
+    id: string;
+    name: string;
     email: string;
     phone: number;
-    role: string;
-    hasSubmittedVerification:boolean;
+    role: UserRole;
+    hasSubmittedVerification: boolean;
     verificationStatus?: string | undefined;
 }
-
-

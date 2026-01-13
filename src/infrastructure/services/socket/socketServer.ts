@@ -7,6 +7,7 @@ import { SocketAuthService } from './socketAuth';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
+import { UserRole } from '../../interface/enums/UserRole';
 
 export class SocketServerService implements ISocketServer {
   private messageRepo: MessageRepository;
@@ -93,14 +94,14 @@ export class SocketServerService implements ISocketServer {
         const videoRoomId = `video-${bookingId}`;
         const role = socket.data.role;
 
-        if (role === 'user') {
+        if (role === UserRole.USER) {
 
           const clients = io.sockets.adapter.rooms.get(videoRoomId);
           let lawyerPresent = false;
           if (clients) {
             for (const clientId of clients) {
               const clientSocket = io.sockets.sockets.get(clientId);
-              if (clientSocket?.data.role === 'lawyer') {
+              if (clientSocket?.data.role === UserRole.LAWYER) {
                 lawyerPresent = true;
                 break;
               }

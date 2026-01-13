@@ -1,4 +1,5 @@
 import { Schema, model, Document, Types } from "mongoose";
+import { UserRole } from "../../interface/enums/UserRole";
 
 export interface ILawyerDocument extends Document {
   name: string;
@@ -6,7 +7,7 @@ export interface ILawyerDocument extends Document {
   password?: string;
   phone?: number;
   isVerified: boolean;
-  role: string;
+  role: UserRole;
   hasSubmittedVerification: boolean;
   isBlock: boolean;
   googleId?: string;
@@ -51,7 +52,7 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   password: { type: String, required: false },
   phone: { type: Number, required: false },
   isVerified: { type: Boolean, default: false },
-  role: { type: String, default: "lawyer" },
+  role: { type: String, enum: Object.values(UserRole), default: UserRole.LAWYER },
   hasSubmittedVerification: { type: Boolean, default: false },
   isBlock: { type: Boolean, default: false },
   googleId: { type: String, unique: true, sparse: true },

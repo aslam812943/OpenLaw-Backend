@@ -1,4 +1,4 @@
-import { User } from "../../../domain/entities/ User";
+import { User } from "../../../domain/entities/User";
 import { GetAllUserDTO, IGetAllUserDTO } from "../../dtos/admin/GetAllUserDTO";
 
 export class AdminUserMapper {

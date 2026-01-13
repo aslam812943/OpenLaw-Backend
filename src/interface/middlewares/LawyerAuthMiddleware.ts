@@ -4,18 +4,8 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { CheckLawyerStatusUseCase } from "../../application/useCases/lawyer/CheckLawyerStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
-interface JwtPayload {
-    id: string;
-    role: string;
-}
-
-declare global {
-    namespace Express {
-        interface Request {
-            user?: JwtPayload;
-        }
-    }
-}
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
+import { JwtPayload } from "../../types/express/index";
 
 export class LawyerAuthMiddleware {
     constructor(
@@ -56,7 +46,7 @@ export class LawyerAuthMiddleware {
 
                         const refreshDecoded = this.tokenService.verifyToken(refreshToken, true) as JwtPayload;
 
-                        if (refreshDecoded.role !== 'lawyer') {
+                        if (refreshDecoded.role !== UserRole.LAWYER) {
                             res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role." });
                             return;
                         }
@@ -84,7 +74,7 @@ export class LawyerAuthMiddleware {
             req.user = decoded;
 
 
-            if (decoded.role !== 'lawyer') {
+            if (decoded.role !== UserRole.LAWYER) {
                 res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Access denied. Lawyers only." });
                 return;
             }

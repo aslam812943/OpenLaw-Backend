@@ -1,14 +1,21 @@
-export type SelectedRole = 'user' | 'lawyer';
+import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
 
 export interface RoleSelectionRequestDTO {
-    role: SelectedRole;
+    role: UserRole;
 }
 
 export interface GoogleAuthResponseDTO {
     token: string;
     refreshToken: string;
-    user: { id: string, email: string, role: SelectedRole, name?: string, phone?: number, hasSubmittedVerification?: boolean ,verificationStatus?:string };
+    user: {
+        id: string;
+        email: string;
+        role: UserRole;
+        name?: string;
+        phone?: number;
+        hasSubmittedVerification?: boolean;
+        verificationStatus?: string;
+    };
     needsRoleSelection: boolean;
-    needsVerificationSubmission?: boolean; 
-    
+    needsVerificationSubmission?: boolean;
 }

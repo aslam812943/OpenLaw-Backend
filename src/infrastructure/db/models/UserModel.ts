@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { UserRole } from "../../interface/enums/UserRole";
 
 export interface Address {
   address: string;
@@ -11,10 +12,10 @@ export interface Address {
 export interface IUserDocument extends Document {
   name: string;
   email: string;
-  password?: string; 
+  password?: string;
   phone?: number;
   isVerified: boolean;
-  role: string;
+  role: UserRole;
   hasSubmittedVerification: boolean;
   isBlock: boolean;
   profileImage?: string;
@@ -28,7 +29,7 @@ const AddressSchema: Schema<Address> = new Schema(
     address: { type: String },
     city: { type: String },
     state: { type: String },
-    pincode: { type: Number},
+    pincode: { type: Number },
   },
   { _id: false }
 );
@@ -40,13 +41,13 @@ const UserSchema: Schema<IUserDocument> = new Schema(
 
     email: { type: String, required: true, unique: true },
 
-    password: { type: String, required: false }, 
+    password: { type: String, required: false },
 
     phone: { type: Number, required: false },
 
     isVerified: { type: Boolean, default: false },
 
-    role: { type: String, default: "user" },
+    role: { type: String, enum: Object.values(UserRole), default: UserRole.USER },
 
     hasSubmittedVerification: { type: Boolean, default: false },
 
@@ -60,7 +61,7 @@ const UserSchema: Schema<IUserDocument> = new Schema(
       type: String,
       unique: true,
       sparse: true,
-      
+
     },
   },
   { timestamps: true }

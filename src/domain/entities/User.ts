@@ -1,4 +1,4 @@
-
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
 
 export interface User {
   id?: string;
@@ -7,7 +7,7 @@ export interface User {
   password?: string;
   phone: number;
   isVerified: boolean;
-  role: string;
+  role: UserRole;
   isBlock: boolean;
   hasSubmittedVerification: boolean;
   profileImage?: string
