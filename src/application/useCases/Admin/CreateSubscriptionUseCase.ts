@@ -6,16 +6,16 @@ import { CreateSubscriptionDTO } from "../../dtos/admin/CreateSubscriptionDTO";
 import { Subscription } from "../../../domain/entities/Subscription";
 export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     constructor(private subscriptionRepository: ISubscriptionRepository) { }
-async execute(data: CreateSubscriptionDTO): Promise<void> {
+async execute(subscriptionData: CreateSubscriptionDTO): Promise<void> {
      
 
-        if (!data.planName || !data.duration || !data.durationUnit || data.price < 0 || data.commissionPercent < 0) {
+        if (!subscriptionData.planName || !subscriptionData.duration || !subscriptionData.durationUnit || subscriptionData.price < 0 || subscriptionData.commissionPercent < 0) {
             throw new BadRequestError("Invalid subscription data provided.");
         }
 
      
         try {
-            const subscription = new Subscription('',data.planName,Number(data.duration),data.durationUnit,Number(data.price),Number(data.commissionPercent))
+            const subscription = new Subscription('',subscriptionData.planName,Number(subscriptionData.duration),subscriptionData.durationUnit,Number(subscriptionData.price),Number(subscriptionData.commissionPercent))
             await this.subscriptionRepository.create(subscription);
         } catch (error: any) {
             if (error.code === 11000) { 

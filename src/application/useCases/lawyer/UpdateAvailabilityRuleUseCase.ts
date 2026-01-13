@@ -8,24 +8,24 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 
 export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUseCase {
-  constructor(private readonly _repo: IAvailabilityRuleRepository) { }
+  constructor(private readonly _availabilityRuleRepository: IAvailabilityRuleRepository) { }
 
 
 
   async execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: any; slots: any; }> {
     try {
-      const updateRule = await this._repo.updateRule(ruleId, dto);
+      const updateRule = await this._availabilityRuleRepository.updateRule(ruleId, dto);
       if (!updateRule) throw new NotFoundError("Rule not found");
 
 
-      await this._repo.deleteSlotsByRuleId(ruleId);
+      await this._availabilityRuleRepository.deleteSlotsByRuleId(ruleId);
 
 
       const newSlots = SlotGeneratorService.generateSlots(updateRule);
       if (!newSlots) throw new BadRequestError("Failed to generate slots");
 
 
-      await this._repo.createSlots(ruleId, '', newSlots);
+      await this._availabilityRuleRepository.createSlots(ruleId, '', newSlots);
 
       return {
         rule: updateRule,

@@ -1,19 +1,21 @@
-import { StripeService } from "../../../infrastructure/services/StripeService";
+import { IPaymentService } from "../../interface/services/IPaymentService";
 import { ICreateSubscriptionCheckoutUseCase } from "../../interface/use-cases/lawyer/ICreateSubscriptionCheckoutUseCase";
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { CreateSubscriptionCheckoutDTO } from "../../dtos/lawyer/CreateSubscriptionCheckoutDTO";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class CreateSubscriptionCheckoutUseCase implements ICreateSubscriptionCheckoutUseCase {
     constructor(
-        private stripeService: StripeService,
+        private paymentService: IPaymentService,
         private lawyerRepository: ILawyerRepository,
         private subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(dto: CreateSubscriptionCheckoutDTO): Promise<string> {
         const lawyer = await this.lawyerRepository.findById(dto.lawyerId);
-        if (!lawyer) throw new Error("Lawyer not found");
+        if (!lawyer) throw new NotFoundError("Lawyer not found");
 
         if (lawyer.subscriptionId) {
             const currentPlan = await this.subscriptionRepository.findById(lawyer.subscriptionId);
@@ -28,12 +30,12 @@ export class CreateSubscriptionCheckoutUseCase implements ICreateSubscriptionChe
                 const newMonths = getMonths(newPlan.duration, newPlan.durationUnit);
 
                 if (newMonths < currentMonths) {
-                    throw new Error("You cannot downgrade to a shorter duration plan.");
+                    throw new BadRequestError("You cannot downgrade to a shorter duration plan.");
                 }
             }
         }
 
-        return await this.stripeService.createSubscriptionCheckoutSession(
+        return await this.paymentService.createSubscriptionCheckoutSession(
             dto.lawyerId,
             dto.email,
             dto.planName,

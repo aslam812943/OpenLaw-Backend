@@ -1,19 +1,19 @@
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import { AppError } from "../../../infrastructure/errors/AppError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class CheckUserStatusUseCase {
-  constructor(private _repo: IUserRepository) { }
+  constructor(private _userRepository: IUserRepository) { }
 
-  async check(id: string): Promise<{ isActive: boolean }> {
+  async check(userId: string): Promise<{ isActive: boolean }> {
 
-    if (!id) {
+    if (!userId) {
       throw new BadRequestError("User ID is required.");
     }
 
-   
-    const user = await this._repo.findById(id);
+
+    const user = await this._userRepository.findById(userId);
 
     if (!user) {
       throw new NotFoundError("User not found.");

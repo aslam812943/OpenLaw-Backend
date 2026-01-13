@@ -6,7 +6,7 @@ import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
-  constructor(private _repo: ILawyerRepository) { }
+  constructor(private _lawyerRepository: ILawyerRepository) { }
 
   async execute(query?: {
     page?: number;
@@ -18,7 +18,7 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
   }): Promise<any> {
     try {
 
-      const { lawyers, total } = await this._repo.findAll(query);
+      const { lawyers, total } = await this._lawyerRepository.findAll(query);
 
       if (!lawyers || lawyers.length === 0) {
         throw new NotFoundError("No lawyers found.");
@@ -33,10 +33,6 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
       };
 
     } catch (error: any) {
-
-      if (error instanceof AppError) {
-        throw error;
-      }
 
       throw new BadRequestError(
         error.message || "Failed to fetch lawyers. Please try again later."

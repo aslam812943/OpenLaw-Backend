@@ -129,7 +129,7 @@ const lawyerEarningsController = new LawyerEarningsController(getLawyerEarningsU
 // Payout
 const withdrawalRepository = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawyerRepository);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository, subscriptionRepository);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository);
 const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepository);
 
 const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);

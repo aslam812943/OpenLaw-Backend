@@ -9,7 +9,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     constructor(
-        private bookingRepository: IBookingRepository,
+        private _bookingRepository: IBookingRepository,
         private _slotRepo: IAvailabilityRuleRepository,
         private _paymentService: IPaymentService,
         private _lawyerRepo: ILawyerRepository,
@@ -17,7 +17,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
-        const booking = await this.bookingRepository.findById(bookingId);
+        const booking = await this._bookingRepository.findById(bookingId);
         if (!booking) {
             throw new NotFoundError("Booking not found");
         }
@@ -62,13 +62,13 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             }
         }
 
-        await this.bookingRepository.updateStatus(bookingId, "cancelled", reason, {
+        await this._bookingRepository.updateStatus(bookingId, "cancelled", reason, {
             amount: refundAmount,
             status: refundStatus
         });
         await this._slotRepo.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
     
-        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this.bookingRepository);
+        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

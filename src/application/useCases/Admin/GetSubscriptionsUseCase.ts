@@ -4,10 +4,10 @@ import { SubscriptionDTO } from "../../dtos/lawyer/SubscriptionDTO";
 import { SubscriptionMapper } from "../../mapper/lawyer/SubscriptionMapper";
 
 export class GetSubscriptionsUseCase implements IGetSubscriptionsUseCase {
-    constructor(private subscriptionRepository: ISubscriptionRepository) { }
+    constructor(private _subscriptionRepository: ISubscriptionRepository) { }
 
     async execute(): Promise<SubscriptionDTO[]> {
-        const subscriptions = await this.subscriptionRepository.findAll();
+        const subscriptions = await this._subscriptionRepository.findAll();
         return SubscriptionMapper.toDTOs(subscriptions);
     }
 }

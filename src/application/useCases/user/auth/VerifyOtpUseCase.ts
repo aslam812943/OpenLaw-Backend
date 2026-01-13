@@ -1,19 +1,20 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IVerifyOtpUseCase } from "../../../interface/use-cases/user/IVerifyOtpUseCase";
 
 
 //  VerifyOtpUseCase
 
-export class VerifyOtpUseCase {
+export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
     private _userRepo: IUserRepository,
     private _lawyerRepo: ILawyerRepository,
-    private _otpService: OtpService
+    private _otpService: IOtpService
   ) { }
 
 

@@ -1,13 +1,14 @@
 
 import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IGenerateOtpUseCase } from "../../../interface/use-cases/user/IGenerateOtpUseCase";
 
 
 //  GenerateOtpUseCase
 
-export class GenerateOtpUseCase {
-  constructor(private otpService: OtpService) { }
+export class GenerateOtpUseCase implements IGenerateOtpUseCase {
+  constructor(private otpService: IOtpService) { }
 
 
   async execute(email: string, data: UserRegisterDTO): Promise<string> {

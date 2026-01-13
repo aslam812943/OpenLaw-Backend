@@ -5,7 +5,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 export class DeleteAvailableRuleUseCase implements IDeleteAvailableRuleUseCase {
 
-    constructor(private readonly _ruleRepo: IAvailabilityRuleRepository) { }
+    constructor(private readonly _availabilityRuleRepository: IAvailabilityRuleRepository) { }
 
     async execute(ruleId: string): Promise<void> {
 
@@ -13,8 +13,8 @@ export class DeleteAvailableRuleUseCase implements IDeleteAvailableRuleUseCase {
 
 
             await Promise.all([
-                this._ruleRepo.deleteRuleById(ruleId),
-                this._ruleRepo.deleteSlotsByRuleId(ruleId)
+                this._availabilityRuleRepository.deleteRuleById(ruleId),
+                this._availabilityRuleRepository.deleteSlotsByRuleId(ruleId)
             ]);
 
             return;
@@ -22,7 +22,7 @@ export class DeleteAvailableRuleUseCase implements IDeleteAvailableRuleUseCase {
         } catch (err: any) {
 
 
-            if (err instanceof AppError) throw err;
+
 
 
             throw new BadRequestError(

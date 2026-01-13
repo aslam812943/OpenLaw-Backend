@@ -1,18 +1,18 @@
-import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
+import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IApproveLawyerUseCase } from "../../interface/use-cases/admin/IApproveLawyerUseCase";
-import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { IEmailService } from "../../interface/services/IEmailService";
 
 export class ApproveLawyerUseCase implements IApproveLawyerUseCase {
   constructor(
-    private _lawyerRepo: LawyerRepository,
-    private _mailService: NodeMailerEmailService
+    private _lawyerRepo: ILawyerRepository,
+    private _mailService: IEmailService
   ) { }
 
-  async execute(id: string, email: string): Promise<void> {
-  
-    await this._lawyerRepo.approveLawyer(id);
+  async execute(lawyerId: string, email: string): Promise<void> {
 
- 
+    await this._lawyerRepo.approveLawyer(lawyerId);
+
+
 
 
     const subject = "✅ Congratulations! Your LegalConnect Profile Has Been Approved";

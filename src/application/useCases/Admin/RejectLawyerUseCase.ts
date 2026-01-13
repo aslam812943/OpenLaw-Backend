@@ -1,16 +1,16 @@
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IRejectLawyerUseCase } from "../../interface/use-cases/admin/IRejectLawyerUseCase";
-import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { IEmailService } from "../../interface/services/IEmailService";
 
 export class RejectLawyerUseCase implements IRejectLawyerUseCase {
   constructor(
     private _lawyerRepo: ILawyerRepository,
-    private _mailService: NodeMailerEmailService
+    private _mailService: IEmailService
   ) { }
 
-  async execute(id: string, email: string, reason: string): Promise<void> {
+  async execute(lawyerId: string, email: string, reason: string): Promise<void> {
 
-    await this._lawyerRepo.rejectLawyer(id);
+    await this._lawyerRepo.rejectLawyer(lawyerId);
 
 
     await this._mailService.sendMail(

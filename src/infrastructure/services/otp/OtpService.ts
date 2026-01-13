@@ -1,7 +1,8 @@
 import { RedisCacheService } from "./RedisCacheService";
+import { IOtpService } from "../../../application/interface/services/IOtpService";
 
-export class OtpService {
-  constructor(private cache: RedisCacheService) {}
+export class OtpService implements IOtpService {
+  constructor(private cache: RedisCacheService) { }
 
   async generateOtp(email: string, data: any): Promise<string> {
     try {
@@ -12,14 +13,14 @@ export class OtpService {
 
       return otp;
     } catch (error) {
-     
+
       throw new Error("Failed to generate OTP. Please try again.");
     }
   }
 
   async verifyOtp(email: string, otp: string): Promise<any> {
     try {
-    
+
 
       const stored = await this.cache.get(`otp:${email}`);
 
@@ -33,12 +34,12 @@ export class OtpService {
         throw new Error("Invalid OTP.");
       }
 
-     
+
       await this.cache.del(`otp:${email}`);
 
       return data;
     } catch (error: any) {
-   
+
       throw new Error(error.message || "OTP verification failed.");
     }
   }

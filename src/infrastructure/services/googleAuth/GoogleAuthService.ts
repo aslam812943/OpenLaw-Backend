@@ -1,5 +1,5 @@
 import { OAuth2Client, LoginTicket } from 'google-auth-library'
-
+import { IGoogleAuthService } from '../../../application/interface/services/IGoogleAuthService';
 
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -10,7 +10,7 @@ const client = new OAuth2Client(CLIENT_ID)
 import { AppError } from '../../errors/AppError';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 
-export class GoogleAuthService {
+export class GoogleAuthService implements IGoogleAuthService {
     async verifyToken(token: string): Promise<LoginTicket['payload']> {
         try {
 

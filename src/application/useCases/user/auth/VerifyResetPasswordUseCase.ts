@@ -1,18 +1,19 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { ResetPasswordDTO } from "../../../dtos/user/ResetPasswordDTO";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IVerifyResetPasswordUseCase } from "../../../interface/use-cases/user/IVerifyResetPasswordUseCase";
 
 
 //  VerifyResetPasswordUseCase
 
-export class VerifyResetPasswordUseCase {
+export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
     constructor(
         private _userRepository: IUserRepository,
-        private _otpService: OtpService,
+        private _otpService: IOtpService,
         private _lawyerRepo: ILawyerRepository
     ) { }
 

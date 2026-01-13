@@ -1,5 +1,5 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import bcrypt from "bcrypt";
 import { LoginUserDTO } from "../../../dtos/user/LoginUserDTO";
 import { LoginResponseMapper } from "../../../mapper/user/LoignResponseMapper";
@@ -11,9 +11,10 @@ import { BadRequestError } from "../../../../infrastructure/errors/BadRequestErr
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 import { ForbiddenError } from "../../../../infrastructure/errors/ForbiddenError";
 import { UnauthorizedError } from "../../../../infrastructure/errors/UnauthorizedError";
+import { ILoginUserUseCase } from "../../../interface/use-cases/user/ILoginUserUseCase";
 // LoginUserUsecase
 
-export class LoginUserUsecase {
+export class LoginUserUsecase implements ILoginUserUseCase {
   constructor(
     private _userRepo: IUserRepository,
     private _LoginResponseMapper: LoginResponseMapper,

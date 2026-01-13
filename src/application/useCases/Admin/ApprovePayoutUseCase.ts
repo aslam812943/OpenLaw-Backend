@@ -3,12 +3,13 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { IApprovePayoutUseCase } from "../../interface/use-cases/admin/IApprovePayoutUseCase";
 
-export class ApprovePayoutUseCase {
+export class ApprovePayoutUseCase implements IApprovePayoutUseCase {
     constructor(
         private _withdrawalRepository: IWithdrawalRepository,
         private _lawyerRepository: ILawyerRepository,
-        private _subscriptionRepository: ISubscriptionRepository
+        
     ) { }
 
     async execute(withdrawalId: string): Promise<void> {
@@ -26,15 +27,15 @@ export class ApprovePayoutUseCase {
             throw new NotFoundError("Lawyer not found.");
         }
 
-       
+
         if ((lawyer.walletBalance || 0) < withdrawal.amount) {
             throw new BadRequestError("Lawyer has insufficient balance for this payout.");
         }
 
-     
+
         await this._lawyerRepository.updateWalletBalance(withdrawal.lawyerId, -withdrawal.amount);
 
-        
+
         await this._withdrawalRepository.updateStatus(withdrawalId, 'approved', {
             commissionAmount: 0,
             finalAmount: withdrawal.amount,

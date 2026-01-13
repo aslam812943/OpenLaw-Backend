@@ -121,7 +121,7 @@ const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
 // Payout Management Setup
 const withdrawalRepo = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo, subscriptionRepo);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo);
 const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepo);
 const getAdminDashboardStatsUseCase = new GetAdminDashboardStatsUseCase(paymentRepo);
 const adminDashboardController = new AdminDashboardController(getAdminDashboardStatsUseCase);

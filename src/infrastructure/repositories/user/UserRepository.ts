@@ -1,7 +1,7 @@
 
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { User } from "../../../domain/entities/ User";
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import UserModel, { IUserDocument } from "../../db/models/ UserModel";
 import { BaseRepository } from "../user/BaseRepository";
 import bcrypt from "bcrypt";
@@ -245,14 +245,14 @@ export class UserRepository
     delete updateData.id;
 
     if (user.address) {
-      updateData.address = user.address; 
+      updateData.address = user.address;
       delete updateData.address;
 
 
     }
-  
- 
- 
+
+
+
 
     if (user.profileImage) {
       updateData.profileImage = user.profileImage

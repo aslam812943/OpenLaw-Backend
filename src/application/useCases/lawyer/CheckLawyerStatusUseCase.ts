@@ -3,7 +3,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class CheckLawyerStatusUseCase {
-    constructor(private _repo: ILawyerRepository) { }
+    constructor(private _lawyerRepository : ILawyerRepository) { }
 
     async check(id: string): Promise<{ isActive: boolean }> {
 
@@ -12,7 +12,7 @@ export class CheckLawyerStatusUseCase {
         }
 
       
-        const lawyer = await this._repo.findById(id);
+        const lawyer = await this._lawyerRepository.findById(id);
 
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found.");

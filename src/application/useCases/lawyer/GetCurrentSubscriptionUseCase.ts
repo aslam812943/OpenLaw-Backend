@@ -9,17 +9,17 @@ import { IGetCurrentSubscriptionUseCase } from "../../interface/use-cases/lawyer
 
 export class GetCurrentSubscriptionUseCase implements IGetCurrentSubscriptionUseCase {
     constructor(
-        private lawyerRepository: ILawyerRepository,
-        private subscriptionRepository: ISubscriptionRepository
+        private _lawyerRepository: ILawyerRepository,
+        private _subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(lawyerId: string): Promise<SubscriptionDTO | null> {
-        const lawyer = await this.lawyerRepository.findById(lawyerId);
+        const lawyer = await this._lawyerRepository.findById(lawyerId);
         if (!lawyer || !lawyer.subscriptionId) {
             return null;
         }
 
-        const subscription = await this.subscriptionRepository.findById(lawyer.subscriptionId);
+        const subscription = await this._subscriptionRepository.findById(lawyer.subscriptionId);
         if (!subscription) {
             return null;
         }

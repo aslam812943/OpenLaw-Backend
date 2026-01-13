@@ -6,10 +6,10 @@ import { IGetSubscriptionPlansUseCase } from "../../interface/use-cases/lawyer/I
 
 
 export class GetSubscriptionPlansUseCase implements IGetSubscriptionPlansUseCase {
-    constructor(private subscriptionRepository: ISubscriptionRepository) { }
+    constructor(private _subscriptionRepository: ISubscriptionRepository) { }
 
     async execute(): Promise<SubscriptionDTO[]> {
-        const subscriptions = await this.subscriptionRepository.findActive();
+        const subscriptions = await this._subscriptionRepository.findActive();
         return SubscriptionMapper.toDTOs(subscriptions);
     }
 }

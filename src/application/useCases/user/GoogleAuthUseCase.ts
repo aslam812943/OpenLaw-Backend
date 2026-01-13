@@ -1,8 +1,8 @@
-import { IUserRepository } from '../../../domain/repositories/user/ IUserRepository';
+import { IUserRepository } from '../../../domain/repositories/user/IUserRepository';
 import { ILawyerRepository } from '../../../domain/repositories/lawyer/ILawyerRepository';
 import { User } from '../../../domain/entities/ User';
-import { GoogleAuthService } from '../../../infrastructure/services/googleAuth/GoogleAuthService';
-import { TokenService } from '../../../infrastructure/services/jwt/TokenService';
+import { IGoogleAuthService } from '../../interface/services/IGoogleAuthService';
+import { ITokenService } from '../../interface/services/TokenServiceInterface';
 import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
 import { BadRequestError } from '../../../infrastructure/errors/BadRequestError';
 import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
@@ -12,8 +12,8 @@ export class GoogleAuthUsecase {
 
   constructor(
     private _userRepository: IUserRepository,
-    private _googleAuthService: GoogleAuthService,
-    private _tokenService: TokenService,
+    private _googleAuthService: IGoogleAuthService,
+    private _tokenService: ITokenService,
     private _lawyerRepo: ILawyerRepository
   ) { }
 
@@ -23,7 +23,7 @@ export class GoogleAuthUsecase {
       throw new BadRequestError("Google token is missing.");
     }
 
-    
+
     const payload = await this._googleAuthService.verifyToken(idToken);
 
     if (!payload || !payload.email) {

@@ -8,15 +8,15 @@ import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 
 export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
     constructor(
-        private bookingRepository: IBookingRepository,
-        private lawyerRepository: ILawyerRepository,
-        private subscriptionRepository: ISubscriptionRepository
+        private _bookingRepository: IBookingRepository,
+        private _lawyerRepository: ILawyerRepository,
+        private _subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(lawyerId: string): Promise<GetLawyerEarningsDTO> {
         const [bookings, lawyer] = await Promise.all([
-            this.bookingRepository.findByLawyerId(lawyerId),
-            this.lawyerRepository.findById(lawyerId)
+            this._bookingRepository.findByLawyerId(lawyerId),
+            this._lawyerRepository.findById(lawyerId)
         ]);
 
         if (!lawyer) {
@@ -25,7 +25,7 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
 
         let commissionPercent = 0;
         if ((lawyer as any).subscriptionId) {
-            const subscription = await this.subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
+            const subscription = await this._subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
             if (subscription) {
                 commissionPercent = subscription.commissionPercent;
             }

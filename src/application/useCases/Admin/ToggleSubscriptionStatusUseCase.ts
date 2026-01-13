@@ -1,12 +1,19 @@
 import { IToggleSubscriptionStatusUseCase } from "../../interface/use-cases/admin/IToggleSubscriptionStatusUseCase";
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class ToggleSubscriptionStatusUseCase implements IToggleSubscriptionStatusUseCase {
-    constructor(private subscriptionRepository: ISubscriptionRepository) { }
+    constructor(private _subscriptionRepository: ISubscriptionRepository) { }
 
-    async execute(id: string, status: boolean): Promise<void> {
-        if (!id) throw new Error("Subscription ID is required");
-        await this.subscriptionRepository.toggleStatus(id, status);
+    async execute(subscriptionId: string, status: boolean): Promise<void> {
+        if (!subscriptionId) throw new BadRequestError("Subscription ID is required");
+
+        const subscription = await this._subscriptionRepository.findById(subscriptionId);
+        if (!subscription) {
+            throw new NotFoundError("Subscription not found");
+        }
+
+        await this._subscriptionRepository.toggleStatus(subscriptionId, status);
     }
 }

@@ -17,12 +17,12 @@ export class UpdateAppointmentStatusUseCase {
         private _chatRoomRepository: IChatRoomRepository
     ) { }
 
-    async execute(id: string, status: string): Promise<void> {
-        if (!id || !status) {
+    async execute(appointmentId: string, status: string): Promise<void> {
+        if (!appointmentId || !status) {
             throw new BadRequestError("Appointment ID and status are required.");
         }
 
-        const booking = await this._bookingRepository.findById(id);
+        const booking = await this._bookingRepository.findById(appointmentId);
         if (!booking) {
             throw new NotFoundError("Appointment not found.");
         }
@@ -30,12 +30,12 @@ export class UpdateAppointmentStatusUseCase {
         if (status === 'rejected') {
             if (booking.paymentStatus === 'paid' && booking.paymentId) {
                 await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
-                await this._bookingRepository.updateStatus(id, 'rejected', undefined, {
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, {
                     amount: booking.consultationFee,
                     status: 'full'
                 });
             } else {
-                await this._bookingRepository.updateStatus(id, 'rejected');
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected');
             }
 
             await this._repository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
@@ -57,7 +57,7 @@ export class UpdateAppointmentStatusUseCase {
                 throw new BadRequestError("Cannot mark a future appointment as completed.");
             }
 
-            await this._bookingRepository.updateStatus(id, 'completed');
+            await this._bookingRepository.updateStatus(appointmentId, 'completed');
 
 
             const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
@@ -75,10 +75,10 @@ export class UpdateAppointmentStatusUseCase {
 
             await this._lawyerRepository.updateWalletBalance(booking.lawyerId, netAmount);
         } else {
-            await this._bookingRepository.updateStatus(id, status);
+            await this._bookingRepository.updateStatus(appointmentId, status);
         }
 
-        
+
         await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

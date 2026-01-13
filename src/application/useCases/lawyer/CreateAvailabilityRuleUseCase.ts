@@ -10,7 +10,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUseCase {
 
-  constructor(private readonly _repo: IAvailabilityRuleRepository) { }
+  constructor(private readonly _availabilityRuleRepository: IAvailabilityRuleRepository) { }
 
   private toMinutes(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -46,7 +46,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
       }
     }
 
-    const existingRules = await this._repo.getAllRules(dto.lawyerId);
+    const existingRules = await this._availabilityRuleRepository.getAllRules(dto.lawyerId);
 
     const newStartDate = new Date(dto.startDate);
     const newEndDate = new Date(dto.endDate);
@@ -93,7 +93,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
       const newRuleEntity = AvailabilityRuleMapper.toEntity(dto);
 
-      const savedRule = await this._repo.createRule(newRuleEntity);
+      const savedRule = await this._availabilityRuleRepository.createRule(newRuleEntity);
 
       if (!savedRule) {
         throw new BadRequestError("Failed to save availability rule.");
@@ -105,7 +105,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         throw new BadRequestError("Failed to generate slots.");
       }
 
-      await this._repo.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
+      await this._availabilityRuleRepository.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
 
       return { rule: savedRule, slots };
 

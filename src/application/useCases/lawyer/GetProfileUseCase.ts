@@ -8,16 +8,16 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 export class GetProfileUseCase implements IGetProfileUseCase {
   constructor(private readonly _repo: ILawyerRepository) { }
 
-  async execute(id: string): Promise<any> {
+  async execute(lawyerId: string): Promise<any> {
 
     try {
 
 
-      const data = await this._repo.findById(id);
+      const data = await this._repo.findById(lawyerId);
       
 
       if (!data) {
-        throw new NotFoundError(`Profile not found for user ID: ${id}`);
+        throw new NotFoundError(`Profile not found for user ID: ${lawyerId}`);
       }
 
       return GetProfileMapper.toDTO(data);
