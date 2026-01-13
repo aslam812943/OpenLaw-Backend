@@ -16,16 +16,16 @@ export class GetProfileController {
   // ------------------------------------------
   async getDetils(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = req.user?.id;
+      const userId = req.user?.id;
 
-      if (!id) {
+      if (!userId) {
         return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
           message: "Unauthorized: User ID missing",
         });
       }
 
-      const data = await this._getprofileusecase.execute(id);
+      const data = await this._getprofileusecase.execute(userId);
       
 
       return res.status(HttpStatusCode.OK).json({
@@ -45,9 +45,9 @@ export class GetProfileController {
   //   UPDATE PROFILE
   // ------------------------------------------
   async updateProfile(req: Request, res: Response, next: NextFunction) {
-    const id = req.user?.id
+    const userId = req.user?.id
 
-    if (!id) {
+    if (!userId) {
       return res.status(HttpStatusCode.FORBIDDEN).json({
         success: false,
         message: "Unauthorized: User ID missing",
@@ -69,7 +69,7 @@ export class GetProfileController {
         Number(req.body.consultationFee)
       );
 
-      await this._updateprofileusecase.execute(id, dto);
+      await this._updateprofileusecase.execute(userId, dto);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,

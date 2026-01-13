@@ -6,7 +6,7 @@ import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStat
  
 export class WebhookController {
     constructor(
-        private handleWebhookUseCase: IHandleWebhookUseCase
+        private _handleWebhookUseCase: IHandleWebhookUseCase
     ) {}
 
  
@@ -16,7 +16,7 @@ export class WebhookController {
             const event = req.body;
 
             
-            await this.handleWebhookUseCase.execute(event);
+            await this._handleWebhookUseCase.execute(event);
 
           
             res.status(HttpStatusCode.OK).json({ received: true });

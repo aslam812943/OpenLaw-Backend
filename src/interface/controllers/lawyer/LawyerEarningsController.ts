@@ -3,13 +3,13 @@ import { IGetLawyerEarningsUseCase } from "../../../application/interface/use-ca
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class LawyerEarningsController {
-    constructor(private getLawyerEarningsUseCase: IGetLawyerEarningsUseCase) { }
+    constructor(private _getLawyerEarningsUseCase: IGetLawyerEarningsUseCase) { }
 
     async getEarnings(req: Request, res: Response, next: NextFunction) {
         try {
-            const lawyerId = (req as any).user.id;
+            const lawyerId = req.user?.id;
 
-            const earnings = await this.getLawyerEarningsUseCase.execute(lawyerId);
+            const earnings = await this._getLawyerEarningsUseCase.execute(lawyerId!);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,

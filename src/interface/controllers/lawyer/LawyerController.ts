@@ -1,38 +1,19 @@
-
-import { Request, Response ,NextFunction} from "express";
-import { RegisterLawyerUseCase } from "../../../application/useCases/lawyer/VerificationLawyerUseCase";
-import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
+import { Request, Response, NextFunction } from "express";
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
+import { IRegisterLawyerUseCase } from "../../../application/interface/use-cases/lawyer/IRegisterLawyerUseCase";
 
 export class LawyerController {
-  private registerLawyerUseCase: RegisterLawyerUseCase;
+  constructor(private _registerLawyerUseCase: IRegisterLawyerUseCase) { }
 
-  constructor() {
-
-    const repo = new LawyerRepository();
-    this.registerLawyerUseCase = new RegisterLawyerUseCase(repo);
-  }
-
-
-
-
-  
-  async registerLawyer(req: Request, res: Response,next:NextFunction) {
-  
+  async registerLawyer(req: Request, res: Response, next: NextFunction) {
     try {
-     
-
       const documentUrls = Array.isArray(req.files)
         ? req.files.map((file: any) => file.path)
         : [];
 
-
       const dto = new VerificationLawyerDTO({
         ...req.body,
-
         userId: JSON.parse(req.body.userId),
         yearsOfPractice: Number(req.body.yearsOfPractice),
         practiceAreas: JSON.parse(req.body.practiceAreas),
@@ -40,10 +21,7 @@ export class LawyerController {
         documentUrls,
       });
 
-
-
-
-      const lawyer = await this.registerLawyerUseCase.execute(dto);
+      const lawyer = await this._registerLawyerUseCase.execute(dto);
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
@@ -51,9 +29,7 @@ export class LawyerController {
         lawyer,
       });
     } catch (err: any) {
-     
-
-next(err)
+      next(err);
     }
   }
 }

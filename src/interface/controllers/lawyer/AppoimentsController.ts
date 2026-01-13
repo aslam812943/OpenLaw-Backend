@@ -12,8 +12,8 @@ export class AppoimentsController {
 
     async getAppoiments(req: Request, res: Response, next: NextFunction) {
         try {
-            let id = req.user?.id
-            let data = await this._appoimentUseCase.execute(id!)
+            let lawyerId = req.user?.id
+            let data = await this._appoimentUseCase.execute(lawyerId!)
             res.status(HttpStatusCode.OK).json({ success: true, data })
         } catch (error) {
             next(error)

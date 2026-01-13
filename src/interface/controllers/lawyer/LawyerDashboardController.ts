@@ -7,7 +7,7 @@ export class LawyerDashboardController {
 
     async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const lawyerId = (req as any).user?.id; 
+            const lawyerId = req.user?.id; 
             if (!lawyerId) {
                 res.status(HttpStatusCode.UNAUTHORIZED).json({ message: "Unauthorized" });
                 return;

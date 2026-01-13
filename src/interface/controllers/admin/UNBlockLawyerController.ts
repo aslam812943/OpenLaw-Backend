@@ -12,10 +12,9 @@ export class UNBlockLawyerController {
 
   async handle(req: Request, res: Response, next: any): Promise<void> {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
 
-      //
-      await this._unblockLawyerUseCase.execute(id);
+      await this._unblockLawyerUseCase.execute(lawyerId);
 
       res.status(HttpStatusCode.OK).json({
         success: true,

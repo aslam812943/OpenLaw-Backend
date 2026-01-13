@@ -14,13 +14,13 @@ export class GetSingleLawyerController {
 
   async getlawyer(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
 
-      if (!id) {
+      if (!lawyerId) {
         throw new BadRequestError("Lawyer ID is required.");
       }
 
-      const lawyer = await this._getsinglelawyerusecase.execute(id);
+      const lawyer = await this._getsinglelawyerusecase.execute(lawyerId);
 
       if (!lawyer) {
         throw new NotFoundError("Lawyer not found.");

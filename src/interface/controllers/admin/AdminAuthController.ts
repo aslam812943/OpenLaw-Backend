@@ -17,18 +17,18 @@ export class AdminAuthController {
 
   async login(req: Request, res: Response, next: any) {
     try {
-      const dto = new AdminLoginRequestDTO(req.body);
-      const result = await this._loginUseCase.execute(dto);
+      const loginDto = new AdminLoginRequestDTO(req.body);
+      const result = await this._loginUseCase.execute(loginDto);
 
-      res.cookie("adminAccessToken", result.token, {
+      res.cookie("accessToken", result.token, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000, 
       });
 
-      res.cookie('adminRefreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',

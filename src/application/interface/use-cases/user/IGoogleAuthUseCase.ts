@@ -1,10 +1,7 @@
-interface GoogleAuthResponse {
-    token: string;
-    user: { id: string, email: string };
-}
+import { GoogleAuthResponseDTO } from "../../../dtos/user/GoogleAuthResponseDTO";
 
 
 
-export interface IGoogleAuthUseCase{
-    execute(idToken:string):Promise<GoogleAuthResponse>
+export interface IGoogleAuthUseCase {
+    execute(idToken: string, role?: 'user' | 'lawyer'): Promise<GoogleAuthResponseDTO>;
 }

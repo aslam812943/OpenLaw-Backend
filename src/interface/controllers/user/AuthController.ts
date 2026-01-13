@@ -1,29 +1,26 @@
 
 import { Request, Response, NextFunction } from "express";
-import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
-import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
-import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
-import { ResendOtpUseCase } from "../../../application/useCases/user/auth/ResendOtpUseCase";
-import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
-import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
-import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
+import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
+import { IVerifyOtpUseCase } from "../../../application/interface/use-cases/user/IVerifyOtpUseCase";
+import { ILoginUserUseCase } from "../../../application/interface/use-cases/user/ILoginUserUseCase";
+import { IResendOtpUseCase } from "../../../application/interface/use-cases/user/IResendOtpUseCase";
+import { IRequestForgetPasswordUseCase } from "../../../application/interface/use-cases/user/IRequestForgetPasswordUseCase";
+import { IVerifyResetPasswordUseCase } from "../../../application/interface/use-cases/user/IVerifyResetPasswordUseCase";
+import { IGoogleAuthUseCase } from "../../../application/interface/use-cases/user/IGoogleAuthUseCase";
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
-import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
-
-
-
+import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
+import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
 
 export class AuthController {
   constructor(
     private _registerUserCase: IRegisterUserUseCase,
-    private verifyOtpUseCase: VerifyOtpUseCase,
-    private _loginUserUsecase: LoginUserUsecase,
-    private _resendOtpUseCase: ResendOtpUseCase,
-    private _requestForgetPasswordUseCase: RequestForgetPasswordUseCase,
-    private _verifyResetPasswordUseCase: VerifyResetPasswordUseCase,
-    private _googleAuthUseCase: GoogleAuthUsecase
+    private _verifyOtpUseCase: IVerifyOtpUseCase,
+    private _loginUserUsecase: ILoginUserUseCase,
+    private _resendOtpUseCase: IResendOtpUseCase,
+    private _requestForgetPasswordUseCase: IRequestForgetPasswordUseCase,
+    private _verifyResetPasswordUseCase: IVerifyResetPasswordUseCase,
+    private _googleAuthUseCase: IGoogleAuthUseCase
   ) { }
 
   // ------------------------------------------------------------
@@ -32,7 +29,6 @@ export class AuthController {
 
   async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       const dto = new UserRegisterDTO(req.body);
       const result = await this._registerUserCase.execute(dto);
 
@@ -41,7 +37,7 @@ export class AuthController {
         message: result.message || "User registered successfully! OTP sent to email.",
       });
     } catch (error: any) {
-      next(error)
+      next(error);
     }
   }
 
@@ -52,16 +48,15 @@ export class AuthController {
   async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, otp } = req.body;
-
-      const result = await this.verifyOtpUseCase.execute(email, otp);
+      const result = await this._verifyOtpUseCase.execute(email, otp);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "OTP verified successfully!",
         user: result,
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
@@ -72,15 +67,14 @@ export class AuthController {
   async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
-
       const message = await this._resendOtpUseCase.execute(email);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: message || "OTP resent successfully!",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
@@ -97,8 +91,8 @@ export class AuthController {
         success: true,
         message: message || "Password reset OTP sent successfully.",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
@@ -114,8 +108,8 @@ export class AuthController {
         success: true,
         message: message || "Password reset successful!",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
@@ -124,26 +118,24 @@ export class AuthController {
   // ------------------------------------------------------------
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUsecase.execute(dto);
 
       res.cookie("accessToken", token, {
         httpOnly: true,
-        secure: false, // Set to true in production
+        secure: false,
         sameSite: 'lax',
         path: '/',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000, 
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false, // Set to true in production
+        secure: false, 
         sameSite: 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
-
 
       res.status(HttpStatusCode.OK).json({
         success: true,
@@ -152,12 +144,10 @@ export class AuthController {
         refreshToken,
         user,
       });
-    } catch (err: any) {
-
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
-
 
   // ------------------------------------------------------------
   // Logout user and clear authentication cookies
@@ -165,7 +155,6 @@ export class AuthController {
 
   async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       res.clearCookie("accessToken", {
         httpOnly: true,
         secure: false,
@@ -180,25 +169,22 @@ export class AuthController {
         path: '/'
       });
 
-
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "User logged out successfully.",
       });
     } catch (error: any) {
-
-
-      next(error)
+      next(error);
     }
   }
+
   // ------------------------------------------------------------
   //  Google Authentication
   // ------------------------------------------------------------
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { token, role } = req.body;
-
-      const result = await this._googleAuthUseCase.execute(token, role);
+      const { token: idToken, role } = req.body;
+      const result = await this._googleAuthUseCase.execute(idToken, role);
 
       if (result.needsRoleSelection) {
         res.status(HttpStatusCode.OK).json({
@@ -233,9 +219,8 @@ export class AuthController {
         user: result.user,
         needsVerificationSubmission: result.needsVerificationSubmission
       });
-
     } catch (error: any) {
-      next(error)
+      next(error);
     }
   }
 }

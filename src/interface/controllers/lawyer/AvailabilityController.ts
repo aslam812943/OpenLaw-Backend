@@ -9,7 +9,7 @@ import {
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { error } from "console";
+
 
 export class AvailabilityController {
   constructor(
@@ -22,7 +22,7 @@ export class AvailabilityController {
 
   async createRule(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = req.body.ruleData;
+      const ruleData = req.body.ruleData;
 
       const lawyerId = req.user?.id
 
@@ -34,19 +34,19 @@ export class AvailabilityController {
       }
 
       const dto = new CreateAvailabilityRuleDTO(
-        data.title,
-        data.startTime,
-        data.endTime,
-        data.startDate,
-        data.endDate,
-        data.availableDays,
-        data.bufferTime.toString(),
-        data.slotDuration,
-        data.maxBookings,
-        data.sessionType,
-        data.exceptionDays,
+        ruleData.title,
+        ruleData.startTime,
+        ruleData.endTime,
+        ruleData.startDate,
+        ruleData.endDate,
+        ruleData.availableDays,
+        ruleData.bufferTime.toString(),
+        ruleData.slotDuration,
+        ruleData.maxBookings,
+        ruleData.sessionType,
+        ruleData.exceptionDays,
         lawyerId,
-        data.consultationFee
+        ruleData.consultationFee
       );
 
       const result = await this._createRuleUseCase.execute(dto);
@@ -62,9 +62,7 @@ export class AvailabilityController {
     }
   }
 
-  /**
-   * Update an existing availability rule
-   */
+ 
   async updateRule(req: Request, res: Response, next: NextFunction) {
 
     try {
@@ -103,9 +101,9 @@ export class AvailabilityController {
     }
   }
 
-  /**
-   * Fetch all availability rules for a lawyer
-   */
+
+
+
   async getAllRuls(req: Request, res: Response, next: NextFunction) {
 
     try {
@@ -131,9 +129,7 @@ export class AvailabilityController {
     }
   }
 
-  /**
-   * Delete a rule and its slots
-   */
+ 
   async DeleteRule(req: Request, res: Response, next: NextFunction) {
     try {
       const ruleId = req.params.ruleId;

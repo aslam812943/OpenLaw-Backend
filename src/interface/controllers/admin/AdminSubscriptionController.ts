@@ -7,15 +7,15 @@ import { CreateSubscriptionDTO } from '../../../application/dtos/admin/CreateSub
 
 export class AdminSubscriptionController {
     constructor(
-        private createSubscriptionUseCase: ICreateSubscriptionUseCase,
-        private getSubscriptionsUseCase: IGetSubscriptionsUseCase,
-        private toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
+        private _createSubscriptionUseCase: ICreateSubscriptionUseCase,
+        private _getSubscriptionsUseCase: IGetSubscriptionsUseCase,
+        private _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
     ) { }
 
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const dto = new CreateSubscriptionDTO(req.body.planName, Number(req.body.duration), req.body.durationUnit, Number(req.body.price), Number(req.body.commissionPercent))
-            await this.createSubscriptionUseCase.execute(dto);
+            await this._createSubscriptionUseCase.execute(dto);
 
             res.status(HttpStatusCode.CREATED).json({
                 success: true,
@@ -28,7 +28,7 @@ export class AdminSubscriptionController {
 
     async getAll(_req: Request, res: Response, next: NextFunction) {
         try {
-            const subscriptions = await this.getSubscriptionsUseCase.execute();
+            const subscriptions = await this._getSubscriptionsUseCase.execute();
             res.status(HttpStatusCode.OK).json({
                 success: true,
                 data: subscriptions
@@ -42,7 +42,7 @@ export class AdminSubscriptionController {
         try {
             const { id } = req.params;
             const { status } = req.body;
-            await this.toggleSubscriptionStatusUseCase.execute(id, status);
+            await this._toggleSubscriptionStatusUseCase.execute(id, status);
             res.status(HttpStatusCode.OK).json({
                 success: true,
                 message: `Subscription plan ${status ? 'activated' : 'inactivated'} successfully.`

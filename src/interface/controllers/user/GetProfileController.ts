@@ -13,10 +13,10 @@ export class GetProfileController {
 
   async getprofiledetils(req: Request, res: Response,next:NextFunction) {
     try {
-      const id = req.user?.id;
+      const userId = req.user?.id;
      
       
-      const data = await this._getprofileusecase.execute(id!);
+      const data = await this._getprofileusecase.execute(userId!);
 
       res.status(HttpStatusCode.OK).json({
         success: true,

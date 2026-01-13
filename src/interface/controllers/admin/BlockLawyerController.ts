@@ -11,9 +11,9 @@ export class BlockLawyerController {
 
   async handle(req: Request, res: Response, next: any): Promise<void> {
     try {
-      const { id } = req.params;
+      const  lawyerId  = req.params.id;
 
-      await this._blockLawyerUseCase.execute(id);
+      await this._blockLawyerUseCase.execute(lawyerId);
 
       res.status(HttpStatusCode.OK).json({
         success: true,

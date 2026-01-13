@@ -8,18 +8,18 @@ import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStat
 
 export class BookingController {
     constructor(
-        private createBookingPaymentUseCase: ICreateBookingPaymentUseCase,
-        private confirmBookingUseCase: IConfirmBookingUseCase,
-        private getUserAppointmentsUseCase: IGetUserAppointmentsUseCase,
-        private cancelAppointmentUseCase: ICancelAppointmentUseCase
+        private _createBookingPaymentUseCase: ICreateBookingPaymentUseCase,
+        private _confirmBookingUseCase: IConfirmBookingUseCase,
+        private _getUserAppointmentsUseCase: IGetUserAppointmentsUseCase,
+        private _cancelAppointmentUseCase: ICancelAppointmentUseCase
     ) { }
 
     async initiatePayment(req: Request, res: Response, next: NextFunction) {
 
         try {
-            const dto = new BookingDTO(req.body)
-            const url = await this.createBookingPaymentUseCase.execute(dto);
-            res.status(HttpStatusCode.OK).json({ url });
+            const bookingDto = new BookingDTO(req.body)
+            const paymentUrl = await this._createBookingPaymentUseCase.execute(bookingDto);
+            res.status(HttpStatusCode.OK).json({ paymentUrl });
         } catch (error) {
             next(error);
         }
@@ -31,7 +31,7 @@ export class BookingController {
             if (!sessionId) {
                 throw new Error("Session ID is required");
             }
-            const booking = await this.confirmBookingUseCase.execute(sessionId);
+            const booking = await this._confirmBookingUseCase.execute(sessionId);
             res.status(HttpStatusCode.CREATED).json({ success: true, booking });
         } catch (error) {
 
@@ -49,7 +49,7 @@ export class BookingController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 5;
 
-            const result = await this.getUserAppointmentsUseCase.execute(userId, page, limit);
+            const result = await this._getUserAppointmentsUseCase.execute(userId, page, limit);
 
             res.status(HttpStatusCode.OK).json({
                 appointments: result.appointments,
@@ -73,7 +73,7 @@ export class BookingController {
             if (!reason) {
                 throw new Error("Cancellation reason is required");
             }
-            await this.cancelAppointmentUseCase.execute(id, reason);
+            await this._cancelAppointmentUseCase.execute(id, reason);
             res.status(HttpStatusCode.OK).json({ success: true, message: "Appointment cancelled successfully" });
         } catch (error) {
             next(error);

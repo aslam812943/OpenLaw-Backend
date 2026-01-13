@@ -7,8 +7,9 @@ import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
 import { BadRequestError } from '../../../infrastructure/errors/BadRequestError';
 import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
 import { ForbiddenError } from '../../../infrastructure/errors/ForbiddenError';
+import { IGoogleAuthUseCase } from '../../interface/use-cases/user/IGoogleAuthUseCase';
 
-export class GoogleAuthUsecase {
+export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
   constructor(
     private _userRepository: IUserRepository,

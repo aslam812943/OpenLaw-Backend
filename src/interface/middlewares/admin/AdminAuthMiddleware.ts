@@ -19,7 +19,7 @@ export class AdminAuthMiddleware {
   execute = (req: Request, res: Response, next: NextFunction): void => {
     try {
       const token =
-        req.cookies?.adminAccessToken ||
+        req.cookies?.accessToken ||
         req.headers.authorization?.split(" ")[1];
 
       if (!token) {

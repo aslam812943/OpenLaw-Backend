@@ -12,9 +12,9 @@ export class UNBlockUserController {
 
   async handle(req: Request, res: Response, next: any): Promise<void> {
     try {
-      const id = req.params.id;
+      const userId = req.params.id;
 
-      await this._unblockUserUseCase.execute(id);
+      await this._unblockUserUseCase.execute(userId);
 
       res.status(HttpStatusCode.OK).json({
         success: true,

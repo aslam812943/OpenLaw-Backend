@@ -11,10 +11,10 @@ export class ApproveLawyerController {
 
   async handle(req: Request, res: Response, next: any): Promise<void> {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
       const { email } = req.body;
 
-      await this._approveLawyerUseCase.execute(id, email);
+      await this._approveLawyerUseCase.execute(lawyerId, email);
 
       res.status(HttpStatusCode.OK).json({
         success: true,

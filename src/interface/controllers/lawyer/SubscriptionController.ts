@@ -5,13 +5,13 @@ import { IGetCurrentSubscriptionUseCase } from "../../../application/interface/u
 
 export class SubscriptionController {
     constructor(
-        private getSubscriptionPlansUseCase: IGetSubscriptionPlansUseCase,
-        private getCurrentSubscriptionUseCase: IGetCurrentSubscriptionUseCase
+        private _getSubscriptionPlansUseCase: IGetSubscriptionPlansUseCase,
+        private _getCurrentSubscriptionUseCase: IGetCurrentSubscriptionUseCase
     ) { }
 
     async getPlans(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const plans = await this.getSubscriptionPlansUseCase.execute();
+            const plans = await this._getSubscriptionPlansUseCase.execute();
             res.status(HttpStatusCode.OK).json({ status: true, data: plans });
         } catch (error) {
             next(error);
@@ -25,7 +25,7 @@ export class SubscriptionController {
                 res.status(HttpStatusCode.UNAUTHORIZED).json({ status: false, message: "Unauthorized" });
                 return;
             }
-            const subscription = await this.getCurrentSubscriptionUseCase.execute(lawyerId);
+            const subscription = await this._getCurrentSubscriptionUseCase.execute(lawyerId);
             res.status(HttpStatusCode.OK).json({ status: true, data: subscription });
         } catch (error) {
             next(error);

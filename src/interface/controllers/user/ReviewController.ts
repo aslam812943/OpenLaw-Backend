@@ -5,7 +5,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IGetAllReviewsUseCase } from "../../../application/interface/use-cases/user/review/IGetAllReviewsUsecase";
 export class ReviewController {
-    constructor(private addReviewUseCase: IAddReviewUseCase,private allreviewusecase:IGetAllReviewsUseCase) { }
+    constructor(private _addReviewUseCase: IAddReviewUseCase,private allreviewusecase:IGetAllReviewsUseCase) { }
 
     async addReview(req: Request, res: Response, next: NextFunction) {
         try {
@@ -16,7 +16,7 @@ export class ReviewController {
             }
 
             const reviewDTO = new AddReviewDTO(userId, lawyerId, rating, comment);
-            const review = await this.addReviewUseCase.execute(reviewDTO);
+            const review = await this._addReviewUseCase.execute(reviewDTO);
 
             res.status(HttpStatusCode.CREATED).json({ success: true, data: review, message: "Review added successfully" });
         } catch (error) {

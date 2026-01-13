@@ -12,9 +12,9 @@ export class BlockUserController {
 
     async handle(req: Request, res: Response, next: any): Promise<void> {
         try {
-            const id = req.params.id;
+            const userId = req.params.id;
 
-            await this._blockuserUseCase.execute(id);
+            await this._blockuserUseCase.execute(userId);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,

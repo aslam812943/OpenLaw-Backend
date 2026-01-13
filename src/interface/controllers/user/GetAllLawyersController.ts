@@ -16,7 +16,7 @@ export class GetAllLawyersController {
 
 
 
-         const response = await this._getallLawyersUseCase.execute({
+         const AllLawyers = await this._getallLawyersUseCase.execute({
             page,
             limit,
             search,
@@ -31,10 +31,10 @@ export class GetAllLawyersController {
             success: true,
             message: "Lawyers fetched successfully.",
             response: {
-               lawyers: response.lawyers,
-               totalCount: response.total,
+               lawyers: AllLawyers.lawyers,
+               totalCount: AllLawyers.total,
                currentPage: page,
-               totalPages: Math.ceil(response.total / limit)
+               totalPages: Math.ceil(AllLawyers.total / limit)
             }
          });
 

@@ -6,9 +6,6 @@ import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStat
 export class LawyerLogoutController {
     async handle(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-
-
-
             res.clearCookie('accessToken', {
                 httpOnly: true,
                 secure: false,

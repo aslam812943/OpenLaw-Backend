@@ -6,8 +6,8 @@ import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStat
 
 export class SubscriptionPaymentController {
     constructor(
-        private createSubscriptionCheckoutUseCase: ICreateSubscriptionCheckoutUseCase,
-        private verifySubscriptionPaymentUseCase: IVerifySubscriptionPaymentUseCase
+        private _createSubscriptionCheckoutUseCase: ICreateSubscriptionCheckoutUseCase,
+        private _verifySubscriptionPaymentUseCase: IVerifySubscriptionPaymentUseCase
     ) { }
 
     async createCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -21,7 +21,7 @@ export class SubscriptionPaymentController {
             }
 
             const dto = new CreateSubscriptionCheckoutDTO(lawyerId, email, planName, price, subscriptionId);
-            const url = await this.createSubscriptionCheckoutUseCase.execute(dto);
+            const url = await this._createSubscriptionCheckoutUseCase.execute(dto);
             res.status(HttpStatusCode.OK).json({ success: true, url });
         } catch (error) {
             next(error);
@@ -37,7 +37,7 @@ export class SubscriptionPaymentController {
                 return;
             }
 
-            const success = await this.verifySubscriptionPaymentUseCase.execute(session_id);
+            const success = await this._verifySubscriptionPaymentUseCase.execute(session_id);
             if (success) {
                 res.status(HttpStatusCode.OK).json({ success: true, message: "Subscription verified successfully" });
             } else {

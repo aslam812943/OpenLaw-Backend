@@ -3,14 +3,14 @@ import { IGetLawyerCasesUseCase } from "../../../application/interface/use-cases
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class LawyerCasesController {
-    constructor(private getLawyerCasesUseCase: IGetLawyerCasesUseCase) { }
+    constructor(private _getLawyerCasesUseCase: IGetLawyerCasesUseCase) { }
 
     async getCases(req: Request, res: Response, next: NextFunction) {
         try {
          
-            const lawyerId = (req as any).user.id;
+            const lawyerId = req.user?.id;
 
-            const cases = await this.getLawyerCasesUseCase.execute(lawyerId);
+            const cases = await this._getLawyerCasesUseCase.execute(lawyerId!);
            
             res.status(HttpStatusCode.OK).json({ data: cases, message: "Cases fetched successfully" });
         } catch (error) {
