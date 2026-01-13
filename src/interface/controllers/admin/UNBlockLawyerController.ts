@@ -1,16 +1,12 @@
-
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IUNBlockLawyerUseCase } from "../../../application/interface/use-cases/admin/IUnBlockLawyerUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  UNBlockLawyerController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class UNBlockLawyerController {
   constructor(private readonly _unblockLawyerUseCase: IUNBlockLawyerUseCase) { }
 
-
-  async handle(req: Request, res: Response, next: any): Promise<void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const lawyerId = req.params.id;
 
@@ -18,7 +14,7 @@ export class UNBlockLawyerController {
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyer unblocked successfully.",
+        message: MessageConstants.LAWYER.UNBLOCK_SUCCESS,
       });
     } catch (error: any) {
       next(error);

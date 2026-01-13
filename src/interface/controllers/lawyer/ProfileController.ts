@@ -3,58 +3,50 @@ import { IGetProfileUseCase, IUpdateProfileUseCase, IChangePasswordUseCase } fro
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 import { ChangePasswordDTO } from "../../../application/dtos/lawyer/ChangePasswordDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
-export class GetProfileController {
+export class LawyerProfileController {
   constructor(
-    private readonly _getprofileusecase: IGetProfileUseCase,
-    private readonly _updateprofileusecase: IUpdateProfileUseCase,
-    private readonly _changepasswordusecase: IChangePasswordUseCase
+    private readonly _getProfileUseCase: IGetProfileUseCase,
+    private readonly _updateProfileUseCase: IUpdateProfileUseCase,
+    private readonly _changePasswordUseCase: IChangePasswordUseCase
   ) { }
 
-  // ------------------------------------------
-  //   GET PROFILE
-  // ------------------------------------------
-  async getDetils(req: Request, res: Response, next: NextFunction) {
+  async getDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
 
       if (!userId) {
         return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: "Unauthorized: User ID missing",
+          message: MessageConstants.COMMON.UNAUTHORIZED,
         });
       }
 
-      const data = await this._getprofileusecase.execute(userId);
-      
+      const data = await this._getProfileUseCase.execute(userId);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Profile fetched successfully",
+        message: MessageConstants.LAWYER.FETCH_SUCCESS,
         data,
       });
 
     } catch (error: any) {
-
-
-      next(error)
+      next(error);
     }
   }
 
-  // ------------------------------------------
-  //   UPDATE PROFILE
-  // ------------------------------------------
   async updateProfile(req: Request, res: Response, next: NextFunction) {
-    const userId = req.user?.id
-
-    if (!userId) {
-      return res.status(HttpStatusCode.FORBIDDEN).json({
-        success: false,
-        message: "Unauthorized: User ID missing",
-      });
-    }
-
     try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(HttpStatusCode.FORBIDDEN).json({
+          success: false,
+          message: MessageConstants.COMMON.UNAUTHORIZED,
+        });
+      }
+
       const imageUrl = req.file ? req.file.path : "";
 
       const dto = new UpdateLawyerProfileDTO(
@@ -69,44 +61,38 @@ export class GetProfileController {
         Number(req.body.consultationFee)
       );
 
-      await this._updateprofileusecase.execute(userId, dto);
+      await this._updateProfileUseCase.execute(userId, dto);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Profile updated successfully",
+        message: MessageConstants.LAWYER.PROFILE_UPDATE_SUCCESS,
       });
 
     } catch (error: any) {
-
-
-      next(error)
+      next(error);
     }
   }
 
-  // ------------------------------------------
-  //   CHANGE PASSWORD
-  // ------------------------------------------
   async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
       if (!userId) {
         return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: 'Unauthorized: User ID missing'
+          message: MessageConstants.COMMON.UNAUTHORIZED
         });
       }
 
       const dto = new ChangePasswordDTO(userId, req.body.oldPassword, req.body.newPassword);
 
-      await this._changepasswordusecase.execute(dto);
+      await this._changePasswordUseCase.execute(dto);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: 'Password changed successfully'
+        message: MessageConstants.LAWYER.PASSWORD_CHANGE_SUCCESS
       });
     } catch (error: any) {
-
-      next(error)
+      next(error);
     }
   }
 }

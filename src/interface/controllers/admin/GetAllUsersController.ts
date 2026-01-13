@@ -1,26 +1,23 @@
-
-import { Response, Request } from "express";
+import { Response, Request, NextFunction } from "express";
 import { IGetAllUsersUseCase } from "../../../application/interface/use-cases/admin/IGetAllUsersUseCase";
 import { GetAllUserDTO } from "../../../application/dtos/admin/GetAllUserDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 interface PaginationInput {
   page: number;
   limit: number;
 }
 
-//  GetAllUsersController
-
 export class GetAllUsersController {
   constructor(
-    private _getAllUserUseCase: IGetAllUsersUseCase<
+    private readonly _getAllUserUseCase: IGetAllUsersUseCase<
       PaginationInput,
       { users: GetAllUserDTO[]; total: number }
     >
   ) { }
 
-
-  async handle(req: Request, res: Response, next: any): Promise<Response | void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -29,7 +26,7 @@ export class GetAllUsersController {
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Users fetched successfully.",
+        message: MessageConstants.USER.FETCH_SUCCESS,
         users,
         total,
         currentPage: page,

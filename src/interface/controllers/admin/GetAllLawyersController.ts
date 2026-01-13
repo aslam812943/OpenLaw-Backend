@@ -1,15 +1,12 @@
-
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IGetAllLawyersUseCase } from "../../../application/interface/use-cases/admin/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  GetAllLawyersController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class GetAllLawyersController {
-  constructor(private _getAllLawyersUseCase: IGetAllLawyersUseCase) { }
+  constructor(private readonly _getAllLawyersUseCase: IGetAllLawyersUseCase) { }
 
-  async handle(req: Request, res: Response, next: any): Promise<void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
@@ -24,7 +21,7 @@ export class GetAllLawyersController {
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyers fetched successfully.",
+        message: MessageConstants.LAWYER.FETCH_SUCCESS,
         lawyers,
         total,
         currentPage: page,

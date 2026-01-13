@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from "express";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
@@ -11,26 +10,23 @@ import { IGoogleAuthUseCase } from "../../../application/interface/use-cases/use
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
 import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
 import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class AuthController {
   constructor(
-    private _registerUserCase: IRegisterUserUseCase,
-    private _verifyOtpUseCase: IVerifyOtpUseCase,
-    private _loginUserUsecase: ILoginUserUseCase,
-    private _resendOtpUseCase: IResendOtpUseCase,
-    private _requestForgetPasswordUseCase: IRequestForgetPasswordUseCase,
-    private _verifyResetPasswordUseCase: IVerifyResetPasswordUseCase,
-    private _googleAuthUseCase: IGoogleAuthUseCase
+    private readonly _registerUserUseCase: IRegisterUserUseCase,
+    private readonly _verifyOtpUseCase: IVerifyOtpUseCase,
+    private readonly _loginUserUseCase: ILoginUserUseCase,
+    private readonly _resendOtpUseCase: IResendOtpUseCase,
+    private readonly _requestForgetPasswordUseCase: IRequestForgetPasswordUseCase,
+    private readonly _verifyResetPasswordUseCase: IVerifyResetPasswordUseCase,
+    private readonly _googleAuthUseCase: IGoogleAuthUseCase
   ) { }
-
-  // ------------------------------------------------------------
-  //  Register a new user and send OTP to their email
-  // -----------------------------------------------------------
 
   async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = new UserRegisterDTO(req.body);
-      const result = await this._registerUserCase.execute(dto);
+      const result = await this._registerUserUseCase.execute(dto);
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
@@ -41,10 +37,6 @@ export class AuthController {
     }
   }
 
-  // ------------------------------------------------------------
-  // Verify OTP for user registration
-  // ------------------------------------------------------------
-
   async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, otp } = req.body;
@@ -53,16 +45,12 @@ export class AuthController {
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "OTP verified successfully!",
-        user: result,
+        data: result,
       });
     } catch (error: any) {
       next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  //  Resend OTP to user email
-  // ------------------------------------------------------------
 
   async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -78,10 +66,6 @@ export class AuthController {
     }
   }
 
-  // ------------------------------------------------------------
-  //  Request to reset password (sends OTP to user email)
-  // ------------------------------------------------------------
-
   async requestForgetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = new ForgetPasswordRequestDTO(req.body);
@@ -96,10 +80,6 @@ export class AuthController {
     }
   }
 
-  // ------------------------------------------------------------
-  //  Verify reset password OTP and update new password
-  // ------------------------------------------------------------
-
   async verifyResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const message = await this._verifyResetPasswordUseCase.execute(req.body);
@@ -113,45 +93,40 @@ export class AuthController {
     }
   }
 
-  // ------------------------------------------------------------
-  //  Login user and issue authentication tokens (access + refresh)
-  // ------------------------------------------------------------
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = new LoginUserDTO(req.body);
-      const { token, refreshToken, user } = await this._loginUserUsecase.execute(dto);
+      const { token, refreshToken, user } = await this._loginUserUseCase.execute(dto);
 
       res.cookie("accessToken", token, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/',
-        maxAge: 15 * 60 * 1000, 
+        maxAge: 15 * 60 * 1000,
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false, 
+        secure: false,
         sameSite: 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Login successful.",
-        token,
-        refreshToken,
-        user,
+        message: MessageConstants.ADMIN.LOGIN_SUCCESS, // Standard login success message
+        data: {
+          token,
+          refreshToken,
+          user,
+        },
       });
     } catch (error: any) {
       next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  // Logout user and clear authentication cookies
-  // ------------------------------------------------------------
 
   async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -171,16 +146,13 @@ export class AuthController {
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "User logged out successfully.",
+        message: MessageConstants.LAWYER.LOGOUT_SUCCESS,
       });
     } catch (error: any) {
       next(error);
     }
   }
 
-  // ------------------------------------------------------------
-  //  Google Authentication
-  // ------------------------------------------------------------
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { token: idToken, role } = req.body;
@@ -190,7 +162,9 @@ export class AuthController {
         res.status(HttpStatusCode.OK).json({
           success: true,
           message: "Please select a role.",
-          needsRoleSelection: true,
+          data: {
+            needsRoleSelection: true
+          }
         });
         return;
       }
@@ -214,10 +188,12 @@ export class AuthController {
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Google login successful.",
-        token: result.token,
-        refreshToken: result.refreshToken,
-        user: result.user,
-        needsVerificationSubmission: result.needsVerificationSubmission
+        data: {
+          token: result.token,
+          refreshToken: result.refreshToken,
+          user: result.user,
+          needsVerificationSubmission: result.needsVerificationSubmission
+        }
       });
     } catch (error: any) {
       next(error);

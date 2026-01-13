@@ -6,15 +6,16 @@ import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepos
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { IUpdateAppointmentStatusUseCase } from "../../interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
 
-export class UpdateAppointmentStatusUseCase {
+export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusUseCase {
     constructor(
-        private _repository: IAvailabilityRuleRepository,
-        private _bookingRepository: IBookingRepository,
-        private _paymentService: IPaymentService,
-        private _lawyerRepository: ILawyerRepository,
-        private _subscriptionRepository: ISubscriptionRepository,
-        private _chatRoomRepository: IChatRoomRepository
+        private readonly _repository: IAvailabilityRuleRepository,
+        private readonly _bookingRepository: IBookingRepository,
+        private readonly _paymentService: IPaymentService,
+        private readonly _lawyerRepository: ILawyerRepository,
+        private readonly _subscriptionRepository: ISubscriptionRepository,
+        private readonly _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(appointmentId: string, status: string): Promise<void> {

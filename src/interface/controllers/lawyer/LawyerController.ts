@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IRegisterLawyerUseCase } from "../../../application/interface/use-cases/lawyer/IRegisterLawyerUseCase";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class LawyerController {
-  constructor(private _registerLawyerUseCase: IRegisterLawyerUseCase) { }
+  constructor(private readonly _registerLawyerUseCase: IRegisterLawyerUseCase) { }
 
   async registerLawyer(req: Request, res: Response, next: NextFunction) {
     try {
@@ -25,8 +26,8 @@ export class LawyerController {
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
-        message: "Lawyer verification details submitted successfully.",
-        lawyer,
+        message: MessageConstants.LAWYER.APPROVE_SUCCESS, 
+        data: lawyer,
       });
     } catch (err: any) {
       next(err);

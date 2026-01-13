@@ -5,31 +5,28 @@ import {
   IGetAllAvailableRuleUseCase,
   IDeleteAvailableRuleUseCase
 } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
-
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class AvailabilityController {
   constructor(
     private readonly _createRuleUseCase: ICreateAvailabilityRuleUseCase,
-    private readonly _updateAvilableUseCase: IUpdateAvailabilityRuleUseCase,
-    private readonly _getavailableUsecase: IGetAllAvailableRuleUseCase,
-    private readonly _deleteavailableusecase: IDeleteAvailableRuleUseCase
+    private readonly _updateAvailableUseCase: IUpdateAvailabilityRuleUseCase,
+    private readonly _getAllRulesUseCase: IGetAllAvailableRuleUseCase,
+    private readonly _deleteRuleUseCase: IDeleteAvailableRuleUseCase
   ) { }
-
 
   async createRule(req: Request, res: Response, next: NextFunction) {
     try {
       const ruleData = req.body.ruleData;
-
-      const lawyerId = req.user?.id
+      const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
+        return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: "Lawyer ID is missing. Unable to create rule.",
+          message: MessageConstants.COMMON.UNAUTHORIZED,
         });
       }
 
@@ -53,25 +50,22 @@ export class AvailabilityController {
 
       return res.status(HttpStatusCode.CREATED).json({
         success: true,
-        message: "Availability rule and slots created successfully.",
+        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
     } catch (err: any) {
-
-      next(err)
+      next(err);
     }
   }
 
- 
   async updateRule(req: Request, res: Response, next: NextFunction) {
-
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: "Rule ID is required for updating.",
+          message: MessageConstants.COMMON.BAD_REQUEST,
         });
       }
 
@@ -89,66 +83,60 @@ export class AvailabilityController {
         req.body.exceptionDays
       );
 
-      const result = await this._updateAvilableUseCase.execute(ruleId, dto);
+      const result = await this._updateAvailableUseCase.execute(ruleId, dto);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Rule updated successfully. Slots regenerated.",
+        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 
-
-
-
-  async getAllRuls(req: Request, res: Response, next: NextFunction) {
-
+  async getAllRules(req: Request, res: Response, next: NextFunction) {
     try {
-      const lawyerId = req.user?.id
+      const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
+        return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: "Lawyer ID missing. Cannot fetch rules.",
+          message: MessageConstants.COMMON.UNAUTHORIZED,
         });
       }
 
-      const rules = await this._getavailableUsecase.execute(lawyerId);
-
+      const rules = await this._getAllRulesUseCase.execute(lawyerId);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Availability rules fetched successfully.",
+        message: MessageConstants.LAWYER.AVAILABILITY_FETCH_SUCCESS,
         data: rules,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 
- 
-  async DeleteRule(req: Request, res: Response, next: NextFunction) {
+  async deleteRule(req: Request, res: Response, next: NextFunction) {
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: "Rule ID missing. Cannot delete rule.",
+          message: MessageConstants.COMMON.BAD_REQUEST,
         });
       }
 
-      await this._deleteavailableusecase.execute(ruleId);
+      await this._deleteRuleUseCase.execute(ruleId);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Rule and its slots deleted successfully.",
+        message: MessageConstants.COMMON.SUCCESS,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 }

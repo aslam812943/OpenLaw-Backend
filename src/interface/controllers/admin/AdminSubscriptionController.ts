@@ -4,12 +4,13 @@ import { IGetSubscriptionsUseCase } from '../../../application/interface/use-cas
 import { IToggleSubscriptionStatusUseCase } from '../../../application/interface/use-cases/admin/IToggleSubscriptionStatusUseCase';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
 import { CreateSubscriptionDTO } from '../../../application/dtos/admin/CreateSubscriptionDTO';
+import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 
 export class AdminSubscriptionController {
     constructor(
-        private _createSubscriptionUseCase: ICreateSubscriptionUseCase,
-        private _getSubscriptionsUseCase: IGetSubscriptionsUseCase,
-        private _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
+        private readonly _createSubscriptionUseCase: ICreateSubscriptionUseCase,
+        private readonly _getSubscriptionsUseCase: IGetSubscriptionsUseCase,
+        private readonly _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
     ) { }
 
     async create(req: Request, res: Response, next: NextFunction) {
@@ -19,7 +20,7 @@ export class AdminSubscriptionController {
 
             res.status(HttpStatusCode.CREATED).json({
                 success: true,
-                message: "Subscription plan created successfully."
+                message: MessageConstants.SUBSCRIPTION.CREATE_SUCCESS
             });
         } catch (error) {
             next(error);
@@ -31,6 +32,7 @@ export class AdminSubscriptionController {
             const subscriptions = await this._getSubscriptionsUseCase.execute();
             res.status(HttpStatusCode.OK).json({
                 success: true,
+                message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
                 data: subscriptions
             });
         } catch (error) {
@@ -45,7 +47,7 @@ export class AdminSubscriptionController {
             await this._toggleSubscriptionStatusUseCase.execute(id, status);
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                message: `Subscription plan ${status ? 'activated' : 'inactivated'} successfully.`
+                message: MessageConstants.SUBSCRIPTION.STATUS_UPDATE_SUCCESS
             });
         } catch (error) {
             next(error);

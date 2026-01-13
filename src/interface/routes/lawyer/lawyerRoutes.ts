@@ -6,8 +6,8 @@ import { Router } from "express";
 import { LawyerController } from "../../controllers/lawyer/LawyerController";
 import { LawyerLogoutController } from "../../controllers/lawyer/lawyerLogoutController";
 import { AvailabilityController } from "../../controllers/lawyer/AvailabilityController";
-import { GetProfileController } from "../../controllers/lawyer/ProfileController";
-import { AppoimentsController } from "../../controllers/lawyer/AppoimentsController";
+import { LawyerProfileController } from "../../controllers/lawyer/ProfileController";
+import { AppointmentsController } from "../../controllers/lawyer/AppointmentsController";
 import { SubscriptionController } from "../../controllers/lawyer/SubscriptionController";
 import { SubscriptionPaymentController } from "../../controllers/lawyer/SubscriptionPaymentController";
 import { ChatController } from "../../controllers/common/chat/ChatController";
@@ -133,8 +133,8 @@ const availabilityController = new AvailabilityController(
   getAllAvailableRuleUseCase,
   deleteAvailableRuleUseCase
 );
-const getProfileController = new GetProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
-const appoimentsController = new AppoimentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase);
+const getProfileController = new LawyerProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
+const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase);
 const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);
@@ -173,20 +173,20 @@ router.put("/schedule/update/:ruleId", lawyerAuthMiddleware.execute, (req, res, 
 );
 
 router.get("/schedule/", lawyerAuthMiddleware.execute, (req, res, next) =>
-  availabilityController.getAllRuls(req, res, next)
+  availabilityController.getAllRules(req, res, next)
 );
 
 router.delete("/schedule/delete/:ruleId", (req, res, next) =>
-  availabilityController.DeleteRule(req, res, next)
+  availabilityController.deleteRule(req, res, next)
 );
 
-router.get('/profile', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.getDetils(req, res, next));
+router.get('/profile', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.getDetails(req, res, next));
 
 router.put('/profile/update', lawyerAuthMiddleware.execute, upload.single('profileImage'), (req, res, next) => getProfileController.updateProfile(req, res, next));
 
 router.put('/profile/password', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next));
 
-router.get('/appoiments', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.getAppoiments(req, res, next));
+router.get('/appoiments', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.getAppointments(req, res, next));
 
 router.patch('/appoiments/:id/status', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.updateStatus(req, res, next));
 
@@ -203,7 +203,7 @@ router.post('/subscription/checkout', lawyerAuthMiddleware.execute, (req, res, n
 router.post('/subscription/success', lawyerAuthMiddleware.execute, (req, res, next) => subscriptionPaymentController.handleSuccess(req, res, next));
 
 // Review Routes
-router.get(`/review/:id`, lawyerAuthMiddleware.execute, (req, res, next) => reviewController.getAllReview(req, res, next));
+router.get(`/review/:id`, lawyerAuthMiddleware.execute, (req, res, next) => reviewController.getAllReviews(req, res, next));
 
 // Cases Routes
 router.get('/cases', lawyerAuthMiddleware.execute, (req, res, next) => lawyerCasesController.getCases(req, res, next));

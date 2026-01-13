@@ -1,21 +1,24 @@
-import { Request,Response,NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IGetAllReviewsUseCase } from "../../../application/interface/use-cases/user/review/IGetAllReviewsUsecase";
-
-
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class ReviewController {
-    constructor(private getAllReviewUseCase: IGetAllReviewsUseCase) { }
+    constructor(private readonly _getAllReviewsUseCase: IGetAllReviewsUseCase) { }
 
-    async getAllReview(req: Request, res: Response, next: NextFunction) {
+    async getAllReviews(req: Request, res: Response, next: NextFunction) {
         try {
-            const lawyerId = req.params.id
+            const lawyerId = req.params.id;
 
-            const response = await this.getAllReviewUseCase.execute(lawyerId)
+            const reviews = await this._getAllReviewsUseCase.execute(lawyerId);
 
-            res.status(HttpStatusCode.OK).json({ data: response })
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.LAWYER.REVIEWS_FETCH_SUCCESS,
+                data: reviews
+            });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 }

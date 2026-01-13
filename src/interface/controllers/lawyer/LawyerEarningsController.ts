@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetLawyerEarningsUseCase } from "../../../application/interface/use-cases/lawyer/IGetLawyerEarningsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class LawyerEarningsController {
-    constructor(private _getLawyerEarningsUseCase: IGetLawyerEarningsUseCase) { }
+    constructor(private readonly _getLawyerEarningsUseCase: IGetLawyerEarningsUseCase) { }
 
     async getEarnings(req: Request, res: Response, next: NextFunction) {
         try {
@@ -13,8 +14,8 @@ export class LawyerEarningsController {
 
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                data: earnings,
-                message: "Earnings fetched successfully"
+                message: MessageConstants.LAWYER.EARNINGS_FETCH_SUCCESS,
+                data: earnings
             });
         } catch (error) {
             next(error);

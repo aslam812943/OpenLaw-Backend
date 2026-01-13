@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetAdminDashboardStatsUseCase } from "../../../application/interface/use-cases/admin/IGetAdminDashboardStatsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+
 export class AdminDashboardController {
-    constructor(private _getAdminDashboardStatsUseCase: IGetAdminDashboardStatsUseCase) { }
+    constructor(private readonly _getAdminDashboardStatsUseCase: IGetAdminDashboardStatsUseCase) { }
 
     async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -20,7 +22,11 @@ export class AdminDashboardController {
             }
 
             const stats = await this._getAdminDashboardStatsUseCase.execute(start, end);
-            res.status(HttpStatusCode.OK).json(stats);
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.DASHBOARD.STATS_FETCH_SUCCESS,
+                data: stats
+            });
         } catch (error) {
             next(error);
         }

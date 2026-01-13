@@ -1,44 +1,36 @@
-
-import { Request, Response } from 'express';
-import { LoginAdminUseCase } from '../../../application/useCases/Admin/LoginAdminUseCase';
+import { Request, Response, NextFunction } from 'express';
+import { ILoginAdminUseCase } from '../../../application/interface/use-cases/admin/ILoginAdminUseCase';
 import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequestDTO';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
-
-
-//  AdminAuthController
+import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 
 export class AdminAuthController {
-  constructor(private readonly _loginUseCase: LoginAdminUseCase) { }
+  constructor(private readonly _loginUseCase: ILoginAdminUseCase) { }
 
-  // ------------------------------------------------------------
-  // Admin Login Handler
-  // ------------------------------------------------------------
-
-
-  async login(req: Request, res: Response, next: any) {
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
       const loginDto = new AdminLoginRequestDTO(req.body);
       const result = await this._loginUseCase.execute(loginDto);
 
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: false,
+        secure: false, // Set to true in production
         sameSite: 'lax',
         path: '/',
-        maxAge: 15 * 60 * 1000, 
+        maxAge: 15 * 60 * 1000,
       });
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: false, // Set to true in production
         sameSite: 'lax',
         path: '/',
-        maxAge: 1 * 24 * 60 * 60 * 1000
-      })
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Admin logged in successfully.",
+        message: MessageConstants.ADMIN.LOGIN_SUCCESS,
         data: result,
       });
 
@@ -47,30 +39,28 @@ export class AdminAuthController {
     }
   }
 
-
-  async logout(_req: Request, res: Response, next: any): Promise<void> {
+  async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.clearCookie("adminAccessToken", {
+      res.clearCookie("accessToken", {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/'
       });
 
-      res.clearCookie('adminRefreshToken', {
+      res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/'
-      })
+      });
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Admin logged out successfully.",
+        message: MessageConstants.ADMIN.LOGOUT_SUCCESS,
       });
     } catch (error: any) {
       next(error);
     }
   }
-
 }

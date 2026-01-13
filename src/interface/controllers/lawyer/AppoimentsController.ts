@@ -7,7 +7,7 @@ import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStat
 export class AppoimentsController {
     constructor(
         private _appoimentUseCase: IGetAppoimentsUseCase,
-        private _updateStatusUseCase?: UpdateAppointmentStatusUseCase
+        private _updateStatusUseCase: UpdateAppointmentStatusUseCase
     ) { }
 
     async getAppoiments(req: Request, res: Response, next: NextFunction) {

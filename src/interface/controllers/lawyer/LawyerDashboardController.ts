@@ -1,15 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetLawyerDashboardStatsUseCase } from "../../../application/interface/use-cases/lawyer/IGetLawyerDashboardStatsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class LawyerDashboardController {
-    constructor(private _getLawyerDashboardStatsUseCase: IGetLawyerDashboardStatsUseCase) { }
+    constructor(private readonly _getLawyerDashboardStatsUseCase: IGetLawyerDashboardStatsUseCase) { }
 
     async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const lawyerId = req.user?.id; 
+            const lawyerId = req.user?.id;
             if (!lawyerId) {
-                res.status(HttpStatusCode.UNAUTHORIZED).json({ message: "Unauthorized" });
+                res.status(HttpStatusCode.FORBIDDEN).json({
+                    success: false,
+                    message: MessageConstants.COMMON.UNAUTHORIZED
+                });
                 return;
             }
 
@@ -27,7 +31,12 @@ export class LawyerDashboardController {
             }
 
             const stats = await this._getLawyerDashboardStatsUseCase.execute(lawyerId, start, end);
-            res.status(HttpStatusCode.OK).json(stats);
+
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.DASHBOARD.STATS_FETCH_SUCCESS,
+                data: stats
+            });
         } catch (error) {
             next(error);
         }
