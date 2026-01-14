@@ -18,7 +18,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  verifyUser() - Marks a user as verified.
+  //  verifyUser
   // ------------------------------------------------------------
 
   async verifyUser(userId: string): Promise<void> {
@@ -30,7 +30,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  findByEmail() - Finds a user by their email.
+  //  findByEmail()
   // ------------------------------------------------------------
 
   async findByEmail(email: string): Promise<User | null> {
@@ -56,7 +56,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  createUser() - Creates a new user.
+  //  createUser()
   // ------------------------------------------------------------
   async createUser(user: UserRegisterDTO): Promise<User> {
     try {
@@ -84,7 +84,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  // updateUserPassword() - Updates a user's password.
+  // updateUserPassword()
   // ------------------------------------------------------------
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
@@ -95,7 +95,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  markVerificationSubmitted() - Marks that a user has submitted verification details.
+  // markVerificationSubmitted()
   // ------------------------------------------------------------
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
@@ -106,7 +106,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  findAll() - Finds all users with pagination, search, filter, sort.
+  // findAll()
   // ------------------------------------------------------------
   async findAll(query: {
     page: number;
@@ -180,7 +180,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  //  blockUser() - Blocks a user.
+  // blockUser()
   // ------------------------------------------------------------
   async blockUser(id: string): Promise<void> {
     try {
@@ -191,7 +191,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   // ------------------------------------------------------------
-  // unBlockUser() - Unblocks a user.
+  // unBlockUser()
   // ------------------------------------------------------------
   async unBlockUser(id: string): Promise<void> {
     try {
@@ -301,11 +301,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       updateData.address = user.address;
       delete updateData.address;
 
-
     }
-
-
-
 
     if (user.profileImage) {
       updateData.profileImage = user.profileImage

@@ -13,7 +13,7 @@ export class AdminSubscriptionController {
         private readonly _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
     ) { }
 
-    async create(req: Request, res: Response, next: NextFunction) {
+    async createSubscription(req: Request, res: Response, next: NextFunction) {
         try {
             const dto = new CreateSubscriptionDTO(req.body.planName, Number(req.body.duration), req.body.durationUnit, Number(req.body.price), Number(req.body.commissionPercent))
             await this._createSubscriptionUseCase.execute(dto);
@@ -27,20 +27,22 @@ export class AdminSubscriptionController {
         }
     }
 
-    async getAll(_req: Request, res: Response, next: NextFunction) {
+    async getAllSubscriptions(req: Request, res: Response, next: NextFunction) {
         try {
-            const subscriptions = await this._getSubscriptionsUseCase.execute();
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const result = await this._getSubscriptionsUseCase.execute(page, limit);
             res.status(HttpStatusCode.OK).json({
                 success: true,
                 message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
-                data: subscriptions
+                data: result
             });
         } catch (error) {
             next(error);
         }
     }
 
-    async toggleStatus(req: Request, res: Response, next: NextFunction) {
+    async toggleSubscriptionStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             const { status } = req.body;

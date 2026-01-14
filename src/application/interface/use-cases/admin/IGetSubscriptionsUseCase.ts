@@ -1,5 +1,5 @@
 import { SubscriptionDTO } from "../../../dtos/lawyer/SubscriptionDTO";
 
 export interface IGetSubscriptionsUseCase {
-    execute(): Promise<SubscriptionDTO[]>;
+    execute(page?: number, limit?: number): Promise<{ plans: SubscriptionDTO[], total: number }>;
 }

@@ -154,9 +154,9 @@ router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerC
 
 
 // Subscription Managment Routes
-router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAll(req, res, next));
-router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.create(req, res, next));
-router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleStatus(req, res, next));
+router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAllSubscriptions(req, res, next));
+router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.createSubscription(req, res, next));
+router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleSubscriptionStatus(req, res, next));
 
 
 
