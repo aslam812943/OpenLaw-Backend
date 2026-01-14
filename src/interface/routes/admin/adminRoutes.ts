@@ -39,6 +39,7 @@ import { SubscriptionRepository } from '../../../infrastructure/repositories/adm
 import { CreateSubscriptionUseCase } from '../../../application/useCases/Admin/CreateSubscriptionUseCase';
 import { GetSubscriptionsUseCase } from '../../../application/useCases/Admin/GetSubscriptionsUseCase';
 import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/Admin/ToggleSubscriptionStatusUseCase';
+import { UpdateSubscriptionUseCase } from '../../../application/useCases/Admin/UpdateSubscriptionUseCase';
 import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
 import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
 import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
@@ -102,7 +103,8 @@ const subscriptionRepo = new SubscriptionRepository();
 const createSubscriptionUseCase = new CreateSubscriptionUseCase(subscriptionRepo);
 const getSubscriptionsUseCase = new GetSubscriptionsUseCase(subscriptionRepo);
 const toggleSubscriptionStatusUseCase = new ToggleSubscriptionStatusUseCase(subscriptionRepo);
-const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase);
+const updateSubscriptionUseCase = new UpdateSubscriptionUseCase(subscriptionRepo);
+const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase, updateSubscriptionUseCase);
 
 
 
@@ -157,6 +159,7 @@ router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerC
 router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAllSubscriptions(req, res, next));
 router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.createSubscription(req, res, next));
 router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleSubscriptionStatus(req, res, next));
+router.put('/subscription/:id', adminAuth, (req, res, next) => adminSubscriptionController.updateSubscription(req, res, next));
 
 
 

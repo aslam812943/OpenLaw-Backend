@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { ICreateSubscriptionUseCase } from '../../../application/interface/use-cases/admin/ICreateSubscriptionUseCase';
 import { IGetSubscriptionsUseCase } from '../../../application/interface/use-cases/admin/IGetSubscriptionsUseCase';
 import { IToggleSubscriptionStatusUseCase } from '../../../application/interface/use-cases/admin/IToggleSubscriptionStatusUseCase';
+import { IUpdateSubscriptionUseCase } from '../../../application/interface/use-cases/admin/IUpdateSubscriptionUseCase';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
+import { UpdateSubscriptionDTO } from '../../../application/dtos/admin/UpdateSubscriptionDTO';
 import { CreateSubscriptionDTO } from '../../../application/dtos/admin/CreateSubscriptionDTO';
 import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 
@@ -10,7 +12,8 @@ export class AdminSubscriptionController {
     constructor(
         private readonly _createSubscriptionUseCase: ICreateSubscriptionUseCase,
         private readonly _getSubscriptionsUseCase: IGetSubscriptionsUseCase,
-        private readonly _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
+        private readonly _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase,
+        private readonly _updateSubscriptionUseCase: IUpdateSubscriptionUseCase
     ) { }
 
     async createSubscription(req: Request, res: Response, next: NextFunction) {
@@ -21,6 +24,28 @@ export class AdminSubscriptionController {
             res.status(HttpStatusCode.CREATED).json({
                 success: true,
                 message: MessageConstants.SUBSCRIPTION.CREATE_SUCCESS
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateSubscription(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const dto = new UpdateSubscriptionDTO(
+                id,
+                req.body.planName,
+                Number(req.body.duration),
+                req.body.durationUnit,
+                Number(req.body.price),
+                Number(req.body.commissionPercent)
+            );
+            await this._updateSubscriptionUseCase.execute(dto);
+
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.SUBSCRIPTION.UPDATE_SUCCESS
             });
         } catch (error) {
             next(error);

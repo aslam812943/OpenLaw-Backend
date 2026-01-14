@@ -36,8 +36,18 @@ export class SubscriptionRepository implements ISubscriptionRepository {
         await subscriptionModel.findByIdAndUpdate(id, { isActive: status });
     }
 
+    async update(id: string, data: Partial<Subscription>): Promise<void> {
+        await subscriptionModel.findByIdAndUpdate(id, data);
+    }
+
     async findById(id: string): Promise<Subscription | null> {
         const d: any = await subscriptionModel.findById(id);
+        if (!d) return null;
+        return this._mapToSubscription(d);
+    }
+
+    async findByName(name: string): Promise<Subscription | null> {
+        const d = await subscriptionModel.findOne({ planName: name });
         if (!d) return null;
         return this._mapToSubscription(d);
     }
