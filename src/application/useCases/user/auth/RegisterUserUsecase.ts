@@ -11,8 +11,8 @@ import { BadRequestError } from "../../../../infrastructure/errors/BadRequestErr
 
 export class RegisterUserUsecase implements IRegisterUserUseCase {
   constructor(
-    private _userRepo: IUserRepository,
-    private _lawyerRepo: ILawyerRepository,
+    private _userRepository: IUserRepository,
+    private _lawyerRepository: ILawyerRepository,
     private _generateOtpUseCase: IGenerateOtpUseCase,
     private _mailService: IEmailService
   ) { }
@@ -25,8 +25,8 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
       }
 
 
-      const userExists = await this._userRepo.findByEmail(data.email);
-      const lawyerExists = await this._lawyerRepo.findByEmail(data.email);
+      const userExists = await this._userRepository.findByEmail(data.email);
+      const lawyerExists = await this._lawyerRepository.findByEmail(data.email);
 
       if (userExists) {
         throw new BadRequestError("Email already exists as a regular user.");

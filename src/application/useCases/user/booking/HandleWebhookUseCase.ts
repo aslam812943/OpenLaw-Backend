@@ -7,7 +7,7 @@ import { BadRequestError } from '../../../../infrastructure/errors/BadRequestErr
 
 export class HandleWebhookUseCase implements IHandleWebhookUseCase {
     constructor(
-        private confirmBookingUseCase: IConfirmBookingUseCase
+        private _confirmBookingUseCase: IConfirmBookingUseCase
     ) { }
 
     async execute(event: Stripe.Event): Promise<void> {
@@ -53,7 +53,7 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
 
         try {
 
-            await this.confirmBookingUseCase.execute(session.id);
+            await this._confirmBookingUseCase.execute(session.id);
 
         } catch (error) {
 

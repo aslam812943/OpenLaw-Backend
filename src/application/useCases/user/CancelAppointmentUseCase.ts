@@ -10,9 +10,9 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     constructor(
         private _bookingRepository: IBookingRepository,
-        private _slotRepo: IAvailabilityRuleRepository,
+        private _slotRepository: IAvailabilityRuleRepository,
         private _paymentService: IPaymentService,
-        private _lawyerRepo: ILawyerRepository,
+        private _lawyerRepository: ILawyerRepository,
         private _chatRoomRepository: IChatRoomRepository
     ) { }
 
@@ -58,7 +58,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
 
 
             if (booking.status === 'completed') {
-                await this._lawyerRepo.updateWalletBalance(booking.lawyerId, -refundAmount);
+                await this._lawyerRepository.updateWalletBalance(booking.lawyerId, -refundAmount);
             }
         }
 
@@ -66,7 +66,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             amount: refundAmount,
             status: refundStatus
         });
-        await this._slotRepo.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
+        await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
     
         await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);

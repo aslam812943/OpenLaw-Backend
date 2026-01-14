@@ -3,15 +3,15 @@ import { IJoinCallUseCase } from "../../../interface/use-cases/common/IJoinCallU
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 
 export class JoinCallUseCase implements IJoinCallUseCase {
-    constructor(private bookingRepository: IBookingRepository) { }
+    constructor(private _bookingRepository: IBookingRepository) { }
 
     async execute(bookingId: string): Promise<void> {
-        const booking = await this.bookingRepository.findById(bookingId);
+        const booking = await this._bookingRepository.findById(bookingId);
         if (!booking) {
             throw new NotFoundError("Booking not found");
         }
 
 
-        await this.bookingRepository.updateCallStatus(bookingId, true, true);
+        await this._bookingRepository.updateCallStatus(bookingId, true, true);
     }
 }

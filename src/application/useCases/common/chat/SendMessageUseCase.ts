@@ -10,8 +10,8 @@ import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRe
 
 export class SendMessageUseCase implements ISendMessageUseCase {
     constructor(
-        private messageRepo: IMessageRepository,
-        private chatRoomRepo: IChatRoomRepository
+        private _messageRepository: IMessageRepository,
+        private _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(
@@ -41,8 +41,8 @@ export class SendMessageUseCase implements ISendMessageUseCase {
             fileSize
         );
 
-        await this.messageRepo.save(message);
-        await this.chatRoomRepo.updateLastMessage(roomId);
+        await this._messageRepository.save(message);
+        await this._chatRoomRepository.updateLastMessage(roomId);
 
         return MessageMapper.toDTO(message);
     }

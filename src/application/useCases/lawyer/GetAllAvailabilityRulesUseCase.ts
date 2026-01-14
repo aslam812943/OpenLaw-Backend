@@ -8,9 +8,9 @@ import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapp
 export class GetAllAvailableRuleUseCase implements IGetAllAvailableRuleUseCase {
     constructor(private readonly _availabilityRuleRepository: IAvailabilityRuleRepository) { }
 
-    async execute(id: string): Promise<AvailabilityRule[]> {
+    async execute(ruleId: string): Promise<AvailabilityRule[]> {
     
-        const rules = await this._availabilityRuleRepository.getAllRules(id)
+        const rules = await this._availabilityRuleRepository.getAllRules(ruleId)
 
         return AvailabilityRuleMapper.toDTOList(rules)
     }

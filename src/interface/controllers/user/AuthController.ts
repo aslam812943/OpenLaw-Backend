@@ -98,12 +98,11 @@ export class AuthController {
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUseCase.execute(dto);
 
-      const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
       res.cookie("accessToken", token, {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/',
         maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
@@ -111,7 +110,7 @@ export class AuthController {
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/',
         maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000,
@@ -133,19 +132,18 @@ export class AuthController {
 
   async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
       res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/'
       });
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/'
       });
@@ -175,23 +173,22 @@ export class AuthController {
         return;
       }
 
-      const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
-      // Set Cookies
+
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/',
-        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE)
       });
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: cookieSecure,
+        secure: process.env.COOKIE_SECURE === 'true',
         sameSite: cookieSameSite,
         path: '/',
-        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000,
+        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE)
       });
 
       res.status(HttpStatusCode.OK).json({

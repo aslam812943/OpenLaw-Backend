@@ -1,8 +1,4 @@
 
-
-
-
-
 export interface IGetAllLawyerDTO {
   id: string;
   userId:string;

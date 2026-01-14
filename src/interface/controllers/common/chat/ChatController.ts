@@ -6,31 +6,31 @@ import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpS
 
 export class ChatController {
     constructor(
-        private checkChatAccessUseCase: CheckChatAccessUseCase,
-        private getChatRoomUseCase: GetChatRoomUseCase,
-        private getMessagesUseCase: GetMessagesUseCase
+        private _checkChatAccessUseCase: CheckChatAccessUseCase,
+        private _getChatRoomUseCase: GetChatRoomUseCase,
+        private _getMessagesUseCase: GetMessagesUseCase
     ) { }
 
     async checkAccess(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;
             const { lawyerId } = req.params;
-
-
-            const chatAccessDto = await this.checkChatAccessUseCase.execute(userId!, lawyerId);
-
+            const chatAccessDto = await this._checkChatAccessUseCase.execute(userId!, lawyerId);
             res.status(HttpStatusCode.OK).json({ success: true, hasAccess: chatAccessDto.hasAccess });
         } catch (error) {
             next(error);
         }
     }
 
+
+    
+
     async getChatRoom(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;
             const { lawyerId, userId: targetUserId } = req.body;
 
-            const room = await this.getChatRoomUseCase.execute(
+            const room = await this._getChatRoomUseCase.execute(
                 targetUserId || userId,
                 lawyerId || userId
             );
@@ -43,7 +43,7 @@ export class ChatController {
     async getRoomById(req: Request, res: Response, next: NextFunction) {
         try {
             const { roomId } = req.params;
-            const room = await this.getChatRoomUseCase.getById(roomId);
+            const room = await this._getChatRoomUseCase.getById(roomId);
             res.status(HttpStatusCode.OK).json({ success: true, data: room });
         } catch (error) {
             next(error);
@@ -53,7 +53,7 @@ export class ChatController {
     async getMessages(req: Request, res: Response, next: NextFunction) {
         try {
             const { roomId } = req.params;
-            const messages = await this.getMessagesUseCase.execute(roomId);
+            const messages = await this._getMessagesUseCase.execute(roomId);
             res.status(HttpStatusCode.OK).json({ success: true, data: messages });
         } catch (error) {
             next(error);
@@ -63,7 +63,7 @@ export class ChatController {
     async getUserRooms(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;
-            const rooms = await this.getChatRoomUseCase.getByUser(userId);
+            const rooms = await this._getChatRoomUseCase.getByUser(userId);
             res.status(HttpStatusCode.OK).json({ success: true, data: rooms });
         } catch (error) {
             next(error);
@@ -73,7 +73,7 @@ export class ChatController {
     async getLawyerRooms(req: Request, res: Response, next: NextFunction) {
         try {
             const lawyerId = (req as any).user.id;
-            const rooms = await this.getChatRoomUseCase.getByLawyer(lawyerId);
+            const rooms = await this._getChatRoomUseCase.getByLawyer(lawyerId);
             res.status(HttpStatusCode.OK).json({ success: true, data: rooms });
         } catch (error) {
             next(error);

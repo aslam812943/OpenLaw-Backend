@@ -12,9 +12,7 @@ import { NotFoundError } from "../../errors/NotFoundError";
 
 //  UserRepository
 
-export class UserRepository
-  extends BaseRepository<IUserDocument>
-  implements IUserRepository {
+export class UserRepository extends BaseRepository<IUserDocument> implements IUserRepository {
   constructor() {
     super(UserModel);
   }
@@ -108,15 +106,70 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  findAll() - Finds all users with pagination.
+  //  findAll() - Finds all users with pagination, search, filter, sort.
   // ------------------------------------------------------------
-  async findAll(page: number, limit: number): Promise<{ users: User[]; total: number }> {
+  async findAll(query: {
+    page: number;
+    limit: number;
+    search?: string;
+    filter?: string;
+    sort?: string;
+  }): Promise<{ users: User[]; total: number }> {
     try {
-      const skip = (page - 1) * limit;
+      const page = Math.max(query.page || 1, 1);
+      const limit = Math.max(query.limit || 10, 1);
+      const search = query.search?.trim();
+      const filter = query.filter?.trim();
+      const sort = query.sort;
+
+      const andConditions: any[] = [{ role: "user" }];
+
+      if (search) {
+        andConditions.push({
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+            ...(!isNaN(Number(search)) ? [{ phone: Number(search) }] : [])
+          ],
+        });
+      }
+
+      if (filter) {
+        if (filter.toLowerCase() === "blocked") {
+          andConditions.push({ isBlock: true });
+        } else if (filter.toLowerCase() === "active") {
+          andConditions.push({ isBlock: false });
+        }
+      }
+
+      const match = { $and: andConditions };
+
+      // Sort
+      const sortOption: any = {};
+      switch (sort) {
+        case "name-asc":
+          sortOption.name = 1;
+          break;
+        case "name-desc":
+          sortOption.name = -1;
+          break;
+        case "newest":
+          sortOption._id = -1;
+          break;
+        case "oldest":
+          sortOption._id = 1;
+          break;
+        default:
+          sortOption._id = -1; 
+      }
 
       const [docs, total] = await Promise.all([
-        UserModel.find({ role: "user" }).skip(skip).limit(limit).exec(),
-        UserModel.countDocuments({ role: "user" }),
+        UserModel.find(match)
+          .sort(sortOption)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .exec(),
+        UserModel.countDocuments(match),
       ]);
 
       const users = docs.map((doc) => this.mapToDomain(doc));

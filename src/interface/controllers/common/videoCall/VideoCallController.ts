@@ -5,8 +5,8 @@ import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpS
 
 export class VideoCallController {
     constructor(
-        private canJoinCallUseCase: ICanJoinCallUseCase,
-        private joinCallUseCase: IJoinCallUseCase
+        private _canJoinCallUseCase: ICanJoinCallUseCase,
+        private _joinCallUseCase: IJoinCallUseCase
     ) { }
 
     async canJoinCall(req: Request, res: Response, next: NextFunction) {
@@ -19,7 +19,7 @@ export class VideoCallController {
                 throw new Error("Unauthorized");
             }
 
-            const result = await this.canJoinCallUseCase.execute(bookingId, userId, role);
+            const result = await this._canJoinCallUseCase.execute(bookingId, userId, role);
             res.status(HttpStatusCode.OK).json(result);
         } catch (error) {
             next(error);
@@ -30,7 +30,7 @@ export class VideoCallController {
         try {
             const { bookingId } = req.params;
 
-            await this.joinCallUseCase.execute(bookingId);
+            await this._joinCallUseCase.execute(bookingId);
             res.status(HttpStatusCode.OK).json({ success: true, message: "Joined call successfully" });
         } catch (error) {
             next(error);

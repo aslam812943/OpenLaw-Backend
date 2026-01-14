@@ -14,7 +14,7 @@ export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
     constructor(
         private _userRepository: IUserRepository,
         private _otpService: IOtpService,
-        private _lawyerRepo: ILawyerRepository
+        private _lawyerRepository: ILawyerRepository
     ) { }
 
 
@@ -41,7 +41,7 @@ export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
             }
 
 
-            await this._lawyerRepo.forgotpassword(stored.userId, hashedPassword)
+            await this._lawyerRepository.forgotpassword(stored.userId, hashedPassword)
 
 
 
@@ -49,9 +49,6 @@ export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
 
             return "Password reset successfully.";
         } catch (error: any) {
-
-
-
             throw new BadRequestError(
                 error.message || "Failed to reset password. Please try again later."
             );

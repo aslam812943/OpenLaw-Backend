@@ -2,7 +2,6 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel } from "../../db/models/BookingModel";
 import { InternalServerError } from "../../errors/InternalServerError";
-import { NotFoundError } from "../../errors/NotFoundError";
 
 export class BookingRepository implements IBookingRepository {
 
@@ -35,7 +34,7 @@ export class BookingRepository implements IBookingRepository {
                 savedBooking.lawyerJoined,
                 (savedBooking as any).createdAt
             );
-        } catch (error: any) {
+        } catch (error) {
             throw new InternalServerError("Database error while creating booking.");
         }
     }
@@ -147,7 +146,6 @@ export class BookingRepository implements IBookingRepository {
 
     async findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null> {
         try {
-            // Priority 1: Confirmed and Paid
             let booking = await BookingModel.findOne({
                 userId,
                 lawyerId,
@@ -155,7 +153,6 @@ export class BookingRepository implements IBookingRepository {
                 paymentStatus: 'paid'
             }).sort({ createdAt: -1 });
 
-            // Priority 2: Pending and Paid
             if (!booking) {
                 booking = await BookingModel.findOne({
                     userId,

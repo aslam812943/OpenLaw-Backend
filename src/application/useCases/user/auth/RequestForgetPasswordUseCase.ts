@@ -9,10 +9,10 @@ import { IRequestForgetPasswordUseCase } from "../../../interface/use-cases/user
 //  RequestForgetPasswordUseCase
 export class RequestForgetPasswordUseCase implements IRequestForgetPasswordUseCase {
   constructor(
-    private _userRepo: IUserRepository,
+    private _userRepository: IUserRepository,
     private _otpService: IOtpService,
     private _mailService: IEmailService,
-    private _lawyerRepo: ILawyerRepository
+    private _lawyerRepository: ILawyerRepository
   ) { }
 
   async execute(data: ForgetPasswordRequestDTO): Promise<string> {
@@ -21,9 +21,9 @@ export class RequestForgetPasswordUseCase implements IRequestForgetPasswordUseCa
         throw new BadRequestError("Email is required to request a password reset.");
       }
       let user;
-      user = await this._userRepo.findByEmail(data.email);
+      user = await this._userRepository.findByEmail(data.email);
       if (!user) {
-        user = await this._lawyerRepo.findByEmail(data.email)
+        user = await this._lawyerRepository.findByEmail(data.email)
       }
 
       if (!user) {

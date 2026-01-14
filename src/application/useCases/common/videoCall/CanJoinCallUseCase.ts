@@ -3,10 +3,10 @@ import { ICanJoinCallUseCase } from "../../../interface/use-cases/common/ICanJoi
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 
 export class CanJoinCallUseCase implements ICanJoinCallUseCase {
-    constructor(private bookingRepository: IBookingRepository) { }
+    constructor(private _bookingRepository: IBookingRepository) { }
 
     async execute(bookingId: string, userId: string, role: 'user' | 'lawyer'): Promise<{ canJoin: boolean; message: string }> {
-        const booking = await this.bookingRepository.findById(bookingId);
+        const booking = await this._bookingRepository.findById(bookingId);
 
         if (!booking) {
             throw new NotFoundError("Booking not found");

@@ -13,8 +13,8 @@ import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
 
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
-    private _userRepo: IUserRepository,
-    private _lawyerRepo: ILawyerRepository,
+    private _userRepository: IUserRepository,
+    private _lawyerRepository: ILawyerRepository,
     private _otpService: IOtpService
   ) { }
 
@@ -45,10 +45,10 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
       let savedUser;
       if (userData.role === UserRole.LAWYER) {
-        savedUser = await this._lawyerRepo.create(userEntity);
+        savedUser = await this._lawyerRepository.create(userEntity);
 
       } else {
-        savedUser = await this._userRepo.createUser(userEntity);
+        savedUser = await this._userRepository.createUser(userEntity);
       }
 
       return savedUser;

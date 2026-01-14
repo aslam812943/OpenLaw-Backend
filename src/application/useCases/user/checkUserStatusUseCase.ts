@@ -1,5 +1,4 @@
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
-import { AppError } from "../../../infrastructure/errors/AppError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 

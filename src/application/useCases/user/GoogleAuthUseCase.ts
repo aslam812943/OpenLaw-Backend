@@ -16,7 +16,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
     private _userRepository: IUserRepository,
     private _googleAuthService: IGoogleAuthService,
     private _tokenService: ITokenService,
-    private _lawyerRepo: ILawyerRepository
+    private _lawyerRepository: ILawyerRepository
   ) { }
 
   async execute(idToken: string, role?: UserRole): Promise<GoogleAuthResponseDTO> {
@@ -43,7 +43,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
 
       if (!user) {
-        user = await this._lawyerRepo.findByEmail(email!);
+        user = await this._lawyerRepository.findByEmail(email!);
 
       }
     }
@@ -60,7 +60,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
         user.googleId = googleId;
 
         if (user.role === UserRole.LAWYER) {
-          await this._lawyerRepo.updateGoogleId(user.id!, googleId);
+          await this._lawyerRepository.updateGoogleId(user.id!, googleId);
         } else {
           user = await this._userRepository.save(user);
         }
@@ -85,7 +85,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
 
       if (role === UserRole.LAWYER) {
-        user = await this._lawyerRepo.create(newUser);
+        user = await this._lawyerRepository.create(newUser);
       } else {
         user = await this._userRepository.createUser(newUser as User);
       }

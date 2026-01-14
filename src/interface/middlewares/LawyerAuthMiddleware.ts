@@ -9,8 +9,8 @@ import { JwtPayload } from "../../types/express/index";
 
 export class LawyerAuthMiddleware {
     constructor(
-        private readonly checkLawyerStatusUseCase: CheckLawyerStatusUseCase,
-        private readonly tokenService: ITokenService
+        private readonly _checkLawyerStatusUseCase: CheckLawyerStatusUseCase,
+        private readonly _tokenService: ITokenService
     ) { }
 
     execute = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -44,14 +44,14 @@ export class LawyerAuthMiddleware {
 
                     try {
 
-                        const refreshDecoded = this.tokenService.verifyToken(refreshToken, true) as JwtPayload;
+                        const refreshDecoded = this._tokenService.verifyToken(refreshToken, true) as JwtPayload;
 
                         if (refreshDecoded.role !== UserRole.LAWYER) {
                             res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role." });
                             return;
                         }
 
-                        const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
+                        const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
                         res.cookie("accessToken", newAccessToken, {
                             httpOnly: true,
@@ -80,7 +80,7 @@ export class LawyerAuthMiddleware {
             }
 
 
-            const status = await this.checkLawyerStatusUseCase.check(decoded.id);
+            const status = await this._checkLawyerStatusUseCase.check(decoded.id);
 
             if (!status.isActive) {
 
