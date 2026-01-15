@@ -3,10 +3,10 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 
 export class BlockLawyerUseCase implements IBlockLawyerUseCase {
 
-    constructor(private _lawyerRepo: ILawyerRepository) { }
+    constructor(private _lawyerRepository: ILawyerRepository) { }
     async execute(lawyerId: string): Promise<void> {
         
-        await this._lawyerRepo.blockLawyer(lawyerId)
+        await this._lawyerRepository.blockLawyer(lawyerId)
     }
 
 }

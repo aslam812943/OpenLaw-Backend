@@ -7,11 +7,11 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 
 export class UpdateProfileUseCase implements IUpdateProfileUseCase {
-    constructor(private readonly _repo: ILawyerRepository) { }
-    async execute(id: string, dto: UpdateLawyerProfileDTO): Promise<void> {
-        if (!id) throw new BadRequestError("Invalid request: User ID is missing");
-        if (!dto) throw new BadRequestError('data missing ')
+    constructor(private _lawyerRepository: ILawyerRepository) { }
+    async execute(lawyerId: string, profileData: UpdateLawyerProfileDTO): Promise<void> {
+        if (!lawyerId) throw new BadRequestError("Invalid request: lawyer ID is missing");
+        if (!profileData) throw new BadRequestError('data missing ')
       
-        await this._repo.updateProfile(id, dto)
+        await this._lawyerRepository.updateProfile(lawyerId, profileData)
     }
 }

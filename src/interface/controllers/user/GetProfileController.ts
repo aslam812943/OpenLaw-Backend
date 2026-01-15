@@ -1,98 +1,94 @@
-import { Request, Response,NextFunction } from "express";
-import { IGetProfileUseCase, IChangePasswordUseCase,IProfileEditUseCase } from "../../../application/interface/use-cases/user/IGetProfileUseCase";
+import { Request, Response, NextFunction } from "express";
+import { IGetProfileUseCase, IChangePasswordUseCase, IProfileEditUseCase } from "../../../application/interface/use-cases/user/IGetProfileUseCase";
 import { ChangePasswordDTO } from "../../../application/dtos/user/ChangePasswordDTO";
 import { ProfileUpdateDTO } from "../../../application/dtos/user/ProfileupdateDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { error } from "console";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+
 export class GetProfileController {
   constructor(
-    private readonly _getprofileusecase: IGetProfileUseCase,
-    private readonly _chengepasswordusecase: IChangePasswordUseCase,
-    private readonly _profileEditusecase:IProfileEditUseCase
-  ) {}
+    private readonly _getProfileUseCase: IGetProfileUseCase,
+    private readonly _changePasswordUseCase: IChangePasswordUseCase,
+    private readonly _profileEditUseCase: IProfileEditUseCase
+  ) { }
 
-  async getprofiledetils(req: Request, res: Response,next:NextFunction) {
-    try {
-      const id = req.user?.id;
-     
-      
-      const data = await this._getprofileusecase.execute(id!);
-
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: 'Profile fetch successful',
-        data
-      });
-    } catch (error: any) {
-      
-
-     next(error)
-    }
-  }
-
-  async chengePassword(req: Request, res: Response,next:NextFunction) {
+  async getProfileDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
       if (!userId) {
         return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: 'Unauthorized: User ID missing'
+          message: MessageConstants.COMMON.UNAUTHORIZED
+        });
+      }
+
+      const data = await this._getProfileUseCase.execute(userId);
+
+      res.status(HttpStatusCode.OK).json({
+        success: true,
+        message: MessageConstants.COMMON.SUCCESS,
+        data
+      });
+    } catch (error: any) {
+      next(error);
+    }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(HttpStatusCode.FORBIDDEN).json({
+          success: false,
+          message: MessageConstants.COMMON.UNAUTHORIZED
         });
       }
 
       const dto = new ChangePasswordDTO(userId, req.body.oldPassword, req.body.newPassword);
-    
-      await this._chengepasswordusecase.execute(dto);
+      await this._changePasswordUseCase.execute(dto);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: 'Password changed successfully'
+        message: MessageConstants.USER.PASSWORD_CHANGE_SUCCESS
       });
     } catch (error: any) {
-    
-
-     next(error)
+      next(error);
     }
   }
 
+  async editProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(HttpStatusCode.FORBIDDEN).json({
+          success: false,
+          message: MessageConstants.COMMON.UNAUTHORIZED
+        });
+      }
 
-async editProfile(req: Request, res: Response,next:NextFunction) {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(HttpStatusCode.FORBIDDEN).json({
-      success: false,
-      message: "Unauthorized: User ID missing",
-    });
-  }
+      let profileImage = undefined;
+      if (req.file) {
+        profileImage = (req.file as any).path;
+      }
+      const dto = new ProfileUpdateDTO(
+        userId,
+        req.body.name,
+        req.body.phone,
+        profileImage,
+        req.body.address,
+        req.body.city,
+        req.body.state,
+        req.body.pincode
+      );
 
-  try {
-    let profileImage = undefined;
-    if (req.file) {
-      profileImage = (req.file as any).path;
+      await this._profileEditUseCase.execute(dto);
+
+      return res.status(HttpStatusCode.OK).json({
+        success: true,
+        message: MessageConstants.USER.PROFILE_UPDATE_SUCCESS
+      });
+    } catch (err: any) {
+      next(err);
     }
-    const dto = new ProfileUpdateDTO(
-      userId,
-      req.body.name,
-      req.body.phone,
-      profileImage,
-      req.body.address,
-      req.body.city,
-      req.body.state,
-      req.body.pincode
-    );
-
-    await this._profileEditusecase.execute(dto);
-
-    return res.status(HttpStatusCode.OK).json({
-      success: true,
-      message: "Profile updated successfully",
-    });
-  } catch (err: any) {
-
-
-  next(err)
   }
-}
-
-  
 }

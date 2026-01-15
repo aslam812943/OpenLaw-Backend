@@ -3,26 +3,34 @@ import { ICreateSubscriptionCheckoutUseCase } from "../../../application/interfa
 import { IVerifySubscriptionPaymentUseCase } from "../../../application/interface/use-cases/lawyer/IVerifySubscriptionPaymentUseCase";
 import { CreateSubscriptionCheckoutDTO } from "../../../application/dtos/lawyer/CreateSubscriptionCheckoutDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class SubscriptionPaymentController {
     constructor(
-        private createSubscriptionCheckoutUseCase: ICreateSubscriptionCheckoutUseCase,
-        private verifySubscriptionPaymentUseCase: IVerifySubscriptionPaymentUseCase
+        private readonly _createSubscriptionCheckoutUseCase: ICreateSubscriptionCheckoutUseCase,
+        private readonly _verifySubscriptionPaymentUseCase: IVerifySubscriptionPaymentUseCase
     ) { }
 
     async createCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
-
         try {
             const { lawyerId, email, planName, price, subscriptionId } = req.body;
 
             if (!lawyerId || !planName || !price || !subscriptionId) {
-                res.status(HttpStatusCode.BAD_REQUEST).json({ success: false, message: "Missing required fields" });
+                res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: MessageConstants.COMMON.BAD_REQUEST
+                });
                 return;
             }
 
             const dto = new CreateSubscriptionCheckoutDTO(lawyerId, email, planName, price, subscriptionId);
-            const url = await this.createSubscriptionCheckoutUseCase.execute(dto);
-            res.status(HttpStatusCode.OK).json({ success: true, url });
+            const url = await this._createSubscriptionCheckoutUseCase.execute(dto);
+
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.SUBSCRIPTION.CHECKOUT_SESSION_CREATE_SUCCESS,
+                data: { url }
+            });
         } catch (error) {
             next(error);
         }
@@ -33,15 +41,24 @@ export class SubscriptionPaymentController {
             const { session_id } = req.body;
 
             if (!session_id) {
-                res.status(HttpStatusCode.BAD_REQUEST).json({ success: false, message: "Session ID required" });
+                res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: MessageConstants.COMMON.BAD_REQUEST
+                });
                 return;
             }
 
-            const success = await this.verifySubscriptionPaymentUseCase.execute(session_id);
+            const success = await this._verifySubscriptionPaymentUseCase.execute(session_id);
             if (success) {
-                res.status(HttpStatusCode.OK).json({ success: true, message: "Subscription verified successfully" });
+                res.status(HttpStatusCode.OK).json({
+                    success: true,
+                    message: MessageConstants.COMMON.SUCCESS
+                });
             } else {
-                res.status(HttpStatusCode.BAD_REQUEST).json({ success: false, message: "Payment verification failed" });
+                res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: MessageConstants.COMMON.BAD_REQUEST
+                });
             }
         } catch (error) {
             next(error);

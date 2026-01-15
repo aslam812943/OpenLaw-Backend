@@ -141,7 +141,7 @@ router.post("/reset-password", (req, res, next) => authController.verifyResetPas
 router.post('/logout', (req, res, next) => authController.logoutUser(req, res, next))
 
 
-router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getprofiledetils(req, res, next) })
+router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getProfileDetails(req, res, next) })
 
 
 
@@ -149,17 +149,17 @@ router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileC
 router.put("/profile/update", authMiddleware.execute, upload.single("profileImage"), (req, res, next) => getProfileController.editProfile(req, res, next));
 
 
-router.put('/profile/password', authMiddleware.execute, (req, res, next) => getProfileController.chengePassword(req, res, next))
+router.put('/profile/password', authMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next))
 
 
 
 
-router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.GetAllLawyers(req, res, next))
+router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next))
 
 
-router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getlawyer(req, res, next))
+router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getLawyer(req, res, next))
 
-router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getallslots(req, res, next))
+router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next))
 
 // Chat Routes
 router.get("/chat/access/:lawyerId", authMiddleware.execute, (req, res, next) => chatController.checkAccess(req, res, next));
@@ -171,5 +171,5 @@ router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req,
 
 // Review Routes
 router.post("/review", authMiddleware.execute, (req, res, next) => reviewController.addReview(req, res, next));
-router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReview(req, res, next))
+router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReviews(req, res, next))
 export default router;

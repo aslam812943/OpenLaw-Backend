@@ -7,13 +7,13 @@ import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStat
 export class AppoimentsController {
     constructor(
         private _appoimentUseCase: IGetAppoimentsUseCase,
-        private _updateStatusUseCase?: UpdateAppointmentStatusUseCase
+        private _updateStatusUseCase: UpdateAppointmentStatusUseCase
     ) { }
 
     async getAppoiments(req: Request, res: Response, next: NextFunction) {
         try {
-            let id = req.user?.id
-            let data = await this._appoimentUseCase.execute(id!)
+            let lawyerId = req.user?.id
+            let data = await this._appoimentUseCase.execute(lawyerId!)
             res.status(HttpStatusCode.OK).json({ success: true, data })
         } catch (error) {
             next(error)

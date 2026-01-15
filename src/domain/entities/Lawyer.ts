@@ -1,10 +1,12 @@
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
+
 export interface Lawyer {
   id?: string;
   name: string;
   email: string;
   password?: string;
   phone?: number;
-  role: string;
+  role: UserRole;
   isBlock: boolean;
   googleId?: string;
 

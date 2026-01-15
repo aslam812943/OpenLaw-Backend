@@ -1,3 +1,4 @@
+import Stripe from 'stripe';
 import { IHandleWebhookUseCase } from '../../../interface/use-cases/user/IHandleWebhookUseCase';
 import { IConfirmBookingUseCase } from '../../../interface/use-cases/user/IConfirmBookingUseCase';
 import { StripeWebhookEventType } from '../../../../infrastructure/interface/enums/StripeWebhookEvent';
@@ -6,10 +7,10 @@ import { BadRequestError } from '../../../../infrastructure/errors/BadRequestErr
 
 export class HandleWebhookUseCase implements IHandleWebhookUseCase {
     constructor(
-        private confirmBookingUseCase: IConfirmBookingUseCase
-    ) {}
+        private _confirmBookingUseCase: IConfirmBookingUseCase
+    ) { }
 
-    async execute(event: any): Promise<void> {
+    async execute(event: Stripe.Event): Promise<void> {
         const eventType = event.type;
 
         switch (eventType) {
@@ -18,11 +19,11 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
                 break;
 
             case StripeWebhookEventType.PAYMENT_INTENT_SUCCEEDED:
-               
+
                 break;
 
             case StripeWebhookEventType.PAYMENT_INTENT_PAYMENT_FAILED:
-               
+
                 break;
 
             default:
@@ -30,11 +31,11 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
         }
     }
 
-    
-    private async handleCheckoutSessionCompleted(event: any): Promise<void> {
-        const session = event.data.object;
 
-        
+    private async handleCheckoutSessionCompleted(event: Stripe.Event): Promise<void> {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+
         if (session.payment_status !== 'paid') {
             console.log(`Payment not completed for session ${session.id}, status: ${session.payment_status}`);
             return;
@@ -44,18 +45,18 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
             throw new BadRequestError('Invalid session metadata in webhook event');
         }
 
-        
+
         const { userId, lawyerId, date, startTime, endTime, slotId } = session.metadata;
         if (!userId || !lawyerId || !date || !startTime || !endTime || !slotId) {
             throw new BadRequestError('Missing required booking details in session metadata');
         }
 
         try {
-          
-            await this.confirmBookingUseCase.execute(session.id);
-         
+
+            await this._confirmBookingUseCase.execute(session.id);
+
         } catch (error) {
-            
+
             throw error;
         }
     }

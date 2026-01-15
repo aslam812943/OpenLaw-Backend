@@ -2,33 +2,38 @@ import { Request, Response, NextFunction } from "express";
 import { IGetSingleLawyerUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { IGetAllSlotsUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { AppError } from "../../../infrastructure/errors/AppError";
-import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
-import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class GetSingleLawyerController {
   constructor(
-    private _getsinglelawyerusecase: IGetSingleLawyerUseCase,
-    private _getslotusecase: IGetAllSlotsUseCase
+    private readonly _getSingleLawyerUseCase: IGetSingleLawyerUseCase,
+    private readonly _getAllSlotsUseCase: IGetAllSlotsUseCase
   ) { }
 
-  async getlawyer(req: Request, res: Response, next: NextFunction) {
+  async getLawyer(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
+      
 
-      if (!id) {
-        throw new BadRequestError("Lawyer ID is required.");
+      if (!lawyerId) {
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
+          success: false,
+          message: MessageConstants.COMMON.BAD_REQUEST
+        });
       }
 
-      const lawyer = await this._getsinglelawyerusecase.execute(id);
+      const lawyer = await this._getSingleLawyerUseCase.execute(lawyerId);
 
       if (!lawyer) {
-        throw new NotFoundError("Lawyer not found.");
+        return res.status(HttpStatusCode.NOT_FOUND).json({
+          success: false,
+          message: MessageConstants.COMMON.INTERNAL_ERROR 
+        });
       }
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyer fetched successfully",
+        message: MessageConstants.LAWYER.FETCH_SUCCESS,
         data: lawyer,
       });
 
@@ -37,24 +42,22 @@ export class GetSingleLawyerController {
     }
   }
 
-
-  async getallslots(req: Request, res: Response, next: NextFunction) {
+  async getAllSlots(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id;
 
       if (!id) {
-        throw new BadRequestError("Lawyer ID is required to fetch slots.");
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
+          success: false,
+          message: MessageConstants.COMMON.BAD_REQUEST
+        });
       }
 
-      const slots = await this._getslotusecase.execute(id);
-
-      if (!slots || slots.length === 0) {
-        throw new NotFoundError("No slots available for this lawyer.");
-      }
+      const slots = await this._getAllSlotsUseCase.execute(id);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Slots fetched successfully",
+        message: MessageConstants.COMMON.SUCCESS,
         data: slots,
       });
 

@@ -2,10 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusCode";
 
-interface JwtPayload {
-    id: string;
-    role: string;
-}
+import { JwtPayload } from "../../types/express/index";
 
 export const commonAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

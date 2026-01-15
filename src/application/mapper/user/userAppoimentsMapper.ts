@@ -15,7 +15,8 @@ export class UserAppointmentsMapper {
                 booking.lawyerName || booking.lawyerId.name || "",
                 booking.cancellationReason,
                 booking.refundAmount,
-                booking.refundStatus
+                booking.refundStatus,
+                booking.lawyerFeedback
             );
         });
     }

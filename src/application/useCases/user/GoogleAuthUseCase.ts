@@ -1,29 +1,31 @@
-import { IUserRepository } from '../../../domain/repositories/user/ IUserRepository';
+import { IUserRepository } from '../../../domain/repositories/user/IUserRepository';
 import { ILawyerRepository } from '../../../domain/repositories/lawyer/ILawyerRepository';
-import { User } from '../../../domain/entities/ User';
-import { GoogleAuthService } from '../../../infrastructure/services/googleAuth/GoogleAuthService';
-import { TokenService } from '../../../infrastructure/services/jwt/TokenService';
+import { User } from '../../../domain/entities/User';
+import { IGoogleAuthService } from '../../interface/services/IGoogleAuthService';
+import { ITokenService } from '../../interface/services/TokenServiceInterface';
 import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
 import { BadRequestError } from '../../../infrastructure/errors/BadRequestError';
 import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
 import { ForbiddenError } from '../../../infrastructure/errors/ForbiddenError';
+import { IGoogleAuthUseCase } from '../../interface/use-cases/user/IGoogleAuthUseCase';
+import { UserRole } from '../../../infrastructure/interface/enums/UserRole';
 
-export class GoogleAuthUsecase {
+export class GoogleAuthUsecase implements IGoogleAuthUseCase {
 
   constructor(
     private _userRepository: IUserRepository,
-    private _googleAuthService: GoogleAuthService,
-    private _tokenService: TokenService,
-    private _lawyerRepo: ILawyerRepository
+    private _googleAuthService: IGoogleAuthService,
+    private _tokenService: ITokenService,
+    private _lawyerRepository: ILawyerRepository
   ) { }
 
-  async execute(idToken: string, role?: 'user' | 'lawyer'): Promise<GoogleAuthResponseDTO> {
+  async execute(idToken: string, role?: UserRole): Promise<GoogleAuthResponseDTO> {
 
     if (!idToken) {
       throw new BadRequestError("Google token is missing.");
     }
 
-    
+
     const payload = await this._googleAuthService.verifyToken(idToken);
 
     if (!payload || !payload.email) {
@@ -41,7 +43,7 @@ export class GoogleAuthUsecase {
 
 
       if (!user) {
-        user = await this._lawyerRepo.findByEmail(email!);
+        user = await this._lawyerRepository.findByEmail(email!);
 
       }
     }
@@ -57,8 +59,8 @@ export class GoogleAuthUsecase {
 
         user.googleId = googleId;
 
-        if (user.role === 'lawyer') {
-          await this._lawyerRepo.updateGoogleId(user.id!, googleId);
+        if (user.role === UserRole.LAWYER) {
+          await this._lawyerRepository.updateGoogleId(user.id!, googleId);
         } else {
           user = await this._userRepository.save(user);
         }
@@ -82,8 +84,8 @@ export class GoogleAuthUsecase {
       };
 
 
-      if (role === 'lawyer') {
-        user = await this._lawyerRepo.create(newUser);
+      if (role === UserRole.LAWYER) {
+        user = await this._lawyerRepository.create(newUser);
       } else {
         user = await this._userRepository.createUser(newUser as User);
       }
@@ -99,7 +101,7 @@ export class GoogleAuthUsecase {
       user: {
         id: user.id!,
         email: user.email,
-        role: user.role! as 'user' | 'lawyer',
+        role: user.role! as UserRole,
         name: user.name,
         phone: user.phone,
         hasSubmittedVerification: user.hasSubmittedVerification,
@@ -108,7 +110,7 @@ export class GoogleAuthUsecase {
       needsRoleSelection: false
     };
 
-    if (user.role === 'lawyer') {
+    if (user.role === UserRole.LAWYER) {
       response.needsVerificationSubmission = !user.hasSubmittedVerification;
 
     }

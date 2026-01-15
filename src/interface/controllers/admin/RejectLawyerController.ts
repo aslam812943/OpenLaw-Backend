@@ -1,25 +1,21 @@
-
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IRejectLawyerUseCase } from "../../../application/interface/use-cases/admin/IRejectLawyerUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  RejectLawyerController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class RejectLawyerController {
   constructor(private readonly _rejectLawyerUseCase: IRejectLawyerUseCase) { }
 
-
-  async handle(req: Request, res: Response, next: any): Promise<void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
       const { reason, email } = req.body;
 
-      await this._rejectLawyerUseCase.execute(id, email, reason);
+      await this._rejectLawyerUseCase.execute(lawyerId, email, reason);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyer rejected successfully.",
+        message: MessageConstants.LAWYER.REJECT_SUCCESS,
       });
     } catch (err: any) {
       next(err);

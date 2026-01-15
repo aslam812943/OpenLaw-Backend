@@ -1,9 +1,9 @@
 import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import { IRegisterUserUseCase } from "../../../interface/use-cases/user/IRegisterUserUseCase";
-import { GenerateOtpUseCase } from "./GenerateOtpUseCase";
-import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { IGenerateOtpUseCase } from "../../../interface/use-cases/user/IGenerateOtpUseCase";
+import { IEmailService } from "../../../interface/services/IEmailService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 
 
@@ -11,10 +11,10 @@ import { BadRequestError } from "../../../../infrastructure/errors/BadRequestErr
 
 export class RegisterUserUsecase implements IRegisterUserUseCase {
   constructor(
-    private _userRepo: IUserRepository,
-    private _lawyerRepo: ILawyerRepository,
-    private _generateOtpUseCase: GenerateOtpUseCase,
-    private _mailService: NodeMailerEmailService
+    private _userRepository: IUserRepository,
+    private _lawyerRepository: ILawyerRepository,
+    private _generateOtpUseCase: IGenerateOtpUseCase,
+    private _mailService: IEmailService
   ) { }
 
   async execute(data: UserRegisterDTO): Promise<{ message: string }> {
@@ -25,8 +25,8 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
       }
 
 
-      const userExists = await this._userRepo.findByEmail(data.email);
-      const lawyerExists = await this._lawyerRepo.findByEmail(data.email);
+      const userExists = await this._userRepository.findByEmail(data.email);
+      const lawyerExists = await this._lawyerRepository.findByEmail(data.email);
 
       if (userExists) {
         throw new BadRequestError("Email already exists as a regular user.");

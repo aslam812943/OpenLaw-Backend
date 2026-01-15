@@ -8,6 +8,7 @@ import { ILoginAdminUseCase } from "../../interface/use-cases/admin/ILoginAdminU
 import AdminLoginResponseDTO from '../../dtos/admin/AdminLoginResponseDTO'
 import { AdminMapper } from '../../mapper/admin/AdminMapper'
 import { Admin } from '../../../domain/entities/Admin'
+import { UserRole } from '../../../infrastructure/interface/enums/UserRole';
 
 
 
@@ -26,8 +27,8 @@ export class LoginAdminUseCase implements ILoginAdminUseCase {
 
     if (!ispasswordValid) throw new UnauthorizedError('Invalid credentials')
 
-    const token = this._tokenService.generateAccessToken(admin.id!, 'admin', false)
-    const refreshToken = this._tokenService.generateRefreshToken(admin.id!, 'admin', false)
+    const token = this._tokenService.generateAccessToken(admin.id!, UserRole.ADMIN, false)
+    const refreshToken = this._tokenService.generateRefreshToken(admin.id!, UserRole.ADMIN, false)
     return AdminMapper.toLoginResponse(admin, token, refreshToken)
   }
 

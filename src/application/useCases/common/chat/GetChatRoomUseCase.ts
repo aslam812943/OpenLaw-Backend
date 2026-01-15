@@ -9,30 +9,30 @@ import { IGetChatRoomUseCase } from "../../../interface/use-cases/common/chat/IG
 
 export class GetChatRoomUseCase implements IGetChatRoomUseCase {
     constructor(
-        private chatRoomRepo: IChatRoomRepository,
-        private bookingRepo: IBookingRepository
+        private _chatRoomRepository: IChatRoomRepository,
+        private _bookingRepository: IBookingRepository
     ) { }
 
     async execute(userId: string, lawyerId: string): Promise<ChatRoomDTO> {
 
-        const activeBooking = await this.bookingRepo.findActiveBooking(userId, lawyerId);
+        const activeBooking = await this._bookingRepository.findActiveBooking(userId, lawyerId);
         if (!activeBooking) {
             throw new NotFoundError("No active booking found with this lawyer.");
         }
 
 
-        let room = await this.chatRoomRepo.findByUserAndLawyer(userId, lawyerId);
+        let room = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId);
 
         if (room) {
 
             if (room.bookingId !== activeBooking.id) {
-                await this.chatRoomRepo.updateBookingId(room.id, activeBooking.id);
+                await this._chatRoomRepository.updateBookingId(room.id, activeBooking.id);
 
                 room.bookingId = activeBooking.id;
             }
             return ChatRoomMapper.toDTO(room);
         }
-        const newRoom = await this.chatRoomRepo.save({
+        const newRoom = await this._chatRoomRepository.save({
             id: "",
             userId,
             lawyerId,
@@ -42,20 +42,20 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
         return ChatRoomMapper.toDTO(newRoom);
     }
 
-    async getById(roomId: string): Promise<ChatRoomDTO> {
-        const room = await this.chatRoomRepo.findById(roomId);
+    async getById(roomId: string): Promise<PopulatedChatRoomDTO> {
+        const room = await this._chatRoomRepository.findByIdPopulated(roomId);
         if (!room) throw new NotFoundError("Chat room not found");
 
-        return ChatRoomMapper.toDTO(room);
+        return PopulatedChatRoomMapper.toDTO(room);
     }
 
     async getByUser(userId: string): Promise<PopulatedChatRoomDTO[]> {
-        const rooms = await this.chatRoomRepo.findByUserId(userId);
+        const rooms = await this._chatRoomRepository.findByUserId(userId);
         return PopulatedChatRoomMapper.toDTOArray(rooms);
     }
 
     async getByLawyer(lawyerId: string): Promise<PopulatedChatRoomDTO[]> {
-        const rooms = await this.chatRoomRepo.findByLawyerId(lawyerId);
+        const rooms = await this._chatRoomRepository.findByLawyerId(lawyerId);
         return PopulatedChatRoomMapper.toDTOArray(rooms);
     }
 }

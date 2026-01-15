@@ -3,14 +3,15 @@ import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityRuleDTO";
 import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapper";
-import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
-import { Slot } from "../../../domain/entities/Slot";
-import { AppError } from "../../../infrastructure/errors/AppError";
+import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUseCase {
 
-  constructor(private readonly _repo: IAvailabilityRuleRepository) { }
+  constructor(
+    private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
+    private readonly _slotGeneratorService: ISlotGeneratorService
+  ) { }
 
   private toMinutes(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -23,7 +24,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     const startMin = this.toMinutes(dto.startTime);
     const endMin = this.toMinutes(dto.endTime);
 
-   
+
     if (startMin >= endMin) errors.push("Start time must be before end time.");
     if (Number(dto.slotDuration) < 30 || Number(dto.slotDuration) > 120)
       errors.push("Slot duration must be 30–120 minutes.");
@@ -46,7 +47,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
       }
     }
 
-    const existingRules = await this._repo.getAllRules(dto.lawyerId);
+    const existingRules = await this._availabilityRuleRepository.getAllRules(dto.lawyerId);
 
     const newStartDate = new Date(dto.startDate);
     const newEndDate = new Date(dto.endDate);
@@ -82,7 +83,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     }
   }
 
-  async execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: Slot[] }> {
+  async execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: IGeneratedSlot[] }> {
 
     try {
       if (!dto.lawyerId) {
@@ -93,25 +94,23 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
       const newRuleEntity = AvailabilityRuleMapper.toEntity(dto);
 
-      const savedRule = await this._repo.createRule(newRuleEntity);
+      const savedRule = await this._availabilityRuleRepository.createRule(newRuleEntity);
 
       if (!savedRule) {
         throw new BadRequestError("Failed to save availability rule.");
       }
 
-      const slots = SlotGeneratorService.generateSlots(newRuleEntity);
+      const slots = this._slotGeneratorService.generateSlots(newRuleEntity);
 
       if (!slots || slots.length === 0) {
         throw new BadRequestError("Failed to generate slots.");
       }
 
-      await this._repo.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
+      await this._availabilityRuleRepository.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
 
       return { rule: savedRule, slots };
 
     } catch (err: any) {
-
-      if (err instanceof AppError) throw err;
 
       throw new BadRequestError(
         err.message || "Something went wrong while creating availability rule."

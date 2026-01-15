@@ -1,24 +1,20 @@
-
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IBlockUserUseCase } from "../../../application/interface/use-cases/admin/IBlockUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  BlockUserController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class BlockUserController {
-    constructor(private _blockuserUseCase: IBlockUserUseCase) { }
+    constructor(private readonly _blockUserUseCase: IBlockUserUseCase) { }
 
-
-    async handle(req: Request, res: Response, next: any): Promise<void> {
+    async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const id = req.params.id;
+            const userId = req.params.id;
 
-            await this._blockuserUseCase.execute(id);
+            await this._blockUserUseCase.execute(userId);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                message: "User blocked successfully.",
+                message: MessageConstants.USER.BLOCK_SUCCESS,
             });
 
         } catch (err: any) {

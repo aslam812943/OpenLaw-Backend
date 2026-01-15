@@ -34,6 +34,26 @@ export class ChatRoomRepository implements IChatRoomRepository {
         }
     }
 
+    async findByIdPopulated(id: string): Promise<PopulatedChatRoom | null> {
+        try {
+            const doc = await ChatRoomModel.findById(id)
+                .populate("userId", "name profileImage")
+                .populate("lawyerId", "name profileImage");
+
+            if (!doc) return null;
+
+            return {
+                id: (doc._id as Types.ObjectId).toString(),
+                userId: doc.userId as unknown as PopulatedUser,
+                lawyerId: doc.lawyerId as unknown as PopulatedLawyer,
+                bookingId: doc.bookingId.toString(),
+                createdAt: (doc as unknown as IChatRoomDocumentWithTimestamps).createdAt
+            };
+        } catch (error) {
+            throw new InternalServerError("Error finding populated chat room by ID");
+        }
+    }
+
     async findByUserAndLawyer(userId: string, lawyerId: string): Promise<ChatRoom | null> {
         try {
             const doc = await ChatRoomModel.findOne({ userId, lawyerId });
@@ -46,7 +66,9 @@ export class ChatRoomRepository implements IChatRoomRepository {
 
     async findByLawyerId(lawyerId: string): Promise<PopulatedChatRoom[]> {
         try {
-            const docs = await ChatRoomModel.find({ lawyerId }).populate("userId", "name profileImage");
+            const docs = await ChatRoomModel.find({ lawyerId })
+                .populate("userId", "name profileImage")
+                .sort({ updatedAt: -1 });
             return docs.map((doc) => ({
                 id: (doc._id as Types.ObjectId).toString(),
                 userId: doc.userId as unknown as PopulatedUser,
@@ -61,7 +83,9 @@ export class ChatRoomRepository implements IChatRoomRepository {
 
     async findByUserId(userId: string): Promise<PopulatedChatRoom[]> {
         try {
-            const docs = await ChatRoomModel.find({ userId }).populate("lawyerId", "name profileImage");
+            const docs = await ChatRoomModel.find({ userId })
+                .populate("lawyerId", "name profileImage")
+                .sort({ updatedAt: -1 });
             return docs.map((doc) => ({
                 id: (doc._id as Types.ObjectId).toString(),
                 userId: doc.userId.toString(),
@@ -93,6 +117,14 @@ export class ChatRoomRepository implements IChatRoomRepository {
             }
         } catch (error) {
             throw new InternalServerError("Error synchronizing chat room booking ID");
+        }
+    }
+
+    async updateLastMessage(roomId: string): Promise<void> {
+        try {
+            await ChatRoomModel.findByIdAndUpdate(roomId, { updatedAt: new Date() });
+        } catch (error) {
+            throw new InternalServerError("Error updating chat room last message time");
         }
     }
 

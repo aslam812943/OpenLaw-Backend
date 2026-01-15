@@ -1,23 +1,20 @@
-
+import { Request, Response, NextFunction } from "express";
 import { IBlockLawyerUseCase } from "../../../application/interface/use-cases/admin/IBlockLawyerUseCase";
-import { Request, Response } from "express";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  BlockLawyerController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class BlockLawyerController {
   constructor(private readonly _blockLawyerUseCase: IBlockLawyerUseCase) { }
 
-  async handle(req: Request, res: Response, next: any): Promise<void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const lawyerId = req.params.id;
 
-      await this._blockLawyerUseCase.execute(id);
+      await this._blockLawyerUseCase.execute(lawyerId);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyer blocked successfully.",
+        message: MessageConstants.LAWYER.BLOCK_SUCCESS,
       });
     } catch (error: any) {
       next(error);

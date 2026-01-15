@@ -8,6 +8,7 @@ import { ResponseBookingDetilsDTO } from "../../../dtos/user/ResponseBookingDeti
 import { IAvailabilityRuleRepository } from '../../../../domain/repositories/lawyer/IAvailabilityRuleRepository';
 import { ILawyerRepository } from '../../../../domain/repositories/lawyer/ILawyerRepository';
 import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
+import { ISubscriptionRepository } from "../../../../domain/repositories/admin/ISubscriptionRepository";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 
@@ -19,7 +20,8 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         private _slotRepository: IAvailabilityRuleRepository,
         private _lawyerRepository: ILawyerRepository,
         private _paymentRepository: IPaymentRepository,
-        private _chatRoomRepository: IChatRoomRepository
+        private _chatRoomRepository: IChatRoomRepository,
+        private _subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(sessionId: string): Promise<ResponseBookingDetilsDTO> {
@@ -48,6 +50,15 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         }
 
 
+        
+        let commissionPercent = 0; 
+        if (lawyer && (lawyer as any).subscriptionId) {
+            const subscription = await this._subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
+            if (subscription) {
+                commissionPercent = subscription.commissionPercent;
+            }
+        }
+
         const booking = new Booking(
             '',
             metadata.userId,
@@ -60,14 +71,22 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             'paid',
             session.payment_intent as string,
             session.id as string,
-            metadata.description
+            metadata.description,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            commissionPercent
         );
 
 
         const data = await this._bookingRepository.create(booking);
         await this._slotRepository.bookSlot(metadata.slotId);
 
-    
+
         await this._chatRoomRepository.syncChatRoom(metadata.userId, metadata.lawyerId, this._bookingRepository);
 
 

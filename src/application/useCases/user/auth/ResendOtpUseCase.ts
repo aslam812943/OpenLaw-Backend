@@ -1,17 +1,18 @@
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
-import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
-import { RedisCacheService } from "../../../../infrastructure/services/otp/RedisCacheService";
+import { IEmailService } from "../../../interface/services/IEmailService";
+import { ICacheService } from "../../../interface/services/ICacheService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
+import { IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
 
 // ResendOtpUseCase
 
-export class ResendOtpUseCase {
+export class ResendOtpUseCase implements IResendOtpUseCase {
   constructor(
-    private _redisCacheService: RedisCacheService,
-    private _otpService: OtpService,
-    private _mailService: NodeMailerEmailService
+    private _redisCacheService: ICacheService,
+    private _otpService: IOtpService,
+    private _mailService: IEmailService
   ) { }
 
   async execute(email: string): Promise<string> {

@@ -1,8 +1,8 @@
 
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
-import { User } from "../../../domain/entities/ User";
-import { IUserRepository } from "../../../domain/repositories/user/ IUserRepository";
-import UserModel, { IUserDocument } from "../../db/models/ UserModel";
+import { User } from "../../../domain/entities/User";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
+import UserModel, { IUserDocument } from "../../db/models/UserModel";
 import { BaseRepository } from "../user/BaseRepository";
 import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";
@@ -12,15 +12,13 @@ import { NotFoundError } from "../../errors/NotFoundError";
 
 //  UserRepository
 
-export class UserRepository
-  extends BaseRepository<IUserDocument>
-  implements IUserRepository {
+export class UserRepository extends BaseRepository<IUserDocument> implements IUserRepository {
   constructor() {
     super(UserModel);
   }
 
   // ------------------------------------------------------------
-  //  verifyUser() - Marks a user as verified.
+  //  verifyUser
   // ------------------------------------------------------------
 
   async verifyUser(userId: string): Promise<void> {
@@ -32,7 +30,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  findByEmail() - Finds a user by their email.
+  //  findByEmail()
   // ------------------------------------------------------------
 
   async findByEmail(email: string): Promise<User | null> {
@@ -58,7 +56,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  createUser() - Creates a new user.
+  //  createUser()
   // ------------------------------------------------------------
   async createUser(user: UserRegisterDTO): Promise<User> {
     try {
@@ -86,7 +84,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  // updateUserPassword() - Updates a user's password.
+  // updateUserPassword()
   // ------------------------------------------------------------
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
@@ -97,7 +95,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  markVerificationSubmitted() - Marks that a user has submitted verification details.
+  // markVerificationSubmitted()
   // ------------------------------------------------------------
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
@@ -108,15 +106,70 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  findAll() - Finds all users with pagination.
+  // findAll()
   // ------------------------------------------------------------
-  async findAll(page: number, limit: number): Promise<{ users: User[]; total: number }> {
+  async findAll(query: {
+    page: number;
+    limit: number;
+    search?: string;
+    filter?: string;
+    sort?: string;
+  }): Promise<{ users: User[]; total: number }> {
     try {
-      const skip = (page - 1) * limit;
+      const page = Math.max(query.page || 1, 1);
+      const limit = Math.max(query.limit || 10, 1);
+      const search = query.search?.trim();
+      const filter = query.filter?.trim();
+      const sort = query.sort;
+
+      const andConditions: any[] = [{ role: "user" }];
+
+      if (search) {
+        andConditions.push({
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+            ...(!isNaN(Number(search)) ? [{ phone: Number(search) }] : [])
+          ],
+        });
+      }
+
+      if (filter) {
+        if (filter.toLowerCase() === "blocked") {
+          andConditions.push({ isBlock: true });
+        } else if (filter.toLowerCase() === "active") {
+          andConditions.push({ isBlock: false });
+        }
+      }
+
+      const match = { $and: andConditions };
+
+      // Sort
+      const sortOption: any = {};
+      switch (sort) {
+        case "name-asc":
+          sortOption.name = 1;
+          break;
+        case "name-desc":
+          sortOption.name = -1;
+          break;
+        case "newest":
+          sortOption._id = -1;
+          break;
+        case "oldest":
+          sortOption._id = 1;
+          break;
+        default:
+          sortOption._id = -1; 
+      }
 
       const [docs, total] = await Promise.all([
-        UserModel.find({ role: "user" }).skip(skip).limit(limit).exec(),
-        UserModel.countDocuments({ role: "user" }),
+        UserModel.find(match)
+          .sort(sortOption)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .exec(),
+        UserModel.countDocuments(match),
       ]);
 
       const users = docs.map((doc) => this.mapToDomain(doc));
@@ -127,7 +180,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  //  blockUser() - Blocks a user.
+  // blockUser()
   // ------------------------------------------------------------
   async blockUser(id: string): Promise<void> {
     try {
@@ -138,7 +191,7 @@ export class UserRepository
   }
 
   // ------------------------------------------------------------
-  // unBlockUser() - Unblocks a user.
+  // unBlockUser()
   // ------------------------------------------------------------
   async unBlockUser(id: string): Promise<void> {
     try {
@@ -245,14 +298,10 @@ export class UserRepository
     delete updateData.id;
 
     if (user.address) {
-      updateData.address = user.address; 
+      updateData.address = user.address;
       delete updateData.address;
 
-
     }
-  
- 
- 
 
     if (user.profileImage) {
       updateData.profileImage = user.profileImage

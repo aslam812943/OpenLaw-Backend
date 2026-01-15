@@ -3,10 +3,10 @@ import { IUNBlockLawyerUseCase } from "../../interface/use-cases/admin/IUnBlockL
 
 
 export class UNBlockLawyerUseCase implements IUNBlockLawyerUseCase {
-    constructor(private _lawyerRepo: ILawyerRepository) { }
-    async execute(id: string): Promise<void> {
+    constructor(private _lawyerRepository: ILawyerRepository) { }
+    async execute(lawyerId: string): Promise<void> {
        
-        await this._lawyerRepo.unBlockLawyer(id)
+        await this._lawyerRepository.unBlockLawyer(lawyerId)
     }
 
 }

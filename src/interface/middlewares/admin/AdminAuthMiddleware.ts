@@ -2,24 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 
-interface JwtPayload {
-  id: string;
-  role: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      admin?: JwtPayload;
-    }
-  }
-}
+import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
+import { JwtPayload } from "../../../types/express/index";
 
 export class AdminAuthMiddleware {
   execute = (req: Request, res: Response, next: NextFunction): void => {
     try {
       const token =
-        req.cookies?.adminAccessToken ||
+        req.cookies?.accessToken ||
         req.headers.authorization?.split(" ")[1];
 
       if (!token) {
@@ -27,22 +17,22 @@ export class AdminAuthMiddleware {
           success: false,
           message: "Admin authentication failed. Token missing.",
         })
-        return; 
+        return;
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
-      if (decoded.role !== "admin") {
+      if (decoded.role !== UserRole.ADMIN) {
         res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
           message: "Access denied. Admin privileges required.",
         });
-        return; 
+        return;
       }
 
       req.admin = decoded;
 
-      next(); 
+      next();
     } catch (error) {
       res.status(HttpStatusCode.FORBIDDEN).json({
         success: false,

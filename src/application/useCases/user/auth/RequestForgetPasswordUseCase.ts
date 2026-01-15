@@ -1,17 +1,18 @@
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
-import { NodeMailerEmailService } from "../../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
+import { IOtpService } from "../../../interface/services/IOtpService";
+import { IEmailService } from "../../../interface/services/IEmailService";
 import { ForgetPasswordRequestDTO } from "../../../dtos/user/ForgetPasswordRequestDTO";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
+import { IRequestForgetPasswordUseCase } from "../../../interface/use-cases/user/IRequestForgetPasswordUseCase";
 //  RequestForgetPasswordUseCase
-export class RequestForgetPasswordUseCase {
+export class RequestForgetPasswordUseCase implements IRequestForgetPasswordUseCase {
   constructor(
-    private _userRepo: IUserRepository,
-    private _otpService: OtpService,
-    private _mailService: NodeMailerEmailService,
-    private _lawyerRepo: ILawyerRepository
+    private _userRepository: IUserRepository,
+    private _otpService: IOtpService,
+    private _mailService: IEmailService,
+    private _lawyerRepository: ILawyerRepository
   ) { }
 
   async execute(data: ForgetPasswordRequestDTO): Promise<string> {
@@ -20,11 +21,11 @@ export class RequestForgetPasswordUseCase {
         throw new BadRequestError("Email is required to request a password reset.");
       }
       let user;
-      user = await this._userRepo.findByEmail(data.email);
-      if(!user){
-user = await this._lawyerRepo.findByEmail(data.email)
+      user = await this._userRepository.findByEmail(data.email);
+      if (!user) {
+        user = await this._lawyerRepository.findByEmail(data.email)
       }
-      
+
       if (!user) {
         throw new NotFoundError("No user found with this email address.");
       }

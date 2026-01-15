@@ -4,25 +4,29 @@ import { ConflictError } from "../../../infrastructure/errors/ConflictError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 import { CreateSubscriptionDTO } from "../../dtos/admin/CreateSubscriptionDTO";
 import { Subscription } from "../../../domain/entities/Subscription";
-export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
-    constructor(private subscriptionRepository: ISubscriptionRepository) { }
-async execute(data: CreateSubscriptionDTO): Promise<void> {
-     
 
-        if (!data.planName || !data.duration || !data.durationUnit || data.price < 0 || data.commissionPercent < 0) {
-            throw new BadRequestError("Invalid subscription data provided.");
+
+
+
+export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
+    constructor(private _subscriptionRepository: ISubscriptionRepository) { }
+    async execute(subscriptionData: CreateSubscriptionDTO): Promise<void> {
+
+
+        if (!subscriptionData.planName || !subscriptionData.duration || !subscriptionData.durationUnit || subscriptionData.price < 50 || subscriptionData.commissionPercent < 0 || subscriptionData.commissionPercent > 50) {
+            throw new BadRequestError("Invalid subscription data: Price must be at least 50 and Commission must be between 0 and 50.");
         }
 
-     
+
         try {
-            const subscription = new Subscription('',data.planName,Number(data.duration),data.durationUnit,Number(data.price),Number(data.commissionPercent))
-            await this.subscriptionRepository.create(subscription);
+            const subscription = new Subscription('', subscriptionData.planName, Number(subscriptionData.duration), subscriptionData.durationUnit, Number(subscriptionData.price), Number(subscriptionData.commissionPercent))
+            await this._subscriptionRepository.create(subscription);
         } catch (error: any) {
-            if (error.code === 11000) { 
+            if (error.code === 11000) {
                 throw new ConflictError("Subscription plan with this name already exists.");
             }
             throw error;
         }
-}
- 
+    }
+
 }

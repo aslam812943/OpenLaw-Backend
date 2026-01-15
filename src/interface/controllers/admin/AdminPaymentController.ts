@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { IGetPaymentsUseCase } from "../../../application/interface/use-cases/admin/IGetPaymentsUseCase";
 import { GetPaymentsRequestDTO } from "../../../application/dtos/admin/GetPaymentsRequestDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class AdminPaymentController {
-    constructor(private getPaymentsUseCase: IGetPaymentsUseCase) { }
+    constructor(private readonly _getPaymentsUseCase: IGetPaymentsUseCase) { }
 
     async getAllPayments(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -26,11 +27,11 @@ export class AdminPaymentController {
                 endDate
             );
 
-            const result = await this.getPaymentsUseCase.execute(requestDTO);
+            const result = await this._getPaymentsUseCase.execute(requestDTO);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                message: "Payments fetched successfully",
+                message: MessageConstants.PAYMENT.FETCH_SUCCESS,
                 data: result
             });
         } catch (error) {

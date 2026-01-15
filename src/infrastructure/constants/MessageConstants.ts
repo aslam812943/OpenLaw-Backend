@@ -1,0 +1,59 @@
+export const MessageConstants = {
+    ADMIN: {
+        LOGIN_SUCCESS: "Admin login successful.",
+        LOGOUT_SUCCESS: "Admin logged out successfully.",
+        BOOKING_FETCH_SUCCESS: "Bookings fetched successfully.",
+    },
+    USER: {
+        BLOCK_SUCCESS: "User blocked successfully.",
+        UNBLOCK_SUCCESS: "User unblocked successfully.",
+        FETCH_SUCCESS: "Users fetched successfully.",
+        PROFILE_UPDATE_SUCCESS: "User profile updated successfully.",
+        PASSWORD_CHANGE_SUCCESS: "User password changed successfully.",
+    },
+    LAWYER: {
+        APPROVE_SUCCESS: "Lawyer approved successfully.",
+        REJECT_SUCCESS: "Lawyer rejected successfully.",
+        BLOCK_SUCCESS: "Lawyer blocked successfully.",
+        UNBLOCK_SUCCESS: "Lawyer unblocked successfully.",
+        FETCH_SUCCESS: "Lawyers fetched successfully.",
+        PROFILE_UPDATE_SUCCESS: "Lawyer profile updated successfully.",
+        PASSWORD_CHANGE_SUCCESS: "Lawyer password changed successfully.",
+        LOGOUT_SUCCESS: "Lawyer logged out successfully.",
+        AVAILABILITY_UPDATE_SUCCESS: "Availability rules updated successfully.",
+        AVAILABILITY_FETCH_SUCCESS: "Availability rules fetched successfully.",
+        APPOINTMENTS_FETCH_SUCCESS: "Appointments fetched successfully.",
+        EARNINGS_FETCH_SUCCESS: "Earnings statistics fetched successfully.",
+        CASES_FETCH_SUCCESS: "Cases fetched successfully.",
+        REVIEWS_FETCH_SUCCESS: "Reviews fetched successfully.",
+    },
+    SUBSCRIPTION: {
+        CREATE_SUCCESS: "Subscription plan created successfully.",
+        UPDATE_SUCCESS: "Subscription plan updated successfully.",
+        DELETE_SUCCESS: "Subscription plan deleted successfully.",
+        STATUS_UPDATE_SUCCESS: "Subscription status updated successfully.",
+        FETCH_SUCCESS: "Subscription plans fetched successfully.",
+        CURRENT_FETCH_SUCCESS: "Current subscription fetched successfully.",
+        CHECKOUT_SESSION_CREATE_SUCCESS: "Checkout session created successfully.",
+    },
+    DASHBOARD: {
+        STATS_FETCH_SUCCESS: "Dashboard statistics fetched successfully.",
+    },
+    PAYMENT: {
+        PAYOUT_APPROVE_SUCCESS: "Payout approved successfully.",
+        FETCH_SUCCESS: "Payouts fetched successfully.",
+        WITHDRAWAL_REQUEST_SUCCESS: "Withdrawal request submitted successfully.",
+    },
+    BOOKING: {
+        INITIATE_SUCCESS: "Booking payment initiated successfully.",
+        CONFIRM_SUCCESS: "Booking confirmed successfully.",
+        FETCH_SUCCESS: "User appointments fetched successfully.",
+        CANCEL_SUCCESS: "Appointment cancelled successfully.",
+    },
+    COMMON: {
+        UNAUTHORIZED: "Unauthorized access.",
+        BAD_REQUEST: "Invalid request.",
+        INTERNAL_ERROR: "An unexpected error occurred.",
+        SUCCESS: "Operation successful.",
+    }
+} as const;

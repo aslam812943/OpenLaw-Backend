@@ -1,4 +1,3 @@
-import { Lawyer } from "../../../domain/entities/Lawyer";
 
 export class ResponseGetSingleLawyerDTO {
   id: string;

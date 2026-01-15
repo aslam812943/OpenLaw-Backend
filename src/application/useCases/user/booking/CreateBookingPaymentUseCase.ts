@@ -1,10 +1,12 @@
 import { IPaymentService } from "../../../interface/services/IPaymentService";
 import { ICreateBookingPaymentUseCase } from "../../../interface/use-cases/user/IConfirmBookingUseCase";
-export class CreateBookingPaymentUseCase implements ICreateBookingPaymentUseCase {
-    constructor(private paymentService: IPaymentService) { }
+import { BookingDTO } from "../../../dtos/user/BookingDetailsDTO";
 
-    async execute(bookingDetails: any): Promise<string> {
-  
-        return await this.paymentService.createCheckoutSession(bookingDetails);
+export class CreateBookingPaymentUseCase implements ICreateBookingPaymentUseCase {
+    constructor(private _paymentService: IPaymentService) { }
+
+    async execute(bookingDetails: BookingDTO): Promise<string> {
+
+        return await this._paymentService.createCheckoutSession(bookingDetails);
     }
 }

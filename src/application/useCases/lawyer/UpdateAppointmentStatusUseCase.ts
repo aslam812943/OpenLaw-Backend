@@ -1,28 +1,27 @@
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { IUpdateAppointmentStatusUseCase } from "../../interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
 
-export class UpdateAppointmentStatusUseCase {
+export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusUseCase {
     constructor(
-        private _repository: IAvailabilityRuleRepository,
-        private _bookingRepository: IBookingRepository,
-        private _paymentService: IPaymentService,
-        private _lawyerRepository: ILawyerRepository,
-        private _subscriptionRepository: ISubscriptionRepository,
-        private _chatRoomRepository: IChatRoomRepository
+        private readonly _repository: IAvailabilityRuleRepository,
+        private readonly _bookingRepository: IBookingRepository,
+        private readonly _paymentService: IPaymentService,
+        private readonly _lawyerRepository: ILawyerRepository,
+        private readonly _chatRoomRepository: IChatRoomRepository
     ) { }
 
-    async execute(id: string, status: string): Promise<void> {
-        if (!id || !status) {
+    async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
+        if (!appointmentId || !status) {
             throw new BadRequestError("Appointment ID and status are required.");
         }
 
-        const booking = await this._bookingRepository.findById(id);
+        const booking = await this._bookingRepository.findById(appointmentId);
         if (!booking) {
             throw new NotFoundError("Appointment not found.");
         }
@@ -30,12 +29,12 @@ export class UpdateAppointmentStatusUseCase {
         if (status === 'rejected') {
             if (booking.paymentStatus === 'paid' && booking.paymentId) {
                 await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
-                await this._bookingRepository.updateStatus(id, 'rejected', undefined, {
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, {
                     amount: booking.consultationFee,
                     status: 'full'
                 });
             } else {
-                await this._bookingRepository.updateStatus(id, 'rejected');
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected');
             }
 
             await this._repository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
@@ -57,28 +56,19 @@ export class UpdateAppointmentStatusUseCase {
                 throw new BadRequestError("Cannot mark a future appointment as completed.");
             }
 
-            await this._bookingRepository.updateStatus(id, 'completed');
+            await this._bookingRepository.updateStatus(appointmentId, 'completed', undefined, undefined, feedback);
 
-
-            const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
-            let commissionPercent = 10;
-
-            if (lawyer && (lawyer as any).subscriptionId) {
-                const subscription = await this._subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
-                if (subscription) {
-                    commissionPercent = subscription.commissionPercent;
-                }
-            }
-
+            const commissionPercent = booking.commissionPercent || 0;
             const commissionAmount = booking.consultationFee * (commissionPercent / 100);
             const netAmount = booking.consultationFee - commissionAmount;
 
             await this._lawyerRepository.updateWalletBalance(booking.lawyerId, netAmount);
+
         } else {
-            await this._bookingRepository.updateStatus(id, status);
+            await this._bookingRepository.updateStatus(appointmentId, status);
         }
 
-        
+
         await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

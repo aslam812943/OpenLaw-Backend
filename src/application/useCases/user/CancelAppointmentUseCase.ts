@@ -9,15 +9,15 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 
 export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     constructor(
-        private bookingRepository: IBookingRepository,
-        private _slotRepo: IAvailabilityRuleRepository,
+        private _bookingRepository: IBookingRepository,
+        private _slotRepository: IAvailabilityRuleRepository,
         private _paymentService: IPaymentService,
-        private _lawyerRepo: ILawyerRepository,
+        private _lawyerRepository: ILawyerRepository,
         private _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
-        const booking = await this.bookingRepository.findById(bookingId);
+        const booking = await this._bookingRepository.findById(bookingId);
         if (!booking) {
             throw new NotFoundError("Booking not found");
         }
@@ -58,17 +58,17 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
 
 
             if (booking.status === 'completed') {
-                await this._lawyerRepo.updateWalletBalance(booking.lawyerId, -refundAmount);
+                await this._lawyerRepository.updateWalletBalance(booking.lawyerId, -refundAmount);
             }
         }
 
-        await this.bookingRepository.updateStatus(bookingId, "cancelled", reason, {
+        await this._bookingRepository.updateStatus(bookingId, "cancelled", reason, {
             amount: refundAmount,
             status: refundStatus
         });
-        await this._slotRepo.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
+        await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
     
-        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this.bookingRepository);
+        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

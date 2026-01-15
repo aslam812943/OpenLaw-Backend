@@ -5,10 +5,10 @@ import { AppoimentMapper } from "../../mapper/lawyer/AppoimentMapper";
 
 
 export class GetAppoimentsUseCase implements IGetAppoimentsUseCase {
-    constructor(private _appoimentRepo: IAvailabilityRuleRepository) { }
+    constructor(private _availabilityRuleRepository: IAvailabilityRuleRepository) { }
 
     async execute(id: string): Promise<ResponseGetAppoimnetsDTO[]> {
-        const response = await this._appoimentRepo.getAppoiments(id);
+        const response = await this._availabilityRuleRepository.getAppoiments(id);
         return AppoimentMapper.toDTO(response);
     }
 }

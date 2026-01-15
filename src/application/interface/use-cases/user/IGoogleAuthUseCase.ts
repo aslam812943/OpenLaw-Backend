@@ -1,10 +1,6 @@
-interface GoogleAuthResponse {
-    token: string;
-    user: { id: string, email: string };
-}
+import { GoogleAuthResponseDTO } from "../../../dtos/user/GoogleAuthResponseDTO";
+import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
 
-
-
-export interface IGoogleAuthUseCase{
-    execute(idToken:string):Promise<GoogleAuthResponse>
+export interface IGoogleAuthUseCase {
+    execute(idToken: string, role?: UserRole): Promise<GoogleAuthResponseDTO>;
 }

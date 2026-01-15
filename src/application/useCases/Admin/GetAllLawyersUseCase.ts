@@ -5,11 +5,11 @@ import { AdminLawyerMapper } from "../../mapper/admin/AdminLawyerMapper";
 import { IGetAllLawyersUseCase } from "../../interface/use-cases/admin/IGetAllLawyersUseCase";
 
 export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
-  constructor(private _lawyerRepo: ILawyerRepository) { }
+  constructor(private _lawyerRepository: ILawyerRepository) { }
 
   async execute(query?: { page?: number; limit?: number; search?: string; fromAdmin?: boolean }): Promise<{ lawyers: GetAllLawyerDTO[]; total: number }> {
     
-    const { lawyers, total } = await this._lawyerRepo.findAll(query);
+    const { lawyers, total } = await this._lawyerRepository.findAll(query);
   
     const lawyerDTOs = AdminLawyerMapper.toAllLawyerListDTO(lawyers);
     return { lawyers: lawyerDTOs, total };

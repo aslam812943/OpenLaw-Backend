@@ -4,10 +4,10 @@ import { ResponseGetAppointments } from "../../dtos/user/ResponseGetAppointments
 import { UserAppointmentsMapper } from "../../mapper/user/userAppoimentsMapper";
 
 export class GetUserAppointmentsUseCase implements IGetUserAppointmentsUseCase {
-    constructor(private bookingRepository: IBookingRepository) { }
+    constructor(private _bookingRepository: IBookingRepository) { }
 
     async execute(userId: string, page: number = 1, limit: number = 10): Promise<{ appointments: ResponseGetAppointments[], total: number }> {
-        const { bookings, total } = await this.bookingRepository.findByUserId(userId, page, limit);
+        const { bookings, total } = await this._bookingRepository.findByUserId(userId, page, limit);
 
         return {
             appointments: UserAppointmentsMapper.mapToDto(bookings),

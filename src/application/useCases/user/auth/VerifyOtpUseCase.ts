@@ -1,19 +1,21 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IVerifyOtpUseCase } from "../../../interface/use-cases/user/IVerifyOtpUseCase";
+import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
 
 
 //  VerifyOtpUseCase
 
-export class VerifyOtpUseCase {
+export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
-    private _userRepo: IUserRepository,
-    private _lawyerRepo: ILawyerRepository,
-    private _otpService: OtpService
+    private _userRepository: IUserRepository,
+    private _lawyerRepository: ILawyerRepository,
+    private _otpService: IOtpService
   ) { }
 
 
@@ -42,11 +44,11 @@ export class VerifyOtpUseCase {
       const userEntity = UserMapper.toEntity(userData);
 
       let savedUser;
-      if (userData.role === 'lawyer') {
-        savedUser = await this._lawyerRepo.create(userEntity);
+      if (userData.role === UserRole.LAWYER) {
+        savedUser = await this._lawyerRepository.create(userEntity);
 
       } else {
-        savedUser = await this._userRepo.createUser(userEntity);
+        savedUser = await this._userRepository.createUser(userEntity);
       }
 
       return savedUser;

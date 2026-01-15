@@ -2,26 +2,30 @@ import { Server, Socket } from 'socket.io';
 import { SendMessageUseCase } from '../../../application/useCases/common/chat/SendMessageUseCase';
 import { MarkMessagesAsReadUseCase } from '../../../application/useCases/common/chat/MarkMessagesAsReadUseCase';
 import { MessageRepository } from '../../repositories/messageRepository';
+import { ChatRoomRepository } from '../../repositories/ChatRoomRepository';
 import { SocketAuthService } from './socketAuth';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
+import { UserRole } from '../../interface/enums/UserRole';
 
 export class SocketServerService implements ISocketServer {
-  private messageRepo: MessageRepository;
-  private sendMessageUseCase: SendMessageUseCase;
-  private markMessagesAsReadUseCase: MarkMessagesAsReadUseCase;
-  private socketAuthService: SocketAuthService;
+  private _messageRepository: MessageRepository;
+  private _chatRoomRepository: ChatRoomRepository;
+  private _sendMessageUseCase: SendMessageUseCase;
+  private _markMessagesAsReadUseCase: MarkMessagesAsReadUseCase;
+  private _socketAuthService: SocketAuthService;
 
   constructor() {
-    this.messageRepo = new MessageRepository();
-    this.sendMessageUseCase = new SendMessageUseCase(this.messageRepo);
-    this.markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(this.messageRepo);
-    this.socketAuthService = new SocketAuthService();
+    this._messageRepository = new MessageRepository();
+    this._chatRoomRepository = new ChatRoomRepository();
+    this._sendMessageUseCase = new SendMessageUseCase(this._messageRepository, this._chatRoomRepository);
+    this._markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(this._messageRepository);
+    this._socketAuthService = new SocketAuthService();
   }
 
   public setupSocketServer(io: Server): void {
-    io.use(this.socketAuthService.socketAuth.bind(this.socketAuthService));
+    io.use(this._socketAuthService.socketAuth.bind(this._socketAuthService));
 
     io.on("connection", (socket: Socket) => {
       // JOIN ROOM
@@ -42,7 +46,7 @@ export class SocketServerService implements ISocketServer {
               throw new UnauthorizedError("Unauthorized");
             }
 
-            const message = await this.sendMessageUseCase.execute(
+            const message = await this._sendMessageUseCase.execute(
               roomId,
               senderId,
               content,
@@ -72,7 +76,7 @@ export class SocketServerService implements ISocketServer {
             throw new UnauthorizedError("Unauthorized");
           }
 
-          await this.markMessagesAsReadUseCase.execute(roomId, userId);
+          await this._markMessagesAsReadUseCase.execute(roomId, userId);
 
 
           io.to(roomId).emit("messages-read", { roomId, readBy: userId });
@@ -90,14 +94,14 @@ export class SocketServerService implements ISocketServer {
         const videoRoomId = `video-${bookingId}`;
         const role = socket.data.role;
 
-        if (role === 'user') {
+        if (role === UserRole.USER) {
 
           const clients = io.sockets.adapter.rooms.get(videoRoomId);
           let lawyerPresent = false;
           if (clients) {
             for (const clientId of clients) {
               const clientSocket = io.sockets.sockets.get(clientId);
-              if (clientSocket?.data.role === 'lawyer') {
+              if (clientSocket?.data.role === UserRole.LAWYER) {
                 lawyerPresent = true;
                 break;
               }

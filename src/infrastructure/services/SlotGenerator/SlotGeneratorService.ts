@@ -1,7 +1,9 @@
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
-export class SlotGeneratorService {
-  static generateSlots(rule: AvailabilityRule) {
-    const slots: any[] = [];
+import { IGeneratedSlot, ISlotGeneratorService } from "../../../application/interface/services/ISlotGeneratorService";
+
+export class SlotGeneratorService implements ISlotGeneratorService {
+  generateSlots(rule: AvailabilityRule): IGeneratedSlot[] {
+    const slots: IGeneratedSlot[] = [];
 
     let startDate = new Date(rule.startDate);
     const endDate = new Date(rule.endDate);
@@ -34,7 +36,7 @@ export class SlotGeneratorService {
             endTime: nextSlot.toTimeString().slice(0, 5),
             sessionType: rule.sessionType,
             maxBookings: maxBookings,
-             consultationFee: rule.consultationFee
+            consultationFee: rule.consultationFee
           });
 
           currentStart = new Date(

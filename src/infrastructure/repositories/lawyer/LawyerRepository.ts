@@ -1,15 +1,17 @@
 
 import LawyerModel, { ILawyerDocument } from "../../db/models/LawyerModel";
+import LawyerSubscriptionModel from "../../db/models/LawyerSubscriptionModel";
 
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { Lawyer } from "../../../domain/entities/Lawyer";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
 import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
-import { NotFoundError } from "../../errors/NotFoundError";
+
+
+
 
 
 //  LawyerRepository
@@ -112,9 +114,25 @@ export class LawyerRepository implements ILawyerRepository {
 
 
       if (filter) {
-        andConditions.push({
-          practiceAreas: { $regex: filter, $options: "i" },
-        });
+        const lowerFilter = filter.toLowerCase();
+        if (query?.fromAdmin) {
+          if (lowerFilter === "blocked") {
+            andConditions.push({ isBlock: true });
+          } else if (lowerFilter === "active") {
+            andConditions.push({ isBlock: false });
+          } else if (["approved", "rejected", "pending"].includes(lowerFilter)) {
+
+            andConditions.push({ verificationStatus: { $regex: `^${filter}$`, $options: "i" } });
+          } else {
+            andConditions.push({
+              practiceAreas: { $regex: filter, $options: "i" },
+            });
+          }
+        } else {
+          andConditions.push({
+            practiceAreas: { $regex: filter, $options: "i" },
+          });
+        }
       }
 
 
@@ -298,6 +316,20 @@ export class LawyerRepository implements ILawyerRepository {
 
   async updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean, startDate: Date, expiryDate: Date): Promise<void> {
     try {
+      await LawyerSubscriptionModel.updateMany(
+        { lawyerId: id, status: 'active' },
+        { status: 'upgraded' }
+      );
+
+      await LawyerSubscriptionModel.create({
+        lawyerId: id,
+        subscriptionId: subscriptionId,
+        startDate: startDate,
+        expiryDate: expiryDate,
+        paymentVerify: paymentVerified,
+        status: 'active'
+      });
+
       await LawyerModel.findByIdAndUpdate(id, {
         subscriptionId: subscriptionId,
         paymentVerify: paymentVerified,

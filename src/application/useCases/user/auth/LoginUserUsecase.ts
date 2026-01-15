@@ -1,39 +1,36 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import bcrypt from "bcrypt";
 import { LoginUserDTO } from "../../../dtos/user/LoginUserDTO";
 import { LoginResponseMapper } from "../../../mapper/user/LoignResponseMapper";
 import { LoginResponseDTO } from "../../../dtos/user/LoginResponseDTO";
 import { ITokenService } from "../../../interface/services/TokenServiceInterface";
 import { ILawyerRepository } from '../../../../domain/repositories/lawyer/ILawyerRepository'
-import { AppError } from "../../../../infrastructure/errors/AppError";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 import { ForbiddenError } from "../../../../infrastructure/errors/ForbiddenError";
 import { UnauthorizedError } from "../../../../infrastructure/errors/UnauthorizedError";
+import { ILoginUserUseCase } from "../../../interface/use-cases/user/ILoginUserUseCase";
 // LoginUserUsecase
 
-export class LoginUserUsecase {
+export class LoginUserUsecase implements ILoginUserUseCase {
   constructor(
-    private _userRepo: IUserRepository,
+    private _userRepository: IUserRepository,
     private _LoginResponseMapper: LoginResponseMapper,
     private _tokenService: ITokenService,
-    private _lawyerRepo: ILawyerRepository
+    private _lawyerRepository: ILawyerRepository
   ) { }
 
 
-  async execute(
-    data: LoginUserDTO
-  ): Promise<{ token: string; refreshToken: string; user: LoginResponseDTO }> {
+  async execute( data: LoginUserDTO): Promise<{ token: string; refreshToken: string; user: LoginResponseDTO }> {
+   
+   
     if (!data.email || !data.password) {
       throw new BadRequestError("Email and password are required for login.");
     }
-
-
-    let user: any = await this._userRepo.findByEmail(data.email);
-
+    let user: any = await this._userRepository.findByEmail(data.email);
     if (!user) {
-      user = await this._lawyerRepo.findByEmail(data.email);
+      user = await this._lawyerRepository.findByEmail(data.email);
 
     }
 

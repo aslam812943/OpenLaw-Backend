@@ -27,7 +27,7 @@ export class StripeService implements IPaymentService {
                                 name: `Consultation with ${bookingDetails.lawyerName}`,
                                 description: bookingDetails.description,
                             },
-                            unit_amount: Math.max(Number(bookingDetails.consultationFee) * 100, 100),
+                            unit_amount: Math.max(Number(bookingDetails.consultationFee) * 100, 5000),
                         },
                         quantity: 1,
                     },
@@ -131,7 +131,7 @@ export class StripeService implements IPaymentService {
             }
             return session.url;
         } catch (error: any) {
-        
+
             throw new InternalServerError(error.message || "Stripe subscription checkout failed");
         }
     }
@@ -143,7 +143,7 @@ export class StripeService implements IPaymentService {
                 ...(amount && { amount: Math.round(amount * 100) })
             });
         } catch (error: any) {
-        
+
             throw new InternalServerError(error.message || "Stripe refund failed");
         }
     }

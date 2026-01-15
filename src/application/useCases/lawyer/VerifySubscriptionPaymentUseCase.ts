@@ -1,4 +1,4 @@
-import { StripeService } from "../../../infrastructure/services/StripeService";
+import { IPaymentService } from "../../interface/services/IPaymentService";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IPaymentRepository } from "../../../domain/repositories/IPaymentRepository";
 import { IVerifySubscriptionPaymentUseCase } from "../../interface/use-cases/lawyer/IVerifySubscriptionPaymentUseCase";
@@ -6,30 +6,30 @@ import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISub
 
 export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaymentUseCase {
     constructor(
-        private stripeService: StripeService,
-        private lawyerRepository: ILawyerRepository,
-        private paymentRepository: IPaymentRepository,
-        private subscriptionRepository: ISubscriptionRepository
+        private _paymentService: IPaymentService,
+        private _lawyerRepository: ILawyerRepository,
+        private _paymentRepository: IPaymentRepository,
+        private _subscriptionRepository: ISubscriptionRepository
     ) { }
 
     async execute(sessionId: string): Promise<boolean> {
-        const session = await this.stripeService.retrieveSession(sessionId);
+        const session = await this._paymentService.retrieveSession(sessionId);
 
         if (session.payment_status === 'paid' && session.metadata?.type === 'subscription') {
             const { lawyerId, subscriptionId } = session.metadata;
 
 
-            const lawyer = await this.lawyerRepository.findById(lawyerId);
+            const lawyer = await this._lawyerRepository.findById(lawyerId);
             if (!lawyer) throw new Error("Lawyer not found");
 
 
-            const existingPayment = await this.paymentRepository.findByTransactionId(session.payment_intent as string);
+            const existingPayment = await this._paymentRepository.findByTransactionId(session.payment_intent as string);
             if (existingPayment) {
 
                 return true;
             }
 
-            const subscription = await this.subscriptionRepository.findById(subscriptionId);
+            const subscription = await this._subscriptionRepository.findById(subscriptionId);
             if (!subscription) throw new Error("Subscription plan not found");
 
             let expiryDate = new Date();
@@ -40,12 +40,12 @@ export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaym
             } else if (subscription.durationUnit === 'year') {
                 expiryDate.setFullYear(expiryDate.getFullYear() + subscription.duration);
             } else {
-                // Default to 30 days if unit is unknown, though validation should prevent this
+               
                 expiryDate.setDate(expiryDate.getDate() + (subscription.duration * 30));
             }
 
 
-            await this.paymentRepository.create({
+            await this._paymentRepository.create({
                 userId: lawyerId,
                 lawyerId: lawyerId,
                 bookingId: undefined,
@@ -59,7 +59,7 @@ export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaym
             });
 
 
-            await this.lawyerRepository.updateSubscriptionStatus(lawyerId, subscriptionId, true, startDate, expiryDate);
+            await this._lawyerRepository.updateSubscriptionStatus(lawyerId, subscriptionId, true, startDate, expiryDate);
 
             return true;
         }

@@ -1,92 +1,70 @@
-
 import { Request, Response, NextFunction } from "express";
-import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
-import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
-import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
-import { ResendOtpUseCase } from "../../../application/useCases/user/auth/ResendOtpUseCase";
-import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
-import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
-import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
+import { IRegisterUserUseCase } from "../../../application/interface/use-cases/user/IRegisterUserUseCase";
+import { IVerifyOtpUseCase } from "../../../application/interface/use-cases/user/IVerifyOtpUseCase";
+import { ILoginUserUseCase } from "../../../application/interface/use-cases/user/ILoginUserUseCase";
+import { IResendOtpUseCase } from "../../../application/interface/use-cases/user/IResendOtpUseCase";
+import { IRequestForgetPasswordUseCase } from "../../../application/interface/use-cases/user/IRequestForgetPasswordUseCase";
+import { IVerifyResetPasswordUseCase } from "../../../application/interface/use-cases/user/IVerifyResetPasswordUseCase";
+import { IGoogleAuthUseCase } from "../../../application/interface/use-cases/user/IGoogleAuthUseCase";
 import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO";
-import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
-
-
-
+import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
+import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class AuthController {
   constructor(
-    private _registerUserCase: IRegisterUserUseCase,
-    private verifyOtpUseCase: VerifyOtpUseCase,
-    private _loginUserUsecase: LoginUserUsecase,
-    private _resendOtpUseCase: ResendOtpUseCase,
-    private _requestForgetPasswordUseCase: RequestForgetPasswordUseCase,
-    private _verifyResetPasswordUseCase: VerifyResetPasswordUseCase,
-    private _googleAuthUseCase: GoogleAuthUsecase
+    private readonly _registerUserUseCase: IRegisterUserUseCase,
+    private readonly _verifyOtpUseCase: IVerifyOtpUseCase,
+    private readonly _loginUserUseCase: ILoginUserUseCase,
+    private readonly _resendOtpUseCase: IResendOtpUseCase,
+    private readonly _requestForgetPasswordUseCase: IRequestForgetPasswordUseCase,
+    private readonly _verifyResetPasswordUseCase: IVerifyResetPasswordUseCase,
+    private readonly _googleAuthUseCase: IGoogleAuthUseCase
   ) { }
-
-  // ------------------------------------------------------------
-  //  Register a new user and send OTP to their email
-  // -----------------------------------------------------------
 
   async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       const dto = new UserRegisterDTO(req.body);
-      const result = await this._registerUserCase.execute(dto);
+      const result = await this._registerUserUseCase.execute(dto);
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
         message: result.message || "User registered successfully! OTP sent to email.",
       });
     } catch (error: any) {
-      next(error)
+      next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  // Verify OTP for user registration
-  // ------------------------------------------------------------
 
   async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, otp } = req.body;
-
-      const result = await this.verifyOtpUseCase.execute(email, otp);
+      const result = await this._verifyOtpUseCase.execute(email, otp);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "OTP verified successfully!",
-        user: result,
+        data: result,
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  //  Resend OTP to user email
-  // ------------------------------------------------------------
 
   async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.body;
-
       const message = await this._resendOtpUseCase.execute(email);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: message || "OTP resent successfully!",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  //  Request to reset password (sends OTP to user email)
-  // ------------------------------------------------------------
 
   async requestForgetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -97,14 +75,10 @@ export class AuthController {
         success: true,
         message: message || "Password reset OTP sent successfully.",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
-
-  // ------------------------------------------------------------
-  //  Verify reset password OTP and update new password
-  // ------------------------------------------------------------
 
   async verifyResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -114,128 +88,121 @@ export class AuthController {
         success: true,
         message: message || "Password reset successful!",
       });
-    } catch (err: any) {
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
-  // ------------------------------------------------------------
-  //  Login user and issue authentication tokens (access + refresh)
-  // ------------------------------------------------------------
   async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-
       const dto = new LoginUserDTO(req.body);
-      const { token, refreshToken, user } = await this._loginUserUsecase.execute(dto);
+      const { token, refreshToken, user } = await this._loginUserUseCase.execute(dto);
+
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
       res.cookie("accessToken", token, {
         httpOnly: true,
-        secure: false, // Set to true in production
-        sameSite: 'lax',
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false, // Set to true in production
-        sameSite: 'lax',
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000,
       });
-
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Login successful.",
-        token,
-        refreshToken,
-        user,
+        message: MessageConstants.ADMIN.LOGIN_SUCCESS,
+        data: {
+          token,
+          refreshToken,
+          user,
+        },
       });
-    } catch (err: any) {
-
-      next(err)
+    } catch (error: any) {
+      next(error);
     }
   }
 
-
-  // ------------------------------------------------------------
-  // Logout user and clear authentication cookies
-  // ------------------------------------------------------------
-
   async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
       res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/'
       });
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/'
       });
 
-
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "User logged out successfully.",
+        message: MessageConstants.LAWYER.LOGOUT_SUCCESS,
       });
     } catch (error: any) {
-
-
-      next(error)
+      next(error);
     }
   }
-  // ------------------------------------------------------------
-  //  Google Authentication
-  // ------------------------------------------------------------
+
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { token, role } = req.body;
-
-      const result = await this._googleAuthUseCase.execute(token, role);
+      const { token: idToken, role } = req.body;
+      const result = await this._googleAuthUseCase.execute(idToken, role);
 
       if (result.needsRoleSelection) {
         res.status(HttpStatusCode.OK).json({
           success: true,
           message: "Please select a role.",
-          needsRoleSelection: true,
+          data: {
+            needsRoleSelection: true
+          }
         });
         return;
       }
 
-      // Set Cookies
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
+
       res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 15 * 60 * 1000,
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE)
       });
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE)
       });
 
       res.status(HttpStatusCode.OK).json({
         success: true,
         message: "Google login successful.",
-        token: result.token,
-        refreshToken: result.refreshToken,
-        user: result.user,
-        needsVerificationSubmission: result.needsVerificationSubmission
+        data: {
+          token: result.token,
+          refreshToken: result.refreshToken,
+          user: result.user,
+          needsVerificationSubmission: result.needsVerificationSubmission
+        }
       });
-
     } catch (error: any) {
-      next(error)
+      next(error);
     }
   }
 }

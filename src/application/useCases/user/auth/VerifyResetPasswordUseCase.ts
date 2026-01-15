@@ -1,19 +1,20 @@
 
-import { IUserRepository } from "../../../../domain/repositories/user/ IUserRepository";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { ResetPasswordDTO } from "../../../dtos/user/ResetPasswordDTO";
 import { ILawyerRepository } from "../../../../domain/repositories/lawyer/ILawyerRepository";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IVerifyResetPasswordUseCase } from "../../../interface/use-cases/user/IVerifyResetPasswordUseCase";
 
 
 //  VerifyResetPasswordUseCase
 
-export class VerifyResetPasswordUseCase {
+export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
     constructor(
         private _userRepository: IUserRepository,
-        private _otpService: OtpService,
-        private _lawyerRepo: ILawyerRepository
+        private _otpService: IOtpService,
+        private _lawyerRepository: ILawyerRepository
     ) { }
 
 
@@ -40,7 +41,7 @@ export class VerifyResetPasswordUseCase {
             }
 
 
-            await this._lawyerRepo.forgotpassword(stored.userId, hashedPassword)
+            await this._lawyerRepository.forgotpassword(stored.userId, hashedPassword)
 
 
 
@@ -48,9 +49,6 @@ export class VerifyResetPasswordUseCase {
 
             return "Password reset successfully.";
         } catch (error: any) {
-
-
-
             throw new BadRequestError(
                 error.message || "Failed to reset password. Please try again later."
             );

@@ -6,10 +6,10 @@ import { Review } from "../../../../domain/entities/Review";
 import { ConflictError } from "../../../../infrastructure/errors/ConflictError";
 
 export class AddReviewUseCase implements IAddReviewUseCase {
-    constructor(private reviewRepository: IReviewRepository) { }
+    constructor(private _reviewRepository: IReviewRepository) { }
 
     async execute(reviewData: AddReviewDTO): Promise<ReviewResponseDTO> {
-        const existingReview = await this.reviewRepository.findByUserIdAndLawyerId(reviewData.userId, reviewData.lawyerId);
+        const existingReview = await this._reviewRepository.findByUserIdAndLawyerId(reviewData.userId, reviewData.lawyerId);
         if (existingReview) {
             throw new ConflictError("You have already reviewed this lawyer");
         }
@@ -22,7 +22,7 @@ export class AddReviewUseCase implements IAddReviewUseCase {
             new Date()
         );
 
-        const savedReview = await this.reviewRepository.addReview(review);
+        const savedReview = await this._reviewRepository.addReview(review);
 
         return new ReviewResponseDTO(
             savedReview._id as string,

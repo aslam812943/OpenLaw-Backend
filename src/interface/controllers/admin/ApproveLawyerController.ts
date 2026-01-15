@@ -1,24 +1,21 @@
-
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IApproveLawyerUseCase } from "../../../application/interface/use-cases/admin/IApproveLawyerUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-
-
-//  ApproveLawyerController
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
 export class ApproveLawyerController {
   constructor(private readonly _approveLawyerUseCase: IApproveLawyerUseCase) { }
 
-  async handle(req: Request, res: Response, next: any): Promise<void> {
+  async handle(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const id = req.params.id;
+      const lawyerId = req.params.id;
       const { email } = req.body;
 
-      await this._approveLawyerUseCase.execute(id, email);
+      await this._approveLawyerUseCase.execute(lawyerId, email);
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Lawyer approved successfully.",
+        message: MessageConstants.LAWYER.APPROVE_SUCCESS,
       });
 
     } catch (error: any) {

@@ -1,41 +1,47 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { Booking } from "../../../domain/entities/Booking";
-import { BookingModel } from "../../db/models/BookingModel";
+import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { InternalServerError } from "../../errors/InternalServerError";
-import { NotFoundError } from "../../errors/NotFoundError";
 
 export class BookingRepository implements IBookingRepository {
 
+    private mapToEntity(doc: IBookingDocument): Booking {
+        const docObj = doc.toObject() as any;
+
+        return new Booking(
+            doc.id,
+            (doc.userId as any)?._id?.toString() || doc.userId?.toString() || "",
+            (doc.lawyerId as any)?._id?.toString() || doc.lawyerId?.toString() || "",
+            doc.date,
+            doc.startTime,
+            doc.endTime,
+            doc.consultationFee,
+            doc.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected',
+            doc.paymentStatus as 'pending' | 'paid' | 'failed',
+            doc.paymentId,
+            doc.stripeSessionId,
+            doc.description,
+            docObj.userId?.name,
+            doc.cancellationReason,
+            docObj.lawyerId?.name,
+            doc.refundAmount,
+            doc.refundStatus as 'none' | 'full' | 'partial',
+            doc.isCallActive,
+            doc.lawyerJoined,
+            doc.commissionPercent || 0,
+            doc.lawyerFeedback,
+            docObj.createdAt
+        );
+    }
+
     async create(booking: Booking): Promise<Booking> {
         try {
-
             const { id, ...bookingData } = booking;
             const newBooking = new BookingModel(bookingData);
             const savedBooking = await newBooking.save();
 
-            return new Booking(
-                savedBooking.id,
-                savedBooking.userId,
-                savedBooking.lawyerId,
-                savedBooking.date,
-                savedBooking.startTime,
-                savedBooking.endTime,
-                savedBooking.consultationFee,
-                savedBooking.status as any,
-                savedBooking.paymentStatus as any,
-                savedBooking.paymentId,
-                savedBooking.stripeSessionId,
-                savedBooking.description,
-                undefined,
-                savedBooking.cancellationReason,
-                undefined,
-                savedBooking.refundAmount,
-                savedBooking.refundStatus as any,
-                savedBooking.isCallActive,
-                savedBooking.lawyerJoined,
-                (savedBooking as any).createdAt
-            );
-        } catch (error: any) {
+            return this.mapToEntity(savedBooking);
+        } catch (error) {
             throw new InternalServerError("Database error while creating booking.");
         }
     }
@@ -44,36 +50,15 @@ export class BookingRepository implements IBookingRepository {
         try {
             const booking = await BookingModel.findById(id);
             if (!booking) return null;
-            return new Booking(
-                booking.id,
-                booking.userId,
-                booking.lawyerId,
-                booking.date,
-                booking.startTime,
-                booking.endTime,
-                booking.consultationFee,
-                booking.status as any,
-                booking.paymentStatus as any,
-                booking.paymentId,
-                booking.stripeSessionId,
-                booking.description,
-                undefined,
-                booking.cancellationReason,
-                undefined,
-                booking.refundAmount,
-                booking.refundStatus as any,
-                booking.isCallActive,
-                booking.lawyerJoined,
-                (booking as any).createdAt
-            );
-        } catch (error: any) {
+            return this.mapToEntity(booking);
+        } catch (error) {
             throw new InternalServerError("Database error while fetching booking by ID.");
         }
     }
 
-    async updateStatus(id: string, status: string, reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }): Promise<void> {
+    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string): Promise<void> {
         try {
-            const updateData: any = { status };
+            const updateData: Partial<IBookingDocument> = { status };
             if (reason) {
                 updateData.cancellationReason = reason;
             }
@@ -81,8 +66,11 @@ export class BookingRepository implements IBookingRepository {
                 updateData.refundAmount = refundDetails.amount;
                 updateData.refundStatus = refundDetails.status;
             }
+            if (lawyerFeedback) {
+                updateData.lawyerFeedback = lawyerFeedback;
+            }
             await BookingModel.findByIdAndUpdate(id, updateData);
-        } catch (error: any) {
+        } catch (error) {
             throw new InternalServerError("Database error while updating booking status.");
         }
     }
@@ -102,31 +90,10 @@ export class BookingRepository implements IBookingRepository {
             ]);
 
             return {
-                bookings: bookings.map(booking => new Booking(
-                    booking.id,
-                    booking.userId,
-                    booking.lawyerId,
-                    booking.date,
-                    booking.startTime,
-                    booking.endTime,
-                    booking.consultationFee,
-                    booking.status as any,
-                    booking.paymentStatus as any,
-                    booking.paymentId,
-                    booking.stripeSessionId,
-                    booking.description,
-                    undefined,
-                    booking.cancellationReason,
-                    (booking.lawyerId as any)?.name,
-                    booking.refundAmount,
-                    booking.refundStatus as any,
-                    booking.isCallActive,
-                    booking.lawyerJoined,
-                    (booking as any).createdAt
-                )),
+                bookings: bookings.map(booking => this.mapToEntity(booking)),
                 total
             };
-        } catch (error: any) {
+        } catch (error) {
             throw new InternalServerError("Database error while fetching user bookings.");
         }
     }
@@ -140,14 +107,13 @@ export class BookingRepository implements IBookingRepository {
                 paymentStatus: 'paid'
             });
             return count > 0;
-        } catch (error: any) {
+        } catch (error) {
             throw new InternalServerError("Database error while checking booking existence.");
         }
     }
 
     async findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null> {
         try {
-            // Priority 1: Confirmed and Paid
             let booking = await BookingModel.findOne({
                 userId,
                 lawyerId,
@@ -155,7 +121,6 @@ export class BookingRepository implements IBookingRepository {
                 paymentStatus: 'paid'
             }).sort({ createdAt: -1 });
 
-            // Priority 2: Pending and Paid
             if (!booking) {
                 booking = await BookingModel.findOne({
                     userId,
@@ -167,21 +132,8 @@ export class BookingRepository implements IBookingRepository {
 
             if (!booking) return null;
 
-            return new Booking(
-                booking.id,
-                booking.userId,
-                booking.lawyerId,
-                booking.date,
-                booking.startTime,
-                booking.endTime,
-                booking.consultationFee,
-                booking.status as any,
-                booking.paymentStatus as any,
-                booking.paymentId,
-                booking.stripeSessionId,
-                booking.description
-            );
-        } catch (error: any) {
+            return this.mapToEntity(booking);
+        } catch (error) {
             throw new InternalServerError("Database error while fetching active booking.");
         }
     }
@@ -191,21 +143,8 @@ export class BookingRepository implements IBookingRepository {
             const booking = await BookingModel.findOne({ stripeSessionId: sessionId });
             if (!booking) return null;
 
-            return new Booking(
-                booking.id,
-                booking.userId,
-                booking.lawyerId,
-                booking.date,
-                booking.startTime,
-                booking.endTime,
-                booking.consultationFee,
-                booking.status as any,
-                booking.paymentStatus as any,
-                booking.paymentId,
-                booking.stripeSessionId,
-                booking.description
-            );
-        } catch (error: any) {
+            return this.mapToEntity(booking);
+        } catch (error) {
             throw new InternalServerError("Database error while fetching booking by session ID.");
         }
     }
@@ -215,42 +154,48 @@ export class BookingRepository implements IBookingRepository {
                 .populate('userId', 'name')
                 .sort({ createdAt: -1 });
 
-            return bookings.map(booking => new Booking(
-                booking.id,
-                (booking.userId as any)._id.toString(),
-                booking.lawyerId,
-                booking.date,
-                booking.startTime,
-                booking.endTime,
-                booking.consultationFee,
-                booking.status as any,
-                booking.paymentStatus as any,
-                booking.paymentId,
-                booking.stripeSessionId,
-                booking.description,
-                (booking.userId as any)?.name,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                booking.isCallActive,
-                booking.lawyerJoined,
-                (booking as any).createdAt
-            ));
-        } catch (error: any) {
+            return bookings.map(booking => this.mapToEntity(booking));
+        } catch (error) {
             throw new InternalServerError("Database error while fetching lawyer bookings.");
         }
     }
 
     async updateCallStatus(id: string, lawyerJoined: boolean, isCallActive?: boolean): Promise<void> {
         try {
-            const updateData: any = { lawyerJoined };
+            const updateData: Partial<IBookingDocument> = { lawyerJoined };
             if (isCallActive !== undefined) {
                 updateData.isCallActive = isCallActive;
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
-        } catch (error: any) {
+        } catch (error) {
             throw new InternalServerError("Database error while updating call status.");
+        }
+    }
+
+    async findAll(page: number = 1, limit: number = 10, status?: string): Promise<{ bookings: Booking[], total: number }> {
+        try {
+            const skip = (page - 1) * limit;
+            const query: any = {};
+            if (status) {
+                query.status = status;
+            }
+
+            const [bookings, total] = await Promise.all([
+                BookingModel.find(query)
+                    .populate('userId', 'name')
+                    .populate('lawyerId', 'name')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit),
+                BookingModel.countDocuments(query)
+            ]);
+
+            return {
+                bookings: bookings.map(booking => this.mapToEntity(booking)),
+                total
+            };
+        } catch (error) {
+            throw new InternalServerError("Database error while fetching all bookings.");
         }
     }
 }

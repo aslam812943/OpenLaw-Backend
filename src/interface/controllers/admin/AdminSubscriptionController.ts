@@ -2,50 +2,79 @@ import { Request, Response, NextFunction } from 'express';
 import { ICreateSubscriptionUseCase } from '../../../application/interface/use-cases/admin/ICreateSubscriptionUseCase';
 import { IGetSubscriptionsUseCase } from '../../../application/interface/use-cases/admin/IGetSubscriptionsUseCase';
 import { IToggleSubscriptionStatusUseCase } from '../../../application/interface/use-cases/admin/IToggleSubscriptionStatusUseCase';
+import { IUpdateSubscriptionUseCase } from '../../../application/interface/use-cases/admin/IUpdateSubscriptionUseCase';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
+import { UpdateSubscriptionDTO } from '../../../application/dtos/admin/UpdateSubscriptionDTO';
 import { CreateSubscriptionDTO } from '../../../application/dtos/admin/CreateSubscriptionDTO';
+import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 
 export class AdminSubscriptionController {
     constructor(
-        private createSubscriptionUseCase: ICreateSubscriptionUseCase,
-        private getSubscriptionsUseCase: IGetSubscriptionsUseCase,
-        private toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase
+        private readonly _createSubscriptionUseCase: ICreateSubscriptionUseCase,
+        private readonly _getSubscriptionsUseCase: IGetSubscriptionsUseCase,
+        private readonly _toggleSubscriptionStatusUseCase: IToggleSubscriptionStatusUseCase,
+        private readonly _updateSubscriptionUseCase: IUpdateSubscriptionUseCase
     ) { }
 
-    async create(req: Request, res: Response, next: NextFunction) {
+    async createSubscription(req: Request, res: Response, next: NextFunction) {
         try {
             const dto = new CreateSubscriptionDTO(req.body.planName, Number(req.body.duration), req.body.durationUnit, Number(req.body.price), Number(req.body.commissionPercent))
-            await this.createSubscriptionUseCase.execute(dto);
+            await this._createSubscriptionUseCase.execute(dto);
 
             res.status(HttpStatusCode.CREATED).json({
                 success: true,
-                message: "Subscription plan created successfully."
+                message: MessageConstants.SUBSCRIPTION.CREATE_SUCCESS
             });
         } catch (error) {
             next(error);
         }
     }
 
-    async getAll(_req: Request, res: Response, next: NextFunction) {
+    async updateSubscription(req: Request, res: Response, next: NextFunction) {
         try {
-            const subscriptions = await this.getSubscriptionsUseCase.execute();
+            const { id } = req.params;
+            const dto = new UpdateSubscriptionDTO(
+                id,
+                req.body.planName,
+                Number(req.body.duration),
+                req.body.durationUnit,
+                Number(req.body.price),
+                Number(req.body.commissionPercent)
+            );
+            await this._updateSubscriptionUseCase.execute(dto);
+
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                data: subscriptions
+                message: MessageConstants.SUBSCRIPTION.UPDATE_SUCCESS
             });
         } catch (error) {
             next(error);
         }
     }
 
-    async toggleStatus(req: Request, res: Response, next: NextFunction) {
+    async getAllSubscriptions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const result = await this._getSubscriptionsUseCase.execute(page, limit);
+            res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async toggleSubscriptionStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             const { status } = req.body;
-            await this.toggleSubscriptionStatusUseCase.execute(id, status);
+            await this._toggleSubscriptionStatusUseCase.execute(id, status);
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                message: `Subscription plan ${status ? 'activated' : 'inactivated'} successfully.`
+                message: MessageConstants.SUBSCRIPTION.STATUS_UPDATE_SUCCESS
             });
         } catch (error) {
             next(error);

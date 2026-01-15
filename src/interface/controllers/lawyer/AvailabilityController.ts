@@ -5,77 +5,72 @@ import {
   IGetAllAvailableRuleUseCase,
   IDeleteAvailableRuleUseCase
 } from "../../../application/interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
-
 import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
-import { error } from "console";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+
+
+
+
+
 
 export class AvailabilityController {
   constructor(
     private readonly _createRuleUseCase: ICreateAvailabilityRuleUseCase,
-    private readonly _updateAvilableUseCase: IUpdateAvailabilityRuleUseCase,
-    private readonly _getavailableUsecase: IGetAllAvailableRuleUseCase,
-    private readonly _deleteavailableusecase: IDeleteAvailableRuleUseCase
+    private readonly _updateAvailableUseCase: IUpdateAvailabilityRuleUseCase,
+    private readonly _getAllRulesUseCase: IGetAllAvailableRuleUseCase,
+    private readonly _deleteRuleUseCase: IDeleteAvailableRuleUseCase
   ) { }
 
-  /**
-   * Create a new availability rule
-   */
   async createRule(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = req.body.ruleData;
-
-      const lawyerId = req.user?.id
+      const ruleData = req.body.ruleData;
+      const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
+        return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: "Lawyer ID is missing. Unable to create rule.",
+          message: MessageConstants.COMMON.UNAUTHORIZED,
         });
       }
 
       const dto = new CreateAvailabilityRuleDTO(
-        data.title,
-        data.startTime,
-        data.endTime,
-        data.startDate,
-        data.endDate,
-        data.availableDays,
-        data.bufferTime.toString(),
-        data.slotDuration,
-        data.maxBookings,
-        data.sessionType,
-        data.exceptionDays,
+        ruleData.title,
+        ruleData.startTime,
+        ruleData.endTime,
+        ruleData.startDate,
+        ruleData.endDate,
+        ruleData.availableDays,
+        ruleData.bufferTime.toString(),
+        ruleData.slotDuration,
+        ruleData.maxBookings,
+        ruleData.sessionType,
+        ruleData.exceptionDays,
         lawyerId,
-        data.consultationFee
+        ruleData.consultationFee
       );
 
       const result = await this._createRuleUseCase.execute(dto);
 
       return res.status(HttpStatusCode.CREATED).json({
         success: true,
-        message: "Availability rule and slots created successfully.",
+        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
     } catch (err: any) {
-
-      next(err)
+      next(err);
     }
   }
 
-  /**
-   * Update an existing availability rule
-   */
   async updateRule(req: Request, res: Response, next: NextFunction) {
-
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: "Rule ID is required for updating.",
+          message: MessageConstants.COMMON.BAD_REQUEST,
         });
       }
 
@@ -90,71 +85,64 @@ export class AvailabilityController {
         req.body.slotDuration,
         req.body.maxBookings,
         req.body.sessionType,
-        req.body.exceptionDays
+        req.body.exceptionDays,
+        req.body.consultationFee
       );
 
-      const result = await this._updateAvilableUseCase.execute(ruleId, dto);
+      const result = await this._updateAvailableUseCase.execute(ruleId, dto);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Rule updated successfully. Slots regenerated.",
+        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 
-  /**
-   * Fetch all availability rules for a lawyer
-   */
-  async getAllRuls(req: Request, res: Response, next: NextFunction) {
-
+  async getAllRules(req: Request, res: Response, next: NextFunction) {
     try {
-      const lawyerId = req.user?.id
+      const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
+        return res.status(HttpStatusCode.FORBIDDEN).json({
           success: false,
-          message: "Lawyer ID missing. Cannot fetch rules.",
+          message: MessageConstants.COMMON.UNAUTHORIZED,
         });
       }
 
-      const rules = await this._getavailableUsecase.execute(lawyerId);
-
+      const rules = await this._getAllRulesUseCase.execute(lawyerId);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Availability rules fetched successfully.",
+        message: MessageConstants.LAWYER.AVAILABILITY_FETCH_SUCCESS,
         data: rules,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 
-  /**
-   * Delete a rule and its slots
-   */
-  async DeleteRule(req: Request, res: Response, next: NextFunction) {
+  async deleteRule(req: Request, res: Response, next: NextFunction) {
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: "Rule ID missing. Cannot delete rule.",
+          message: MessageConstants.COMMON.BAD_REQUEST,
         });
       }
 
-      await this._deleteavailableusecase.execute(ruleId);
+      await this._deleteRuleUseCase.execute(ruleId);
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Rule and its slots deleted successfully.",
+        message: MessageConstants.COMMON.SUCCESS,
       });
     } catch (err: any) {
-      next(err)
+      next(err);
     }
   }
 }

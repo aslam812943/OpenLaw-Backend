@@ -1,13 +1,14 @@
 
 import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
-import { OtpService } from "../../../../infrastructure/services/otp/OtpService";
+import { IOtpService } from "../../../interface/services/IOtpService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { IGenerateOtpUseCase } from "../../../interface/use-cases/user/IGenerateOtpUseCase";
 
 
 //  GenerateOtpUseCase
 
-export class GenerateOtpUseCase {
-  constructor(private otpService: OtpService) { }
+export class GenerateOtpUseCase implements IGenerateOtpUseCase {
+  constructor(private _otpService: IOtpService) { }
 
 
   async execute(email: string, data: UserRegisterDTO): Promise<string> {
@@ -17,7 +18,7 @@ export class GenerateOtpUseCase {
         throw new BadRequestError("Email and user data are required to generate OTP.");
       }
 
-      const otp = await this.otpService.generateOtp(email, data);
+      const otp = await this._otpService.generateOtp(email, data);
 
       if (!otp) {
         throw new BadRequestError("Failed to generate OTP. Please try again.");

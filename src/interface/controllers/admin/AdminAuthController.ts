@@ -1,44 +1,39 @@
-
-import { Request, Response } from 'express';
-import { LoginAdminUseCase } from '../../../application/useCases/Admin/LoginAdminUseCase';
+import { Request, Response, NextFunction } from 'express';
+import { ILoginAdminUseCase } from '../../../application/interface/use-cases/admin/ILoginAdminUseCase';
 import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequestDTO';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
-
-
-//  AdminAuthController
+import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 
 export class AdminAuthController {
-  constructor(private readonly _loginUseCase: LoginAdminUseCase) { }
+  constructor(private readonly _loginUseCase: ILoginAdminUseCase) { }
 
-  // ------------------------------------------------------------
-  // Admin Login Handler
-  // ------------------------------------------------------------
-
-
-  async login(req: Request, res: Response, next: any) {
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const dto = new AdminLoginRequestDTO(req.body);
-      const result = await this._loginUseCase.execute(dto);
+      const loginDto = new AdminLoginRequestDTO(req.body);
+      const result = await this._loginUseCase.execute(loginDto);
 
-      res.cookie("adminAccessToken", result.token, {
+      const cookieSecure = process.env.COOKIE_SECURE === 'true';
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
+      res.cookie("accessToken", result.token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
       });
 
-      res.cookie('adminRefreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/',
-        maxAge: 1 * 24 * 60 * 60 * 1000
-      })
+        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000
+      });
 
       return res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Admin logged in successfully.",
+        message: MessageConstants.ADMIN.LOGIN_SUCCESS,
         data: result,
       });
 
@@ -47,30 +42,31 @@ export class AdminAuthController {
     }
   }
 
-
-  async logout(_req: Request, res: Response, next: any): Promise<void> {
+  async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.clearCookie("adminAccessToken", {
+      const cookieSecure = process.env.COOKIE_SECURE === 'true';
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
+      res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/'
       });
 
-      res.clearCookie('adminRefreshToken', {
+      res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
         path: '/'
-      })
+      });
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: "Admin logged out successfully.",
+        message: MessageConstants.ADMIN.LOGOUT_SUCCESS,
       });
     } catch (error: any) {
       next(error);
     }
   }
-
 }

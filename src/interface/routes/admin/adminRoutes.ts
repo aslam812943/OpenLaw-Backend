@@ -17,7 +17,7 @@ import { BlockUserController } from '../../controllers/admin/BlockUserController
 import { BlockUserUseCase } from '../../../application/useCases/Admin/BlockUserUseCase';
 import { UNBlockuserUseCase } from '../../../application/useCases/Admin/UNBlockUserUseCase';
 import { UNBlockUserController } from '../../controllers/admin/UNBlockUserController';
-
+import { BookingRepository } from '../../../infrastructure/repositories/user/BookingRepository';
 // Lawyer Management
 import { LawyerRepository } from '../../../infrastructure/repositories/lawyer/LawyerRepository';
 import { GetAllLawyersController } from '../../controllers/admin/GetAllLawyersController';
@@ -32,17 +32,20 @@ import { RejectLawyerUseCase } from '../../../application/useCases/Admin/RejectL
 import { RejectLawyerController } from '../../controllers/admin/RejectLawyerController';
 
 
-
+import { GetAllBookingController } from '../../controllers/admin/GetAllBookingController';
+import { GetAllBookingUseCase } from '../../../application/useCases/Admin/GetAllBookingUseCase';
 
 // Subscription Management
 import { SubscriptionRepository } from '../../../infrastructure/repositories/admin/SubscriptionRepository';
 import { CreateSubscriptionUseCase } from '../../../application/useCases/Admin/CreateSubscriptionUseCase';
 import { GetSubscriptionsUseCase } from '../../../application/useCases/Admin/GetSubscriptionsUseCase';
 import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/Admin/ToggleSubscriptionStatusUseCase';
+import { UpdateSubscriptionUseCase } from '../../../application/useCases/Admin/UpdateSubscriptionUseCase';
 import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
 import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
 import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
 import { ApprovePayoutUseCase } from '../../../application/useCases/Admin/ApprovePayoutUseCase';
+import { RejectPayoutUseCase } from '../../../application/useCases/Admin/RejectPayoutUseCase';
 import { PayoutController } from '../../controllers/common/payout/PayoutController';
 import { GetAdminDashboardStatsUseCase } from '../../../application/useCases/Admin/GetAdminDashboardStatsUseCase';
 import { AdminDashboardController } from '../../controllers/admin/AdminDashboardController';
@@ -90,19 +93,16 @@ const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
 
 
 
-
-
-
-
-
-// ------------------------------------------------------
-// Subscription Management Setup
-// ------------------------------------------------------
 const subscriptionRepo = new SubscriptionRepository();
 const createSubscriptionUseCase = new CreateSubscriptionUseCase(subscriptionRepo);
 const getSubscriptionsUseCase = new GetSubscriptionsUseCase(subscriptionRepo);
 const toggleSubscriptionStatusUseCase = new ToggleSubscriptionStatusUseCase(subscriptionRepo);
-const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase);
+const updateSubscriptionUseCase = new UpdateSubscriptionUseCase(subscriptionRepo);
+const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase, updateSubscriptionUseCase);
+
+const bookingRepo = new BookingRepository();
+const getAllBookingUseCase = new GetAllBookingUseCase(bookingRepo);
+const getAllBookingController = new GetAllBookingController(getAllBookingUseCase);
 
 
 
@@ -121,8 +121,9 @@ const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
 // Payout Management Setup
 const withdrawalRepo = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo, subscriptionRepo);
-const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepo);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo);
+const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepo, lawyerRepo);
+const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepo);
 const getAdminDashboardStatsUseCase = new GetAdminDashboardStatsUseCase(paymentRepo);
 const adminDashboardController = new AdminDashboardController(getAdminDashboardStatsUseCase);
 
@@ -154,9 +155,10 @@ router.patch('/lawyers/:id/reject', adminAuth, (req, res, next) => rejectLawyerC
 
 
 // Subscription Managment Routes
-router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAll(req, res, next));
-router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.create(req, res, next));
-router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleStatus(req, res, next));
+router.get('/subscription', adminAuth, (req, res, next) => adminSubscriptionController.getAllSubscriptions(req, res, next));
+router.post('/subscription/create', adminAuth, (req, res, next) => adminSubscriptionController.createSubscription(req, res, next));
+router.patch('/subscription/:id/status', adminAuth, (req, res, next) => adminSubscriptionController.toggleSubscriptionStatus(req, res, next));
+router.put('/subscription/:id', adminAuth, (req, res, next) => adminSubscriptionController.updateSubscription(req, res, next));
 
 
 
@@ -166,9 +168,10 @@ router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.ge
 // Payout Routes
 router.get('/payout/pending', adminAuth, (req, res, next) => payoutController.getPendingWithdrawals(req, res, next));
 router.patch('/payout/:id/approve', adminAuth, (req, res, next) => payoutController.approvePayout(req, res, next));
+router.patch('/payout/:id/reject', adminAuth, (req, res, next) => payoutController.rejectPayout(req, res, next));
 
 // Dashboard Stats Route
 router.get('/dashboard/stats', adminAuth, (req, res, next) => adminDashboardController.getStats(req, res, next));
 
-
+router.get('/bookings', adminAuth, (req, res, next) => getAllBookingController.execute(req, res, next));
 export default router

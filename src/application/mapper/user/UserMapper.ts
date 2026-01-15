@@ -1,5 +1,6 @@
 import { UserRegisterDTO } from "../../dtos/user/RegisterUserDTO";
-import { User } from "../../../domain/entities/ User";
+import { User } from "../../../domain/entities/User";
+import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
 
 export class UserMapper {
   static toEntity(dto: UserRegisterDTO): User {
@@ -9,7 +10,7 @@ export class UserMapper {
       password: String(dto.password),
       phone: Number(dto.phone),
       isVerified: dto.isVerified ?? false,
-      role: dto.role ?? "user",
+      role: (dto.role as UserRole) ?? UserRole.USER,
       isBlock: dto.isBlock,
       hasSubmittedVerification: false
     };

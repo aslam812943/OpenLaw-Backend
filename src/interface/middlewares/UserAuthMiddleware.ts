@@ -4,24 +4,13 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { CheckUserStatusUseCase } from "../../application/useCases/user/checkUserStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
-interface JwtPayload {
-  id: string;
-  role: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
-  }
-}
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
+import { JwtPayload } from "../../types/express/index";
 
 export class UserAuthMiddleware {
   constructor(
-
-    private readonly checkUserStatusUseCase: CheckUserStatusUseCase,
-    private readonly tokenService: ITokenService
+    private readonly _checkUserStatusUseCase: CheckUserStatusUseCase,
+    private readonly _tokenService: ITokenService
   ) { }
 
   execute = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -56,17 +45,21 @@ export class UserAuthMiddleware {
 
           try {
 
-            const refreshDecoded = this.tokenService.verifyToken(refreshToken, true) as JwtPayload;
+            const refreshDecoded = this._tokenService.verifyToken(refreshToken, true) as JwtPayload;
 
 
-            const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
+            const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
-            if (refreshDecoded.role === 'user') {
+            if (refreshDecoded.role === UserRole.USER) {
+
+              const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
               res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                maxAge: 15 * 60 * 1000,
+                secure: process.env.COOKIE_SECURE === 'true',
+                sameSite: cookieSameSite,
+                path: '/',
+                maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
               });
             } else {
 
@@ -92,22 +85,23 @@ export class UserAuthMiddleware {
 
 
 
-      const status = await this.checkUserStatusUseCase.check(decoded.id);
+      const status = await this._checkUserStatusUseCase.check(decoded.id);
 
       if (!status.isActive) {
+        const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
-        if (decoded.role == 'user') {
+        if (decoded.role == UserRole.USER) {
           res.clearCookie("accessToken", {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: process.env.COOKIE_SECURE === 'true',
+            sameSite: cookieSameSite,
             path: '/'
           });
 
           res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: process.env.COOKIE_SECURE === 'true',
+            sameSite: cookieSameSite,
             path: '/'
           });
         }

@@ -8,6 +8,7 @@ import { LawyerRepository } from '../../../infrastructure/repositories/lawyer/La
 import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
 import { StripeService } from '../../../infrastructure/services/StripeService';
 import { ChatRoomRepository } from '../../../infrastructure/repositories/ChatRoomRepository';
+import { SubscriptionRepository } from '../../../infrastructure/repositories/admin/SubscriptionRepository';
 import { webhookSignatureVerification } from '../../middlewares/webhookMiddleware';
 
 const router = Router();
@@ -19,20 +20,22 @@ const availabilityRuleRepository = new AvailabilityRuleRepository();
 const lawyerRepository = new LawyerRepository();
 const paymentRepository = new PaymentRepository();
 const chatRoomRepository = new ChatRoomRepository();
+const subscriptionRepository = new SubscriptionRepository();
 
-// Initialize use cases
+
 const confirmBookingUseCase = new ConfirmBookingUseCase(
     bookingRepository,
     stripeService,
     availabilityRuleRepository,
     lawyerRepository,
     paymentRepository,
-    chatRoomRepository
+    chatRoomRepository,
+    subscriptionRepository
 );
 
 const handleWebhookUseCase = new HandleWebhookUseCase(confirmBookingUseCase);
 
-// Initialize controller
+
 const webhookController = new WebhookController(handleWebhookUseCase);
 
 router.post(

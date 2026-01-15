@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { RequestPayoutUseCase } from "../../../../application/useCases/lawyer/RequestPayoutUseCase";
 import { ApprovePayoutUseCase } from "../../../../application/useCases/Admin/ApprovePayoutUseCase";
+import { RejectPayoutUseCase } from "../../../../application/useCases/Admin/RejectPayoutUseCase";
 import { IWithdrawalRepository } from "../../../../domain/repositories/IWithdrawalRepository";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
 
@@ -8,6 +9,7 @@ export class PayoutController {
     constructor(
         private _requestPayoutUseCase: RequestPayoutUseCase,
         private _approvePayoutUseCase: ApprovePayoutUseCase,
+        private _rejectPayoutUseCase: RejectPayoutUseCase,
         private _withdrawalRepository: IWithdrawalRepository
     ) { }
 
@@ -46,6 +48,16 @@ export class PayoutController {
             const { id } = req.params;
             await this._approvePayoutUseCase.execute(id);
             res.status(HttpStatusCode.OK).json({ success: true, message: "Payout approved and processed successfully" });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async rejectPayout(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await this._rejectPayoutUseCase.execute(id);
+            res.status(HttpStatusCode.OK).json({ success: true, message: "Payout rejected and funds refunded successfully" });
         } catch (error) {
             next(error);
         }

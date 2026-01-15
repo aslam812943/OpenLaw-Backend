@@ -5,10 +5,14 @@ import { MessageMapper } from "../../../mapper/chat/MessageMapper";
 import { ISendMessageUseCase } from "../../../interface/use-cases/common/chat/ISendMessageUseCase";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import crypto from "crypto";
+import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
 
 
 export class SendMessageUseCase implements ISendMessageUseCase {
-    constructor(private messageRepo: IMessageRepository) { }
+    constructor(
+        private _messageRepository: IMessageRepository,
+        private _chatRoomRepository: IChatRoomRepository
+    ) { }
 
     async execute(
         roomId: string,
@@ -37,7 +41,9 @@ export class SendMessageUseCase implements ISendMessageUseCase {
             fileSize
         );
 
-        await this.messageRepo.save(message);
+        await this._messageRepository.save(message);
+        await this._chatRoomRepository.updateLastMessage(roomId);
+
         return MessageMapper.toDTO(message);
     }
 }

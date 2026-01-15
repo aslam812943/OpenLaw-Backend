@@ -4,23 +4,13 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { CheckLawyerStatusUseCase } from "../../application/useCases/lawyer/CheckLawyerStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
-interface JwtPayload {
-    id: string;
-    role: string;
-}
-
-declare global {
-    namespace Express {
-        interface Request {
-            user?: JwtPayload;
-        }
-    }
-}
+import { UserRole } from "../../infrastructure/interface/enums/UserRole";
+import { JwtPayload } from "../../types/express/index";
 
 export class LawyerAuthMiddleware {
     constructor(
-        private readonly checkLawyerStatusUseCase: CheckLawyerStatusUseCase,
-        private readonly tokenService: ITokenService
+        private readonly _checkLawyerStatusUseCase: CheckLawyerStatusUseCase,
+        private readonly _tokenService: ITokenService
     ) { }
 
     execute = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -54,14 +44,14 @@ export class LawyerAuthMiddleware {
 
                     try {
 
-                        const refreshDecoded = this.tokenService.verifyToken(refreshToken, true) as JwtPayload;
+                        const refreshDecoded = this._tokenService.verifyToken(refreshToken, true) as JwtPayload;
 
-                        if (refreshDecoded.role !== 'lawyer') {
+                        if (refreshDecoded.role !== UserRole.LAWYER) {
                             res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role." });
                             return;
                         }
 
-                        const newAccessToken = this.tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
+                        const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
 
                         res.cookie("accessToken", newAccessToken, {
                             httpOnly: true,
@@ -84,13 +74,13 @@ export class LawyerAuthMiddleware {
             req.user = decoded;
 
 
-            if (decoded.role !== 'lawyer') {
+            if (decoded.role !== UserRole.LAWYER) {
                 res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Access denied. Lawyers only." });
                 return;
             }
 
 
-            const status = await this.checkLawyerStatusUseCase.check(decoded.id);
+            const status = await this._checkLawyerStatusUseCase.check(decoded.id);
 
             if (!status.isActive) {
 
