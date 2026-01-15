@@ -28,6 +28,7 @@ export class BookingRepository implements IBookingRepository {
             doc.refundStatus as 'none' | 'full' | 'partial',
             doc.isCallActive,
             doc.lawyerJoined,
+            doc.commissionPercent || 0,
             docObj.createdAt
         );
     }

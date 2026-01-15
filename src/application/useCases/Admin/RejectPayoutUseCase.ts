@@ -1,15 +1,13 @@
 import { IWithdrawalRepository } from "../../../domain/repositories/IWithdrawalRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
-import { IApprovePayoutUseCase } from "../../interface/use-cases/admin/IApprovePayoutUseCase";
+import { IRejectPayoutUseCase } from "../../interface/use-cases/admin/IRejectPayoutUseCase";
 
-export class ApprovePayoutUseCase implements IApprovePayoutUseCase {
+export class RejectPayoutUseCase implements IRejectPayoutUseCase {
     constructor(
         private _withdrawalRepository: IWithdrawalRepository,
-        private _lawyerRepository: ILawyerRepository,
-
+        private _lawyerRepository: ILawyerRepository
     ) { }
 
     async execute(withdrawalId: string): Promise<void> {
@@ -22,21 +20,11 @@ export class ApprovePayoutUseCase implements IApprovePayoutUseCase {
             throw new BadRequestError("Withdrawal request is already processed.");
         }
 
-        const lawyer = await this._lawyerRepository.findById(withdrawal.lawyerId);
-        if (!lawyer) {
-            throw new NotFoundError("Lawyer not found.");
-        }
+        await this._lawyerRepository.updateWalletBalance(withdrawal.lawyerId, withdrawal.amount);
 
-
-        // if ((lawyer.walletBalance || 0) < withdrawal.amount) {
-            
-        //     // throw new BadRequestError("Lawyer has insufficient balance for this payout.");
-        // }
-
-
-        await this._withdrawalRepository.updateStatus(withdrawalId, 'approved', {
+        await this._withdrawalRepository.updateStatus(withdrawalId, 'rejected', {
             commissionAmount: 0,
-            finalAmount: withdrawal.amount,
+            finalAmount: 0,
             processedDate: new Date()
         });
     }

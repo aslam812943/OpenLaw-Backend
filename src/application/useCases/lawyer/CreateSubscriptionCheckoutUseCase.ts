@@ -4,7 +4,6 @@ import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISub
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { CreateSubscriptionCheckoutDTO } from "../../dtos/lawyer/CreateSubscriptionCheckoutDTO";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
-import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class CreateSubscriptionCheckoutUseCase implements ICreateSubscriptionCheckoutUseCase {
     constructor(
@@ -29,9 +28,9 @@ export class CreateSubscriptionCheckoutUseCase implements ICreateSubscriptionChe
                 const currentMonths = getMonths(currentPlan.duration, currentPlan.durationUnit);
                 const newMonths = getMonths(newPlan.duration, newPlan.durationUnit);
 
-                if (newMonths < currentMonths) {
-                    throw new BadRequestError("You cannot downgrade to a shorter duration plan.");
-                }
+                // if (newMonths < currentMonths) {
+                //     throw new BadRequestError("You cannot downgrade to a shorter duration plan.");
+                // }
             }
         }
 

@@ -1,5 +1,6 @@
 
 import LawyerModel, { ILawyerDocument } from "../../db/models/LawyerModel";
+import LawyerSubscriptionModel from "../../db/models/LawyerSubscriptionModel";
 
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { Lawyer } from "../../../domain/entities/Lawyer";
@@ -120,7 +121,7 @@ export class LawyerRepository implements ILawyerRepository {
           } else if (lowerFilter === "active") {
             andConditions.push({ isBlock: false });
           } else if (["approved", "rejected", "pending"].includes(lowerFilter)) {
-         
+
             andConditions.push({ verificationStatus: { $regex: `^${filter}$`, $options: "i" } });
           } else {
             andConditions.push({
@@ -315,6 +316,20 @@ export class LawyerRepository implements ILawyerRepository {
 
   async updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean, startDate: Date, expiryDate: Date): Promise<void> {
     try {
+      await LawyerSubscriptionModel.updateMany(
+        { lawyerId: id, status: 'active' },
+        { status: 'upgraded' }
+      );
+
+      await LawyerSubscriptionModel.create({
+        lawyerId: id,
+        subscriptionId: subscriptionId,
+        startDate: startDate,
+        expiryDate: expiryDate,
+        paymentVerify: paymentVerified,
+        status: 'active'
+      });
+
       await LawyerModel.findByIdAndUpdate(id, {
         subscriptionId: subscriptionId,
         paymentVerify: paymentVerified,

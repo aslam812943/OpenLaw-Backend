@@ -60,6 +60,7 @@ import { GetAllReviewsUseCase } from "../../../application/useCases/lawyer/revie
 import { GetLawyerCasesUseCase } from "../../../application/useCases/lawyer/GetLawyerCasesUseCase";
 import { GetLawyerEarningsUseCase } from "../../../application/useCases/lawyer/GetLawyerEarningsUseCase";
 import { RequestPayoutUseCase } from "../../../application/useCases/lawyer/RequestPayoutUseCase";
+import { RejectPayoutUseCase } from "../../../application/useCases/Admin/RejectPayoutUseCase";
 import { ApprovePayoutUseCase } from "../../../application/useCases/Admin/ApprovePayoutUseCase";
 import { GetLawyerDashboardStatsUseCase } from "../../../application/useCases/lawyer/GetLawyerDashboardStatsUseCase";
 
@@ -103,7 +104,6 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
   bookingRepository,
   stripeService,
   lawyerRepository,
-  subscriptionRepository,
   chatRoomRepository
 );
 
@@ -118,10 +118,11 @@ const getMessagesUseCase = new GetMessagesUseCase(messageRepository);
 
 const getAllReviewsUseCase = new GetAllReviewsUseCase(reviewRepository);
 const getLawyerCasesUseCase = new GetLawyerCasesUseCase(bookingRepository);
-const getLawyerEarningsUseCase = new GetLawyerEarningsUseCase(bookingRepository, lawyerRepository, subscriptionRepository);
+const getLawyerEarningsUseCase = new GetLawyerEarningsUseCase(bookingRepository, lawyerRepository);
 
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawyerRepository);
 const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository);
+const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepository, lawyerRepository);
 const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);
 
 // ============================================================================
@@ -143,7 +144,7 @@ const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUse
 const reviewController = new ReviewController(getAllReviewsUseCase);
 const lawyerCasesController = new LawyerCasesController(getLawyerCasesUseCase);
 const lawyerEarningsController = new LawyerEarningsController(getLawyerEarningsUseCase);
-const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepository);
+const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepository);
 const lawyerDashboardController = new LawyerDashboardController(getLawyerDashboardStatsUseCase);
 
 // ============================================================================

@@ -31,6 +31,10 @@ export class RequestPayoutUseCase {
             new Date()
         );
 
-        return await this._withdrawalRepository.create(withdrawal);
+        const data = await this._withdrawalRepository.create(withdrawal);
+
+        await this._lawyerRepository.updateWalletBalance(lawyerId, -amount);
+
+        return data;
     }
 }

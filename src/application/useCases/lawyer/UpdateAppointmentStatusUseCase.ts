@@ -1,7 +1,6 @@
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
@@ -14,7 +13,6 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _bookingRepository: IBookingRepository,
         private readonly _paymentService: IPaymentService,
         private readonly _lawyerRepository: ILawyerRepository,
-        private readonly _subscriptionRepository: ISubscriptionRepository,
         private readonly _chatRoomRepository: IChatRoomRepository
     ) { }
 
@@ -60,21 +58,12 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
 
             await this._bookingRepository.updateStatus(appointmentId, 'completed');
 
-
-            const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
-            let commissionPercent = 10;
-
-            if (lawyer && (lawyer as any).subscriptionId) {
-                const subscription = await this._subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
-                if (subscription) {
-                    commissionPercent = subscription.commissionPercent;
-                }
-            }
-
+            const commissionPercent = booking.commissionPercent || 0;
             const commissionAmount = booking.consultationFee * (commissionPercent / 100);
             const netAmount = booking.consultationFee - commissionAmount;
 
             await this._lawyerRepository.updateWalletBalance(booking.lawyerId, netAmount);
+
         } else {
             await this._bookingRepository.updateStatus(appointmentId, status);
         }

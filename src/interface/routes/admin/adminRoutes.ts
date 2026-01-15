@@ -45,6 +45,7 @@ import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscr
 import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
 import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
 import { ApprovePayoutUseCase } from '../../../application/useCases/Admin/ApprovePayoutUseCase';
+import { RejectPayoutUseCase } from '../../../application/useCases/Admin/RejectPayoutUseCase';
 import { PayoutController } from '../../controllers/common/payout/PayoutController';
 import { GetAdminDashboardStatsUseCase } from '../../../application/useCases/Admin/GetAdminDashboardStatsUseCase';
 import { AdminDashboardController } from '../../controllers/admin/AdminDashboardController';
@@ -100,7 +101,7 @@ const updateSubscriptionUseCase = new UpdateSubscriptionUseCase(subscriptionRepo
 const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase, updateSubscriptionUseCase);
 
 const bookingRepo = new BookingRepository();
-const getAllBookingUseCase = new GetAllBookingUseCase(bookingRepo, lawyerRepo, subscriptionRepo);
+const getAllBookingUseCase = new GetAllBookingUseCase(bookingRepo);
 const getAllBookingController = new GetAllBookingController(getAllBookingUseCase);
 
 
@@ -121,7 +122,8 @@ const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
 const withdrawalRepo = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
 const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo);
-const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, withdrawalRepo);
+const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepo, lawyerRepo);
+const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepo);
 const getAdminDashboardStatsUseCase = new GetAdminDashboardStatsUseCase(paymentRepo);
 const adminDashboardController = new AdminDashboardController(getAdminDashboardStatsUseCase);
 
@@ -166,6 +168,7 @@ router.get('/payments', adminAuth, (req, res, next) => adminPaymentController.ge
 // Payout Routes
 router.get('/payout/pending', adminAuth, (req, res, next) => payoutController.getPendingWithdrawals(req, res, next));
 router.patch('/payout/:id/approve', adminAuth, (req, res, next) => payoutController.approvePayout(req, res, next));
+router.patch('/payout/:id/reject', adminAuth, (req, res, next) => payoutController.rejectPayout(req, res, next));
 
 // Dashboard Stats Route
 router.get('/dashboard/stats', adminAuth, (req, res, next) => adminDashboardController.getStats(req, res, next));
