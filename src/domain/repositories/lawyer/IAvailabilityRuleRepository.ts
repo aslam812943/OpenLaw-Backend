@@ -8,6 +8,8 @@ export interface IAvailabilityRuleRepository {
     updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<any>;
     createSlots(ruleId: string, lawyerId: string, slots: any[]): Promise<any>;
     deleteSlotsByRuleId(ruleId: string): Promise<void>;
+    deleteUnbookedSlotsByRuleId(ruleId: string): Promise<void>;
+    getBookedSlotsByRuleId(ruleId: string): Promise<any[]>;
     getRuleById(ruleId: string): Promise<any>;
     getAllRules(id: string): Promise<AvailabilityRule[]>;
     deleteRuleById(ruleId: string): Promise<void>

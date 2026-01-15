@@ -13,7 +13,7 @@ import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel } from "../../db/models/BookingModel";
 export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
- 
+
   async createRule(rule: CreateAvailabilityRuleDTO): Promise<any> {
     try {
       return await AvailabilityRuleModel.create(rule);
@@ -36,7 +36,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  
+
   async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<any> {
     try {
       const rule = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
@@ -54,7 +54,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
- 
+
   async deleteSlotsByRuleId(ruleId: string): Promise<void> {
     try {
       await SlotModel.deleteMany({ ruleId });
@@ -63,7 +63,23 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
- 
+  async deleteUnbookedSlotsByRuleId(ruleId: string): Promise<void> {
+    try {
+      await SlotModel.deleteMany({ ruleId, isBooked: false });
+    } catch (error: any) {
+      throw new InternalServerError("Database error while deleting unbooked slots.");
+    }
+  }
+
+  async getBookedSlotsByRuleId(ruleId: string): Promise<any[]> {
+    try {
+      return await SlotModel.find({ ruleId, isBooked: true }).lean();
+    } catch (error: any) {
+      throw new InternalServerError("Database error while fetching booked slots.");
+    }
+  }
+
+
   async getRuleById(ruleId: string): Promise<any> {
     try {
       const rule = await AvailabilityRuleModel.findById(ruleId);

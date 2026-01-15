@@ -32,6 +32,7 @@ import { ReviewRepository } from "../../../infrastructure/repositories/ReviewRep
 import { TokenService } from "../../../infrastructure/services/jwt/TokenService";
 import { StripeService } from "../../../infrastructure/services/StripeService";
 import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
+import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
 
 // Middlewares
 import { LawyerAuthMiddleware } from "../../middlewares/LawyerAuthMiddleware";
@@ -82,13 +83,14 @@ const reviewRepository = new ReviewRepository();
 // ============================================================================
 const stripeService = new StripeService();
 const tokenService = new TokenService();
+const slotGeneratorService = new SlotGeneratorService();
 
 // ============================================================================
 //  UseCase Instances
 // ============================================================================
 const registerLawyerUseCase = new RegisterLawyerUseCase(lawyerRepository);
-const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository);
-const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository);
+const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
+const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
 const getAllAvailableRuleUseCase = new GetAllAvailableRuleUseCase(availabilityRuleRepository);
 const deleteAvailableRuleUseCase = new DeleteAvailableRuleUseCase(availabilityRuleRepository);
 const getProfileUseCase = new GetProfileUseCase(lawyerRepository);

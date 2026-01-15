@@ -10,6 +10,11 @@ import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/Upda
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
+
+
+
+
+
 export class AvailabilityController {
   constructor(
     private readonly _createRuleUseCase: ICreateAvailabilityRuleUseCase,
@@ -80,7 +85,8 @@ export class AvailabilityController {
         req.body.slotDuration,
         req.body.maxBookings,
         req.body.sessionType,
-        req.body.exceptionDays
+        req.body.exceptionDays,
+        req.body.consultationFee
       );
 
       const result = await this._updateAvailableUseCase.execute(ruleId, dto);

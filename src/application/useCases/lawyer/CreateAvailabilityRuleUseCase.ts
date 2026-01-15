@@ -3,14 +3,15 @@ import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityRuleDTO";
 import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapper";
-import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
-import { Slot } from "../../../domain/entities/Slot";
-import { AppError } from "../../../infrastructure/errors/AppError";
+import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUseCase {
 
-  constructor(private readonly _availabilityRuleRepository: IAvailabilityRuleRepository) { }
+  constructor(
+    private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
+    private readonly _slotGeneratorService: ISlotGeneratorService
+  ) { }
 
   private toMinutes(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -23,7 +24,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     const startMin = this.toMinutes(dto.startTime);
     const endMin = this.toMinutes(dto.endTime);
 
-   
+
     if (startMin >= endMin) errors.push("Start time must be before end time.");
     if (Number(dto.slotDuration) < 30 || Number(dto.slotDuration) > 120)
       errors.push("Slot duration must be 30–120 minutes.");
@@ -82,7 +83,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     }
   }
 
-  async execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: Slot[] }> {
+  async execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: IGeneratedSlot[] }> {
 
     try {
       if (!dto.lawyerId) {
@@ -99,7 +100,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         throw new BadRequestError("Failed to save availability rule.");
       }
 
-      const slots = SlotGeneratorService.generateSlots(newRuleEntity);
+      const slots = this._slotGeneratorService.generateSlots(newRuleEntity);
 
       if (!slots || slots.length === 0) {
         throw new BadRequestError("Failed to generate slots.");
@@ -110,8 +111,6 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
       return { rule: savedRule, slots };
 
     } catch (err: any) {
-
-      if (err instanceof AppError) throw err;
 
       throw new BadRequestError(
         err.message || "Something went wrong while creating availability rule."
