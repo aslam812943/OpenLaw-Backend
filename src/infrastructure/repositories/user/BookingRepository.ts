@@ -29,6 +29,7 @@ export class BookingRepository implements IBookingRepository {
             doc.isCallActive,
             doc.lawyerJoined,
             doc.commissionPercent || 0,
+            doc.lawyerFeedback,
             docObj.createdAt
         );
     }
@@ -55,7 +56,7 @@ export class BookingRepository implements IBookingRepository {
         }
     }
 
-    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }): Promise<void> {
+    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string): Promise<void> {
         try {
             const updateData: Partial<IBookingDocument> = { status };
             if (reason) {
@@ -64,6 +65,9 @@ export class BookingRepository implements IBookingRepository {
             if (refundDetails) {
                 updateData.refundAmount = refundDetails.amount;
                 updateData.refundStatus = refundDetails.status;
+            }
+            if (lawyerFeedback) {
+                updateData.lawyerFeedback = lawyerFeedback;
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
         } catch (error) {

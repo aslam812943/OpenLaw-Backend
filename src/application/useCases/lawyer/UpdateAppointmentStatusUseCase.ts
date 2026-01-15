@@ -16,7 +16,7 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _chatRoomRepository: IChatRoomRepository
     ) { }
 
-    async execute(appointmentId: string, status: string): Promise<void> {
+    async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
         if (!appointmentId || !status) {
             throw new BadRequestError("Appointment ID and status are required.");
         }
@@ -56,7 +56,7 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                 throw new BadRequestError("Cannot mark a future appointment as completed.");
             }
 
-            await this._bookingRepository.updateStatus(appointmentId, 'completed');
+            await this._bookingRepository.updateStatus(appointmentId, 'completed', undefined, undefined, feedback);
 
             const commissionPercent = booking.commissionPercent || 0;
             const commissionAmount = booking.consultationFee * (commissionPercent / 100);

@@ -18,6 +18,7 @@ export class AdminBookingMapper {
             lawyerEarnings,
             status: booking.status,
             paymentStatus: booking.paymentStatus,
+            lawyerFeedback: booking.lawyerFeedback,
             createdAt: booking.createdAt
         };
     }

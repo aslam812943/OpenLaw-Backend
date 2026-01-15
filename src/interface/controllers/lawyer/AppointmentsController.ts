@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetAppoimentsUseCase } from "../../../application/interface/use-cases/lawyer/IGetAppoimentsUseCase";
-import { IUpdateAppointmentStatusUseCase } from "../../../application/interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase"; 
+import { IUpdateAppointmentStatusUseCase } from "../../../application/interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
@@ -28,9 +28,9 @@ export class AppointmentsController {
     async updateStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const { status } = req.body;
+            const { status, feedback } = req.body;
 
-            await this._updateStatusUseCase.execute(id, status);
+            await this._updateStatusUseCase.execute(id, status, feedback);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,

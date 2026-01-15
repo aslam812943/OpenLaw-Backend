@@ -13,7 +13,8 @@ export class AppoimentMapper {
                 b.status,
                 b.paymentStatus,
                 b.description ?? '',
-                b.userName ?? ''
+                b.userName ?? '',
+                b.lawyerFeedback
             );
         });
     }

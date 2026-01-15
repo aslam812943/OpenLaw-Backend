@@ -20,6 +20,7 @@ export class Booking {
         public isCallActive?: boolean,
         public lawyerJoined?: boolean,
         public commissionPercent: number = 0,
+        public lawyerFeedback?: string,
         public createdAt?: Date
     ) { }
 }

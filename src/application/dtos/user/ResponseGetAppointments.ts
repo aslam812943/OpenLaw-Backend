@@ -11,6 +11,7 @@ export class ResponseGetAppointments {
         public lawyerName: string,
         public cancellationReason: string | undefined,
         public refundAmount?: number,
-        public refundStatus?: string
+        public refundStatus?: string,
+        public lawyerFeedback?: string
     ) { }
 }

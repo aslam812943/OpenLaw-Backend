@@ -18,6 +18,7 @@ export interface IBookingDocument extends Document {
     isCallActive?: boolean;
     lawyerJoined?: boolean;
     commissionPercent: number;
+    lawyerFeedback?: string;
 }
 
 const BookingSchema: Schema = new Schema({
@@ -39,6 +40,7 @@ const BookingSchema: Schema = new Schema({
     isCallActive: { type: Boolean, default: false },
     lawyerJoined: { type: Boolean, default: false },
     commissionPercent: { type: Number, default: 0 },
+    lawyerFeedback: { type: String },
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);
