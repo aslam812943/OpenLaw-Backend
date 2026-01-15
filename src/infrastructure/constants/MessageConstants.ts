@@ -2,6 +2,7 @@ export const MessageConstants = {
     ADMIN: {
         LOGIN_SUCCESS: "Admin login successful.",
         LOGOUT_SUCCESS: "Admin logged out successfully.",
+        BOOKING_FETCH_SUCCESS: "Bookings fetched successfully.",
     },
     USER: {
         BLOCK_SUCCESS: "User blocked successfully.",
