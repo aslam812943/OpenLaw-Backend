@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
+import { BadRequestError } from "../../errors/BadRequestError";
 
 
 //  UserRepository
@@ -160,7 +161,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
           sortOption._id = 1;
           break;
         default:
-          sortOption._id = -1; 
+          sortOption._id = -1;
       }
 
       const [docs, total] = await Promise.all([
@@ -218,69 +219,57 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   async findById(id: string): Promise<User> {
-    try {
-      const doc = await UserModel.findById(id);
-      if (!doc) throw new Error('User document not found ');
-      return {
-        id: String(doc._id),
-        name: doc.name,
-        email: doc.email,
-        password: doc.password,
-        phone: Number(doc.phone),
-        isVerified: doc.isVerified,
-        role: doc.role,
-        isBlock: doc.isBlock,
-        hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
-        profileImage: doc.profileImage ?? '',
-        address: doc.address,
-        isPassword: doc.password ? true : false
-      };
-    } catch (error: any) {
-      throw new InternalServerError('findById failed: ' + (error.message || error));
-    }
+    const doc = await UserModel.findById(id);
+    if (!doc) throw new NotFoundError('User document not found');
+    return {
+      id: String(doc._id),
+      name: doc.name,
+      email: doc.email,
+      password: doc.password,
+      phone: Number(doc.phone),
+      isVerified: doc.isVerified,
+      role: doc.role,
+      isBlock: doc.isBlock,
+      hasSubmittedVerification: doc.hasSubmittedVerification ?? false,
+      profileImage: doc.profileImage ?? '',
+      address: doc.address,
+      isPassword: doc.password ? true : false
+    };
   }
 
   async changePassword(id: string, oldPass: string, newPass: string) {
-    try {
-      const user = await UserModel.findById(id);
-      if (!user) throw new Error('User not found ');
+    const user = await UserModel.findById(id);
+    if (!user) throw new NotFoundError('User not found');
 
-      const match = await bcrypt.compare(oldPass, String(user.password));
-      if (!match) throw new Error('Incorrect old password ');
+    const match = await bcrypt.compare(oldPass, String(user.password));
+    if (!match) throw new BadRequestError('Incorrect old password');
 
-      user.password = await bcrypt.hash(newPass, 10);
-      await user.save();
-    } catch (error: any) {
-      throw new InternalServerError('changePassword failed: ' + (error.message || error));
-    }
+    user.password = await bcrypt.hash(newPass, 10);
+    await user.save();
   }
 
 
   async profileUpdate(id: string, name: string, phone: string, imgurl: string, address: string, city: string, state: string, pincode: string): Promise<void> {
-    try {
-      const user = await UserModel.findById(id)
-      if (!user) throw new Error('user not found')
-      user.name = name
-      user.phone = Number(phone)
-      if (imgurl) {
-        user.profileImage = imgurl
-      }
-      if (!user.address) {
-        user.address = {
-          address: "",
-          city: "",
-          state: '',
-          pincode: 0
-        };
-      }
-      user.address.address = address;
-      user.address.city = city;
-      user.address.state = state;
-      user.address.pincode = Number(pincode);
-      await user.save()
-    } catch (error: any) {
-      throw new InternalServerError("Database error while updating profile.");
+    const user = await UserModel.findById(id)
+    if (!user) throw new NotFoundError('user not found')
+    user.name = name
+    user.phone = Number(phone)
+    if (imgurl) {
+      user.profileImage = imgurl
     }
+    if (!user.address) {
+      user.address = {
+        address: "",
+        city: "",
+        state: '',
+        pincode: 0
+      };
+    }
+    user.address.address = address;
+    user.address.city = city;
+    user.address.state = state;
+    user.address.pincode = Number(pincode);
+    await user.save()
   }
 
 
@@ -292,7 +281,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   async save(user: User): Promise<User> {
-    if (!user.id) throw new Error("User ID is required for update");
+    if (!user.id) throw new BadRequestError("User ID is required for update");
 
     const updateData: any = { ...user };
     delete updateData.id;

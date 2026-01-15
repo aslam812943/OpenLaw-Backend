@@ -9,6 +9,8 @@ import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateL
 import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
+import { NotFoundError } from "../../errors/NotFoundError";
+import { BadRequestError } from "../../errors/BadRequestError";
 
 
 
@@ -281,18 +283,14 @@ export class LawyerRepository implements ILawyerRepository {
   //  changePassword()
   // ------------------------------------------------------------
   async changePassword(id: string, oldPass: string, newPass: string): Promise<void> {
-    try {
-      const lawyer = await LawyerModel.findById(id);
-      if (!lawyer) throw new Error('Lawyer not found');
+    const lawyer = await LawyerModel.findById(id);
+    if (!lawyer) throw new NotFoundError('Lawyer not found');
 
-      const match = await bcrypt.compare(oldPass, String(lawyer.password));
-      if (!match) throw new Error('Incorrect old password');
+    const match = await bcrypt.compare(oldPass, String(lawyer.password));
+    if (!match) throw new BadRequestError('Incorrect old password');
 
-      lawyer.password = await bcrypt.hash(newPass, 10);
-      await lawyer.save();
-    } catch (error: any) {
-      throw new InternalServerError('changePassword failed: ' + (error.message || error));
-    }
+    lawyer.password = await bcrypt.hash(newPass, 10);
+    await lawyer.save();
   }
 
 

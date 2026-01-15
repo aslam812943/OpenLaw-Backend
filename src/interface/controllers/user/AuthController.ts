@@ -163,7 +163,6 @@ export class AuthController {
             logoutMessage = MessageConstants.USER.LOGOUT_SUCCESS;
           }
         } catch (error) {
-          // Token might be expired or invalid, default to generic success
         }
       }
 
