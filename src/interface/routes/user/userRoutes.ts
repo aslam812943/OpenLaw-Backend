@@ -112,7 +112,8 @@ const authController = new AuthController(
   resendOtpUseCase,
   requestForgetPasswordUseCase,
   verifyResetPasswordUseCase,
-  googleAuthUseCase
+  googleAuthUseCase,
+  tokenService
 );
 
 

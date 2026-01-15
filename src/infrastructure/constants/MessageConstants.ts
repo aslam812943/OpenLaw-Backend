@@ -10,6 +10,8 @@ export const MessageConstants = {
         FETCH_SUCCESS: "Users fetched successfully.",
         PROFILE_UPDATE_SUCCESS: "User profile updated successfully.",
         PASSWORD_CHANGE_SUCCESS: "User password changed successfully.",
+        LOGIN_SUCCESS: "login successful.",
+        LOGOUT_SUCCESS: "logged out successfully.",
     },
     LAWYER: {
         APPROVE_SUCCESS: "Lawyer approved successfully.",
@@ -19,7 +21,8 @@ export const MessageConstants = {
         FETCH_SUCCESS: "Lawyers fetched successfully.",
         PROFILE_UPDATE_SUCCESS: "Lawyer profile updated successfully.",
         PASSWORD_CHANGE_SUCCESS: "Lawyer password changed successfully.",
-        LOGOUT_SUCCESS: "Lawyer logged out successfully.",
+        LOGIN_SUCCESS: "login successful.",
+        LOGOUT_SUCCESS: "logged out successfully.",
         AVAILABILITY_UPDATE_SUCCESS: "Availability rules updated successfully.",
         AVAILABILITY_FETCH_SUCCESS: "Availability rules fetched successfully.",
         APPOINTMENTS_FETCH_SUCCESS: "Appointments fetched successfully.",
