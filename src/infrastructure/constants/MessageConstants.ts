@@ -30,6 +30,12 @@ export const MessageConstants = {
         CASES_FETCH_SUCCESS: "Cases fetched successfully.",
         REVIEWS_FETCH_SUCCESS: "Reviews fetched successfully.",
     },
+    SPECIALIZATION: {
+        CREATE_SUCCESS: "Specialization created successfully.",
+        UPDATE_SUCCESS: "Specialization updated successfully.",
+        DELETE_SUCCESS: "Specialization deleted successfully.",
+        FETCH_SUCCESS: "Specializations fetched successfully.",
+    },
     SUBSCRIPTION: {
         CREATE_SUCCESS: "Subscription plan created successfully.",
         UPDATE_SUCCESS: "Subscription plan updated successfully.",
