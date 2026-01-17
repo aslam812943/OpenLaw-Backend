@@ -2,6 +2,7 @@
 import { UserRegisterDTO } from "../../../dtos/user/RegisterUserDTO";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { AppError } from "../../../../infrastructure/errors/AppError";
 import { IGenerateOtpUseCase } from "../../../interface/use-cases/user/IGenerateOtpUseCase";
 
 
@@ -27,8 +28,9 @@ export class GenerateOtpUseCase implements IGenerateOtpUseCase {
 
       return otp;
     } catch (error: any) {
-
-
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new BadRequestError(error.message || "Unexpected error while generating OTP.");
     }
   }

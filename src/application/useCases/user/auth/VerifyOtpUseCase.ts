@@ -6,10 +6,8 @@ import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { IVerifyOtpUseCase } from "../../../interface/use-cases/user/IVerifyOtpUseCase";
+import { AppError } from "../../../../infrastructure/errors/AppError";
 import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
-
-
-//  VerifyOtpUseCase
 
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
@@ -20,10 +18,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
 
   async execute(email: string, otp: string): Promise<any> {
-
     try {
-
-
       if (!email || !otp) {
         throw new BadRequestError("Email and OTP are required for verification.");
       }
@@ -53,9 +48,9 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
       return savedUser;
     } catch (error: any) {
-
-
-
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new BadRequestError(
         error.message || "OTP verification failed. Please try again later."
       );

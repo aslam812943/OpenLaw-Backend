@@ -108,6 +108,26 @@ const getAllBookingController = new GetAllBookingController(getAllBookingUseCase
 
 
 // ------------------------------------------------------
+// Specialization Management Setup
+// ------------------------------------------------------
+import { SpecializationRepository } from '../../../infrastructure/repositories/admin/SpecializationRepository';
+import { AddSpecializationUseCase } from '../../../application/useCases/Admin/specialization/AddSpecializationUseCase';
+import { EditSpecializationUseCase } from '../../../application/useCases/Admin/specialization/EditSpecializationUseCase';
+import { DeleteSpecializationUseCase } from '../../../application/useCases/Admin/specialization/DeleteSpecializationUseCase';
+import { GetSpecializationsUseCase } from '../../../application/useCases/Admin/specialization/GetSpecializationsUseCase';
+import { SpecializationController } from '../../controllers/admin/SpecializationController';
+
+const specializationRepo = new SpecializationRepository();
+const addSpecializationUseCase = new AddSpecializationUseCase(specializationRepo);
+const editSpecializationUseCase = new EditSpecializationUseCase(specializationRepo);
+const deleteSpecializationUseCase = new DeleteSpecializationUseCase(specializationRepo);
+const getSpecializationsUseCase = new GetSpecializationsUseCase(specializationRepo);
+const specializationController = new SpecializationController(
+    addSpecializationUseCase,
+    editSpecializationUseCase,
+    deleteSpecializationUseCase,
+    getSpecializationsUseCase
+);
 // Payment Management Setup
 // ------------------------------------------------------
 import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
@@ -172,6 +192,12 @@ router.patch('/payout/:id/reject', adminAuth, (req, res, next) => payoutControll
 
 // Dashboard Stats Route
 router.get('/dashboard/stats', adminAuth, (req, res, next) => adminDashboardController.getStats(req, res, next));
+
+// Specialization Routes
+router.post('/specialization', adminAuth, (req, res, next) => specializationController.addSpecialization(req, res, next));
+router.put('/specialization/:id', adminAuth, (req, res, next) => specializationController.editSpecialization(req, res, next));
+router.delete('/specialization/:id', adminAuth, (req, res, next) => specializationController.deleteSpecialization(req, res, next));
+router.get('/specialization', adminAuth, (req, res, next) => specializationController.getSpecializations(req, res, next));
 
 router.get('/bookings', adminAuth, (req, res, next) => getAllBookingController.execute(req, res, next));
 export default router

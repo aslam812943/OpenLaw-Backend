@@ -205,7 +205,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         return new Booking(
           obj._id.toString(),
           obj.userId._id.toString(),
-          obj.lawyerId,
+          obj.lawyerId.toString(),
           obj.date,
           obj.startTime,
           obj.endTime,
@@ -215,7 +215,16 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           obj.paymentId,
           obj.stripeSessionId,
           obj.description,
-          obj.userId.name
+          obj.userId.name,
+          obj.cancellationReason,
+          "", 
+          obj.refundAmount,
+          obj.refundStatus,
+          obj.isCallActive,
+          obj.lawyerJoined,
+          obj.commissionPercent,
+          obj.lawyerFeedback,
+          obj.createdAt
         );
       });
 

@@ -1,3 +1,5 @@
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+
 export class UserRegisterDTO {
   name: string;
   email: string;
@@ -5,45 +7,29 @@ export class UserRegisterDTO {
   password?: string;
   isVerified?: boolean;
   role: string;
-  isBlock:boolean
+  isBlock: boolean;
 
-  
-  
   constructor(data: Partial<UserRegisterDTO>) {
-  
-
-    if (!data.name||data.name.length<4 ) {
-     
-      throw new Error(" contain only letters, and be min 4 to  max 15 characters");
+    if (!data.name || data.name.length < 3 || data.name.length > 25) {
+      throw new BadRequestError("Name must be between 3 and 25 characters");
     }
 
     const phoneRegex = /^[0-9]{10}$/;
     if (!data.phone || !phoneRegex.test(data.phone.toString())) {
-     
-      throw new Error("Phone number must contain exactly 10 digits");
+      throw new BadRequestError("Phone number must contain exactly 10 digits");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email || !emailRegex.test(data.email)) {
-   
-      throw new Error("A valid email address is required");
+      throw new BadRequestError("A valid email address is required");
     }
-
-    // const passwordRegex = /^.{8,16}$/
-    // if (!data.password || !passwordRegex.test(data.password)) {
-      
-    //   throw new Error("Password must be 8–16 characters ");
-    // }
 
     this.name = data.name;
     this.email = data.email;
-    this.phone = data.phone;
-    this.password = data.password??'';
+    this.phone = Number(data.phone);
+    this.password = data.password ?? '';
     this.isVerified = false;
     this.role = data.role || "user";
-    this.isBlock = data.isBlock||false
-
+    this.isBlock = data.isBlock || false;
   }
-
-  
 }

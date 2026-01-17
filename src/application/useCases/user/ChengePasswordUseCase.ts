@@ -22,19 +22,12 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
     }
 
 
-    try {
-      const result = await this._userRepository.changePassword(
-        dto.id,
-        dto.oldPassword,
-        dto.newPassword
-      );
+    await this._userRepository.changePassword(
+      dto.id,
+      dto.oldPassword,
+      dto.newPassword
+    );
 
-      return { message: "Password changed successfully." };
-
-    } catch (err: any) {
-      throw new BadRequestError(
-        "Something went wrong while changing the password. Please try again."
-      );
-    }
+    return { message: "Password changed successfully." };
   }
 }

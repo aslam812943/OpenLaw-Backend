@@ -5,6 +5,7 @@ import { IRegisterUserUseCase } from "../../../interface/use-cases/user/IRegiste
 import { IGenerateOtpUseCase } from "../../../interface/use-cases/user/IGenerateOtpUseCase";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { AppError } from "../../../../infrastructure/errors/AppError";
 
 
 //  RegisterUserUsecase
@@ -19,7 +20,6 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
 
   async execute(data: UserRegisterDTO): Promise<{ message: string }> {
     try {
-
       if (!data.email || !data.name || !data.password) {
         throw new BadRequestError("All fields (name, email, password) are required.");
       }
@@ -75,6 +75,9 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
 
       return { message: "OTP sent successfully to the registered email." };
     } catch (error: any) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new BadRequestError(
         error.message || "Registration process failed. Please try again later."
       );

@@ -130,6 +130,14 @@ export class BookingRepository implements IBookingRepository {
                 }).sort({ createdAt: -1 });
             }
 
+            if (!booking) {
+                booking = await BookingModel.findOne({
+                    userId,
+                    lawyerId,
+                    status: 'completed'
+                }).sort({ createdAt: -1 });
+            }
+
             if (!booking) return null;
 
             return this.mapToEntity(booking);

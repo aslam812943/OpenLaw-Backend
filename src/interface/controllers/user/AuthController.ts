@@ -11,6 +11,8 @@ import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO"
 import { LoginUserDTO } from "../../../application/dtos/user/LoginUserDTO";
 import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetPasswordRequestDTO";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ITokenService } from "../../../application/interface/services/TokenServiceInterface";
+import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
 
 export class AuthController {
   constructor(
@@ -20,7 +22,8 @@ export class AuthController {
     private readonly _resendOtpUseCase: IResendOtpUseCase,
     private readonly _requestForgetPasswordUseCase: IRequestForgetPasswordUseCase,
     private readonly _verifyResetPasswordUseCase: IVerifyResetPasswordUseCase,
-    private readonly _googleAuthUseCase: IGoogleAuthUseCase
+    private readonly _googleAuthUseCase: IGoogleAuthUseCase,
+    private readonly _tokenService: ITokenService
   ) { }
 
   async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -118,7 +121,7 @@ export class AuthController {
 
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: MessageConstants.ADMIN.LOGIN_SUCCESS,
+        message: user.role === UserRole.LAWYER ? MessageConstants.LAWYER.LOGIN_SUCCESS : (user.role === UserRole.ADMIN ? MessageConstants.ADMIN.LOGIN_SUCCESS : MessageConstants.USER.LOGIN_SUCCESS),
         data: {
           token,
           refreshToken,
@@ -130,7 +133,7 @@ export class AuthController {
     }
   }
 
-  async logoutUser(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logoutUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
@@ -148,9 +151,24 @@ export class AuthController {
         path: '/'
       });
 
+      const accessToken = req.cookies?.accessToken;
+      let logoutMessage: string = MessageConstants.COMMON.SUCCESS;
+
+      if (accessToken) {
+        try {
+          const decoded = this._tokenService.verifyToken(accessToken);
+          if (decoded.role === UserRole.LAWYER) {
+            logoutMessage = MessageConstants.LAWYER.LOGOUT_SUCCESS;
+          } else if (decoded.role === UserRole.USER) {
+            logoutMessage = MessageConstants.USER.LOGOUT_SUCCESS;
+          }
+        } catch (error) {
+        }
+      }
+
       res.status(HttpStatusCode.OK).json({
         success: true,
-        message: MessageConstants.LAWYER.LOGOUT_SUCCESS,
+        message: logoutMessage,
       });
     } catch (error: any) {
       next(error);
@@ -158,9 +176,11 @@ export class AuthController {
   }
 
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  
     try {
       const { token: idToken, role } = req.body;
       const result = await this._googleAuthUseCase.execute(idToken, role);
+
 
       if (result.needsRoleSelection) {
         res.status(HttpStatusCode.OK).json({
