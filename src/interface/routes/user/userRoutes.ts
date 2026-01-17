@@ -4,6 +4,8 @@ import { AuthController } from "../../controllers/user/AuthController";
 import { GetSingleLawyerController } from "../../controllers/user/GetSingleLawyerController";
 
 import { RegisterUserUsecase } from "../../../application/useCases/user/auth/RegisterUserUsecase";
+import { SpecializationController } from "../../controllers/lawyer/SpecializationController";
+import { GetActiveSpecializationsUseCase } from "../../../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
 import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
 import { GenerateOtpUseCase } from "../../../application/useCases/user/auth/GenerateOtpUseCase";
 import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
@@ -48,6 +50,7 @@ import { ReviewRepository } from "../../../infrastructure/repositories/ReviewRep
 import { ReviewController } from "../../controllers/user/ReviewController";
 
 import { RedisCacheService } from "../../../infrastructure/services/otp/RedisCacheService";
+import { SpecializationRepository } from "../../../infrastructure/repositories/admin/SpecializationRepository";
 import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";
 import { LoginResponseMapper } from "../../../application/mapper/user/LoignResponseMapper";
@@ -70,6 +73,7 @@ const availabilityRuleRepository = new AvailabilityRuleRepository()
 const bookingRepository = new BookingRepository();
 const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
+const specializationRepository = new SpecializationRepository();
 
 //  Initialize use case instances 
 const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase(userRepository, otpService, mailService, lawyerRepository);
@@ -104,6 +108,9 @@ const reviewRepository = new ReviewRepository();
 const getAllReviewsUseCase = new GetAllReviewsUseCase(reviewRepository)
 const addReviewUseCase = new AddReviewUseCase(reviewRepository);
 const reviewController = new ReviewController(addReviewUseCase, getAllReviewsUseCase);
+
+const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(specializationRepository);
+const specializationController = new SpecializationController(getActiveSpecializationsUseCase);
 
 const authController = new AuthController(
   registerUserUsecase,
@@ -173,4 +180,8 @@ router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req,
 // Review Routes
 router.post("/review", authMiddleware.execute, (req, res, next) => reviewController.addReview(req, res, next));
 router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReviews(req, res, next))
+router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReviews(req, res, next))
+
+router.get('/specializations', authMiddleware.execute, (req, res, next) => specializationController.getSpecializations(req, res, next));
+
 export default router;

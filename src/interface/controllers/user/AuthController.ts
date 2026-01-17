@@ -176,9 +176,11 @@ export class AuthController {
   }
 
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  
     try {
       const { token: idToken, role } = req.body;
       const result = await this._googleAuthUseCase.execute(idToken, role);
+
 
       if (result.needsRoleSelection) {
         res.status(HttpStatusCode.OK).json({

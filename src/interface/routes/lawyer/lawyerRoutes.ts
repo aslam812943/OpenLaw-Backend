@@ -63,6 +63,9 @@ import { RequestPayoutUseCase } from "../../../application/useCases/lawyer/Reque
 import { RejectPayoutUseCase } from "../../../application/useCases/Admin/RejectPayoutUseCase";
 import { ApprovePayoutUseCase } from "../../../application/useCases/Admin/ApprovePayoutUseCase";
 import { GetLawyerDashboardStatsUseCase } from "../../../application/useCases/lawyer/GetLawyerDashboardStatsUseCase";
+import { SpecializationController } from "../../controllers/lawyer/SpecializationController";
+import { GetActiveSpecializationsUseCase } from "../../../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
+import { SpecializationRepository } from "../../../infrastructure/repositories/admin/SpecializationRepository";
 
 const router = Router();
 
@@ -78,6 +81,7 @@ const subscriptionRepository = new SubscriptionRepository();
 const paymentRepository = new PaymentRepository();
 const withdrawalRepository = new WithdrawalRepository();
 const reviewRepository = new ReviewRepository();
+const specializationRepository = new SpecializationRepository();
 
 // ============================================================================
 //  Service Instances
@@ -124,6 +128,7 @@ const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawy
 const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository);
 const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepository, lawyerRepository);
 const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);
+const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(specializationRepository);
 
 // ============================================================================
 //  Controller Instances
@@ -146,6 +151,7 @@ const lawyerCasesController = new LawyerCasesController(getLawyerCasesUseCase);
 const lawyerEarningsController = new LawyerEarningsController(getLawyerEarningsUseCase);
 const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepository);
 const lawyerDashboardController = new LawyerDashboardController(getLawyerDashboardStatsUseCase);
+const specializationController = new SpecializationController(getActiveSpecializationsUseCase);
 
 // ============================================================================
 //  Middleware Instances
@@ -220,5 +226,8 @@ router.get('/payout/history', lawyerAuthMiddleware.execute, (req, res, next) => 
 
 // Dashboard Routes
 router.get('/dashboard/stats', lawyerAuthMiddleware.execute, (req, res, next) => lawyerDashboardController.getStats(req, res, next));
+
+// Specialization Routes
+router.get('/specializations', (req, res, next) => specializationController.getSpecializations(req, res, next));
 
 export default router;

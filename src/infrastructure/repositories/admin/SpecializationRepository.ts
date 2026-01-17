@@ -40,6 +40,11 @@ export class SpecializationRepository implements ISpecializationRepository {
         return docs.map(doc => this.mapToEntity(doc));
     }
 
+    async findActive(): Promise<Specialization[]> {
+        const docs = await SpecializationModel.find({ isActive: true }).sort({ name: 1 });
+        return docs.map(doc => this.mapToEntity(doc));
+    }
+
     async findByName(name: string): Promise<Specialization | null> {
         const doc = await SpecializationModel.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
         if (!doc) return null;
