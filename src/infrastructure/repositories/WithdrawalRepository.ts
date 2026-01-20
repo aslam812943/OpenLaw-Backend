@@ -14,7 +14,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
                 requestDate: withdrawal.requestDate
             });
             return this.mapToDomain(doc);
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while creating withdrawal request.");
         }
     }
@@ -23,21 +23,21 @@ export class WithdrawalRepository implements IWithdrawalRepository {
         try {
             const doc = await WithdrawalModel.findById(id);
             return doc ? this.mapToDomain(doc) : null;
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching withdrawal by ID.");
         }
     }
 
     async updateStatus(id: string, status: 'approved' | 'rejected', details?: { commissionAmount: number, finalAmount: number, processedDate: Date }): Promise<void> {
         try {
-            const updateData: any = { status };
+            const updateData: Partial<IWithdrawalDocument> = { status };
             if (details) {
                 updateData.commissionAmount = details.commissionAmount;
                 updateData.finalAmount = details.finalAmount;
                 updateData.processedDate = details.processedDate;
             }
             await WithdrawalModel.findByIdAndUpdate(id, updateData);
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while updating withdrawal status.");
         }
     }
@@ -46,7 +46,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
         try {
             const docs = await WithdrawalModel.find({ lawyerId: new mongoose.Types.ObjectId(lawyerId) }).sort({ createdAt: -1 });
             return docs.map(doc => this.mapToDomain(doc));
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching lawyer withdrawals.");
         }
     }
@@ -60,13 +60,14 @@ export class WithdrawalRepository implements IWithdrawalRepository {
             return docs.map(doc => {
                 const withdrawal = this.mapToDomain(doc);
                 if (doc.lawyerId && typeof doc.lawyerId === 'object') {
-                    withdrawal.lawyerName = (doc.lawyerId as any).name;
-                    (withdrawal as any).isBlock = (doc.lawyerId as any).isBlock;
-                    (withdrawal as any).email = (doc.lawyerId as any).email;
+                    const lawyer = doc.lawyerId as unknown as { name: string; isBlock: boolean; email: string };
+                    withdrawal.lawyerName = lawyer.name;
+                    (withdrawal as { isBlock?: boolean }).isBlock = lawyer.isBlock;
+                    (withdrawal as { email?: string }).email = lawyer.email;
                 }
                 return withdrawal;
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching pending withdrawals.");
         }
     }

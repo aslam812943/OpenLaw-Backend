@@ -91,11 +91,9 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
 
 
       return "OTP resent successfully.";
-    } catch (err: any) {
-      throw new BadRequestError(
-        err.message ||
-        "An unexpected error occurred while resending the OTP."
-      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred while resending the OTP.";
+      throw new BadRequestError(message);
     }
   }
 }

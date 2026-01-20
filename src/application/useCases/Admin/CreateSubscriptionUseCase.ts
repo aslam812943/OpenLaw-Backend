@@ -21,8 +21,8 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
         try {
             const subscription = new Subscription('', subscriptionData.planName, Number(subscriptionData.duration), subscriptionData.durationUnit, Number(subscriptionData.price), Number(subscriptionData.commissionPercent))
             await this._subscriptionRepository.create(subscription);
-        } catch (error: any) {
-            if (error.code === 11000) {
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
                 throw new ConflictError("Subscription plan with this name already exists.");
             }
             throw error;

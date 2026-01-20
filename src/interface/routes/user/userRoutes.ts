@@ -6,12 +6,13 @@ import { GetSingleLawyerController } from "../../controllers/user/GetSingleLawye
 import { RegisterUserUsecase } from "../../../application/useCases/user/auth/RegisterUserUsecase";
 import { SpecializationController } from "../../controllers/lawyer/SpecializationController";
 import { GetActiveSpecializationsUseCase } from "../../../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
-import { VerifyOtpUseCase } from "../../../application/useCases/user/auth/VerifyOtpUseCase";
+import { VerifyResetPasswordUseCase, IResetData } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
+import { IOtpService } from "../../../application/interface/services/IOtpService";
+import { VerifyOtpUseCase, IRegisterData } from "../../../application/useCases/user/auth/VerifyOtpUseCase"
 import { GenerateOtpUseCase } from "../../../application/useCases/user/auth/GenerateOtpUseCase";
 import { LoginUserUsecase } from "../../../application/useCases/user/auth/LoginUserUsecase";
 import { ResendOtpUseCase } from "../../../application/useCases/user/auth/ResendOtpUseCase";
 import { RequestForgetPasswordUseCase } from "../../../application/useCases/user/auth/RequestForgetPasswordUseCase";
-import { VerifyResetPasswordUseCase } from "../../../application/useCases/user/auth/VerifyResetPasswordUseCase";
 import { ChangePasswordUseCase } from "../../../application/useCases/user/ChengePasswordUseCase";
 import { ProfileEditUseCase } from "../../../application/useCases/user/ProfileEditUseCase";
 import { GoogleAuthUsecase } from "../../../application/useCases/user/GoogleAuthUseCase";
@@ -77,8 +78,8 @@ const specializationRepository = new SpecializationRepository();
 
 //  Initialize use case instances 
 const requestForgetPasswordUseCase = new RequestForgetPasswordUseCase(userRepository, otpService, mailService, lawyerRepository);
-const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase(userRepository, otpService, lawyerRepository);
-const verifyOtpUseCase = new VerifyOtpUseCase(userRepository, lawyerRepository, otpService);
+const verifyResetPasswordUseCase = new VerifyResetPasswordUseCase(userRepository, otpService as unknown as IOtpService<IResetData>, lawyerRepository);
+const verifyOtpUseCase = new VerifyOtpUseCase(userRepository, lawyerRepository, otpService as unknown as IOtpService<IRegisterData>);
 const registerUserUsecase = new RegisterUserUsecase(userRepository, lawyerRepository, generateOtpUseCase, mailService);
 const loginUserUsecase = new LoginUserUsecase(userRepository, loginResponseMapper, tokenService, lawyerRepository);
 const resendOtpUseCase = new ResendOtpUseCase(cacheService, otpService, mailService);

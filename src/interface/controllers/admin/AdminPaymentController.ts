@@ -34,7 +34,7 @@ export class AdminPaymentController {
                 message: MessageConstants.PAYMENT.FETCH_SUCCESS,
                 data: result
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

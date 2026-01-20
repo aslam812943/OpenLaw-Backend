@@ -1,6 +1,7 @@
 import { IUserRepository } from '../../../domain/repositories/user/IUserRepository';
 import { ILawyerRepository } from '../../../domain/repositories/lawyer/ILawyerRepository';
 import { User } from '../../../domain/entities/User';
+import { Lawyer } from '../../../domain/entities/Lawyer';
 import { IGoogleAuthService } from '../../interface/services/IGoogleAuthService';
 import { ITokenService } from '../../interface/services/TokenServiceInterface';
 import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
@@ -35,7 +36,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
     const { sub: googleId, email, given_name: firstName, family_name: lastName } = payload;
 
 
-    let user: any = await this._userRepository.findByGoogleId(googleId);
+    let user: User | Lawyer | null = await this._userRepository.findByGoogleId(googleId);
 
 
     if (!user) {
@@ -62,7 +63,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
         if (user.role === UserRole.LAWYER) {
           await this._lawyerRepository.updateGoogleId(user.id!, googleId);
         } else {
-          user = await this._userRepository.save(user);
+          user = await this._userRepository.save(user as User);
         }
       }
     } else {
@@ -111,7 +112,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
     };
 
     if (user.role === UserRole.LAWYER) {
-      response.needsVerificationSubmission = !user.hasSubmittedVerification;
+      response.needsVerificationSubmission = !(user as Lawyer).hasSubmittedVerification;
 
     }
 

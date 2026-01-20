@@ -16,7 +16,7 @@ export class WebhookController {
                 success: true,
                 received: true
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

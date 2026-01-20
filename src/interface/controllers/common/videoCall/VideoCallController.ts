@@ -21,7 +21,7 @@ export class VideoCallController {
 
             const result = await this._canJoinCallUseCase.execute(bookingId, userId, role);
             res.status(HttpStatusCode.OK).json(result);
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -32,7 +32,7 @@ export class VideoCallController {
 
             await this._joinCallUseCase.execute(bookingId);
             res.status(HttpStatusCode.OK).json({ success: true, message: "Joined call successfully" });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

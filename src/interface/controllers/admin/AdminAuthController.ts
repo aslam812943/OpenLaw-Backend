@@ -37,7 +37,7 @@ export class AdminAuthController {
         data: result,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -65,7 +65,7 @@ export class AdminAuthController {
         success: true,
         message: MessageConstants.ADMIN.LOGOUT_SUCCESS,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

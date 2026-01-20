@@ -31,7 +31,7 @@ export class LawyerProfileController {
         data,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -68,7 +68,7 @@ export class LawyerProfileController {
         message: MessageConstants.LAWYER.PROFILE_UPDATE_SUCCESS,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -91,7 +91,7 @@ export class LawyerProfileController {
         success: true,
         message: MessageConstants.LAWYER.PASSWORD_CHANGE_SUCCESS
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

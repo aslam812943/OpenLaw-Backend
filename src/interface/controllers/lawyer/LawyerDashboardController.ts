@@ -37,7 +37,7 @@ export class LawyerDashboardController {
                 message: MessageConstants.DASHBOARD.STATS_FETCH_SUCCESS,
                 data: stats
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

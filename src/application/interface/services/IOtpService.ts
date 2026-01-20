@@ -1,4 +1,4 @@
-export interface IOtpService {
-    generateOtp(email: string, data: any): Promise<string>;
-    verifyOtp(email: string, otp: string): Promise<any>;
+export interface IOtpService<T = unknown> {
+    generateOtp(email: string, data: T): Promise<string>;
+    verifyOtp(email: string, otp: string): Promise<T | null>;
 }

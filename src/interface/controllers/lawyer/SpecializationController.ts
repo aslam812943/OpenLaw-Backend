@@ -10,7 +10,7 @@ export class SpecializationController {
         try {
             const result = await this._getActiveSpecializationsUseCase.execute();
             res.status(HttpStatusCode.OK).json({ success: true, message: MessageConstants.SPECIALIZATION.FETCH_SUCCESS, data: result });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

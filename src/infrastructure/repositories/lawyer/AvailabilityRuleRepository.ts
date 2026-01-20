@@ -11,14 +11,70 @@ import { Slot } from "../../../domain/entities/Slot";
 import mongoose from "mongoose";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel } from "../../db/models/BookingModel";
+import { IGeneratedSlot } from "../../../application/interface/services/ISlotGeneratorService";
+interface IRuleDoc {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  startTime: string;
+  endTime: string;
+  startDate: string;
+  endDate: string;
+  availableDays: string[];
+  bufferTime: number;
+  slotDuration: number;
+  maxBookings: number;
+  sessionType: 'online' | 'offline';
+  exceptionDays: string[];
+  lawyerId: mongoose.Types.ObjectId;
+  consultationFee: number;
+}
+
+interface ISlotDoc {
+  _id: mongoose.Types.ObjectId;
+  ruleId: string;
+  userId: string;
+  startTime: string;
+  endTime: string;
+  date: string;
+  sessionType: 'online' | 'offline';
+  isBooked: boolean;
+  bookingId?: string | null;
+  maxBookings: number;
+  consultationFee: number;
+}
+
+interface IBookingDoc {
+  _id: mongoose.Types.ObjectId;
+  userId: { _id: mongoose.Types.ObjectId; name: string };
+  lawyerId: mongoose.Types.ObjectId;
+  date: string;
+  startTime: string;
+  endTime: string;
+  consultationFee: number;
+  status: string;
+  paymentStatus: string;
+  paymentId: string;
+  stripeSessionId: string;
+  description: string;
+  cancellationReason: string;
+  refundAmount: number;
+  refundStatus: string;
+  isCallActive: boolean;
+  lawyerJoined: boolean;
+  commissionPercent: number;
+  lawyerFeedback: string;
+  createdAt: Date;
+}
+
 export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
 
-  async createRule(rule: CreateAvailabilityRuleDTO): Promise<any> {
+  async createRule(rule: CreateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      return await AvailabilityRuleModel.create(rule);
-    } catch (error: any) {
-      if (error.code === 11000) {
+      const doc = await AvailabilityRuleModel.create(rule);
+      return this.mapToRule(doc as unknown as IRuleDoc);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
         throw new ConflictError("Availability rule already exists.");
       }
       throw new InternalServerError("Database error while creating availability rule.");
@@ -26,27 +82,28 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   }
 
 
-  async createSlots(ruleId: string, lawyerId: string, slots: any[]): Promise<any> {
+  async createSlots(ruleId: string, lawyerId: string, slots: IGeneratedSlot[]): Promise<Slot[]> {
     try {
       const formatted = slots.map(s => ({ ...s, ruleId, userId: lawyerId }));
 
-      return await SlotModel.insertMany(formatted);
-    } catch (error: any) {
+      const docs = await SlotModel.insertMany(formatted);
+      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotDoc));
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while saving slots.");
     }
   }
 
 
-  async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<any> {
+  async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      const rule = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
+      const doc = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
 
-      if (!rule) {
+      if (!doc) {
         throw new NotFoundError("Rule not found for update");
       }
 
-      return rule;
-    } catch (error: any) {
+      return this.mapToRule(doc as unknown as IRuleDoc);
+    } catch (error: unknown) {
       if (error instanceof NotFoundError) {
         throw error;
       }
@@ -58,7 +115,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async deleteSlotsByRuleId(ruleId: string): Promise<void> {
     try {
       await SlotModel.deleteMany({ ruleId });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while deleting slots by rule ID.");
     }
   }
@@ -66,30 +123,31 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async deleteUnbookedSlotsByRuleId(ruleId: string): Promise<void> {
     try {
       await SlotModel.deleteMany({ ruleId, isBooked: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while deleting unbooked slots.");
     }
   }
 
-  async getBookedSlotsByRuleId(ruleId: string): Promise<any[]> {
+  async getBookedSlotsByRuleId(ruleId: string): Promise<Slot[]> {
     try {
-      return await SlotModel.find({ ruleId, isBooked: true }).lean();
-    } catch (error: any) {
+      const docs = await SlotModel.find({ ruleId, isBooked: true }).lean();
+      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotDoc));
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching booked slots.");
     }
   }
 
 
-  async getRuleById(ruleId: string): Promise<any> {
+  async getRuleById(ruleId: string): Promise<AvailabilityRule> {
     try {
-      const rule = await AvailabilityRuleModel.findById(ruleId);
+      const doc = await AvailabilityRuleModel.findById(ruleId);
 
-      if (!rule) {
+      if (!doc) {
         throw new NotFoundError("Rule not found");
       }
 
-      return rule;
-    } catch (error: any) {
+      return this.mapToRule(doc as unknown as IRuleDoc);
+    } catch (error: unknown) {
       if (error instanceof NotFoundError) {
         throw error;
       }
@@ -104,25 +162,8 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         lawyerId: new mongoose.Types.ObjectId(id)
       });
 
-      return docs.map((doc: any) =>
-        new AvailabilityRule(
-          doc._id.toString(),
-          doc.title,
-          doc.startTime,
-          doc.endTime,
-          doc.startDate,
-          doc.endDate,
-          doc.availableDays,
-          doc.bufferTime,
-          doc.slotDuration,
-          doc.maxBookings,
-          doc.sessionType,
-          doc.exceptionDays,
-          doc.lawyerId.toString(),
-          doc.consultationFee
-        )
-      );
-    } catch (error: any) {
+      return docs.map((doc: mongoose.Document) => this.mapToRule(doc as unknown as IRuleDoc));
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching availability rules.");
     }
   }
@@ -135,8 +176,11 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       if (!deleted) {
         throw new Error("Rule not found to delete");
       }
-    } catch (err: any) {
-      throw new Error("Failed to delete rule: " + err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        throw new Error("Failed to delete rule: " + err.message);
+      }
+      throw new Error("Failed to delete rule: Unknown error");
     }
   }
 
@@ -146,30 +190,14 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       const response = await SlotModel.find({ userId: lawyerId });
 
 
-      const slots = response.map((slot: any) =>
-        new Slot(
-          slot._id.toString(),
-          slot.ruleId,
-          slot.userId,
-          slot.startTime,
-          slot.endTime,
-          slot.date,
-          slot.sessionType,
-          slot.isBooked,
-          slot.bookingId ?? null,
-          slot.maxBookings,
-          slot.consultationFee
-        )
-      );
+      const slots = response.map((slot: mongoose.Document) => this.mapToSlot(slot as unknown as ISlotDoc));
 
       return slots;
-    } catch (error) {
+    } catch (error: unknown) {
 
       return [];
     }
   }
-
-
 
 
   async bookSlot(id: string): Promise<void> {
@@ -201,34 +229,35 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         .populate("userId", "name")
         .lean();
 
-      return docs.map((obj: any) => {
+      return (docs as unknown[]).map((obj: unknown) => {
+        const o = obj as IBookingDoc;
         return new Booking(
-          obj._id.toString(),
-          obj.userId._id.toString(),
-          obj.lawyerId.toString(),
-          obj.date,
-          obj.startTime,
-          obj.endTime,
-          obj.consultationFee,
-          obj.status,
-          obj.paymentStatus,
-          obj.paymentId,
-          obj.stripeSessionId,
-          obj.description,
-          obj.userId.name,
-          obj.cancellationReason,
-          "", 
-          obj.refundAmount,
-          obj.refundStatus,
-          obj.isCallActive,
-          obj.lawyerJoined,
-          obj.commissionPercent,
-          obj.lawyerFeedback,
-          obj.createdAt
+          o._id.toString(),
+          o.userId._id.toString(),
+          o.lawyerId.toString(),
+          o.date,
+          o.startTime,
+          o.endTime,
+          o.consultationFee,
+          o.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected',
+          o.paymentStatus as 'pending' | 'paid' | 'failed',
+          o.paymentId,
+          o.stripeSessionId,
+          o.description,
+          o.userId.name,
+          o.cancellationReason,
+          "",
+          o.refundAmount,
+          o.refundStatus as 'none' | 'full' | 'partial',
+          o.isCallActive,
+          o.lawyerJoined,
+          o.commissionPercent,
+          o.lawyerFeedback,
+          o.createdAt
         );
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
 
       return [];
     }
@@ -244,9 +273,46 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           await this.cancelSlot(booking.startTime, booking.lawyerId.toString(), booking.date);
         }
       }
-    } catch (error: any) {
-      throw new Error("Failed to update appointment status: " + error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error("Failed to update appointment status: " + error.message);
+      }
+      throw new Error("Failed to update appointment status: Unknown error");
     }
   }
 
+  private mapToRule(d: IRuleDoc): AvailabilityRule {
+    return new AvailabilityRule(
+      d._id.toString(),
+      d.title,
+      d.startTime,
+      d.endTime,
+      d.startDate,
+      d.endDate,
+      d.availableDays,
+      d.bufferTime,
+      d.slotDuration,
+      d.maxBookings,
+      d.sessionType,
+      d.exceptionDays,
+      d.lawyerId.toString(),
+      d.consultationFee
+    );
+  }
+
+  private mapToSlot(d: ISlotDoc): Slot {
+    return new Slot(
+      d._id.toString(),
+      d.ruleId,
+      d.userId,
+      d.startTime,
+      d.endTime,
+      d.date,
+      d.sessionType,
+      d.isBooked,
+      d.consultationFee,
+      d.bookingId ?? null,
+      d.maxBookings
+    );
+  }
 }

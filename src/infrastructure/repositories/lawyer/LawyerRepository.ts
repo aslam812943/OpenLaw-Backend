@@ -1,4 +1,4 @@
-
+import mongoose from "mongoose";
 import LawyerModel, { ILawyerDocument } from "../../db/models/LawyerModel";
 import LawyerSubscriptionModel from "../../db/models/LawyerSubscriptionModel";
 
@@ -11,6 +11,8 @@ import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
+
+
 
 
 
@@ -29,8 +31,9 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       const lawyerDoc = await LawyerModel.create(lawyer);
       return this.mapToDomain(lawyerDoc);
-    } catch (error: any) {
-      if (error.code === 11000) {
+    } catch (error: unknown) {
+      const err = error as { code?: number };
+      if (err.code === 11000) {
         throw new ConflictError("A lawyer with this email already exists.");
       }
       throw new InternalServerError("Database error while creating lawyer.");
@@ -46,7 +49,7 @@ export class LawyerRepository implements ILawyerRepository {
 
       if (!lawyerDoc) return null;
       return this.mapToDomain(lawyerDoc);
-    } catch (error: any) {
+    } catch (error: unknown) {
 
       throw new InternalServerError("Database error while fetching lawyer by email.");
     }
@@ -77,7 +80,7 @@ export class LawyerRepository implements ILawyerRepository {
       if (!lawyerDoc) throw new Error("Lawyer not found for verification submission.");
 
       return this.mapToDomain(lawyerDoc);
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while updating lawyer verification details.");
     }
   }
@@ -100,7 +103,7 @@ export class LawyerRepository implements ILawyerRepository {
       const sort = query?.sort;
       const filter = query?.filter?.trim();
 
-      const andConditions: any[] = [];
+      const andConditions: mongoose.FilterQuery<ILawyerDocument>[] = [];
 
 
       if (search) {
@@ -152,7 +155,7 @@ export class LawyerRepository implements ILawyerRepository {
       const match = andConditions.length ? { $and: andConditions } : {};
 
 
-      const sortOption: any = {};
+      const sortOption: { [key: string]: mongoose.SortOrder } = {};
       switch (sort) {
         case "experience-asc":
           sortOption.yearsOfPractice = 1;
@@ -177,7 +180,7 @@ export class LawyerRepository implements ILawyerRepository {
         lawyers: lawyerDocs.map((doc) => this.mapToDomain(doc)),
         total,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching lawyers.");
     }
   }
@@ -189,7 +192,7 @@ export class LawyerRepository implements ILawyerRepository {
   async blockLawyer(id: string): Promise<void> {
     try {
       await LawyerModel.findByIdAndUpdate(id, { isBlock: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while blocking lawyer.");
     }
   }
@@ -200,7 +203,7 @@ export class LawyerRepository implements ILawyerRepository {
   async unBlockLawyer(id: string): Promise<void> {
     try {
       await LawyerModel.findByIdAndUpdate(id, { isBlock: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while unblocking lawyer.");
     }
   }
@@ -214,7 +217,7 @@ export class LawyerRepository implements ILawyerRepository {
         isAdminVerified: true,
         verificationStatus: "Approved"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while approving lawyer.");
     }
   }
@@ -228,7 +231,7 @@ export class LawyerRepository implements ILawyerRepository {
         isAdminVerified: false,
         verificationStatus: "Rejected"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while rejecting lawyer.");
     }
   }
@@ -242,8 +245,9 @@ export class LawyerRepository implements ILawyerRepository {
       const doc = await LawyerModel.findById(id);
       if (!doc) throw new Error(`Lawyer with ID ${id} not found`);
       return this.mapToDomain(doc);
-    } catch (error: any) {
-      throw new InternalServerError(error.message || "Database error while fetching lawyer profile.");
+    } catch (error: unknown) {
+      const err = error as Error;
+      throw new InternalServerError(err.message || "Database error while fetching lawyer profile.");
     }
   }
 
@@ -274,8 +278,9 @@ export class LawyerRepository implements ILawyerRepository {
       data.isVerified = true;
 
       await data.save();
-    } catch (error: any) {
-      throw new InternalServerError(error.message || "Database error while updating lawyer profile.");
+    } catch (error: unknown) {
+      const err = error as Error;
+      throw new InternalServerError(err.message || "Database error while updating lawyer profile.");
     }
   }
 
@@ -297,7 +302,7 @@ export class LawyerRepository implements ILawyerRepository {
   async updateGoogleId(id: string, googleId: string): Promise<void> {
     try {
       await LawyerModel.findByIdAndUpdate(id, { googleId });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while updating lawyer googleId.");
     }
   }
@@ -334,7 +339,7 @@ export class LawyerRepository implements ILawyerRepository {
         subscriptionStartDate: startDate,
         subscriptionExpiryDate: expiryDate
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while updating lawyer subscription status.");
     }
   }
@@ -378,7 +383,7 @@ export class LawyerRepository implements ILawyerRepository {
       await LawyerModel.findByIdAndUpdate(lawyerId, {
         $inc: { walletBalance: amount }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while updating lawyer wallet balance.");
     }
   }

@@ -5,17 +5,17 @@ import { MessageConstants } from "../../../infrastructure/constants/MessageConst
 export class LawyerLogoutController {
     async handle(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            
+
             res.clearCookie('accessToken', {
                 httpOnly: true,
-                secure: process.env.COOKIE_SECURE === 'true', 
+                secure: process.env.COOKIE_SECURE === 'true',
                 sameSite: 'lax',
                 path: '/'
             });
 
             res.clearCookie('refreshToken', {
                 httpOnly: true,
-                secure: process.env.COOKIE_SECURE === 'true', 
+                secure: process.env.COOKIE_SECURE === 'true',
                 sameSite: 'lax',
                 path: '/'
             });
@@ -25,7 +25,7 @@ export class LawyerLogoutController {
                 message: MessageConstants.LAWYER.LOGOUT_SUCCESS,
             });
 
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

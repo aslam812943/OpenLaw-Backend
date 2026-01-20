@@ -74,13 +74,12 @@ export class RegisterUserUsecase implements IRegisterUserUseCase {
       );
 
       return { message: "OTP sent successfully to the registered email." };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new BadRequestError(
-        error.message || "Registration process failed. Please try again later."
-      );
+      const message = error instanceof Error ? error.message : "Registration process failed. Please try again later.";
+      throw new BadRequestError(message);
     }
   }
 }

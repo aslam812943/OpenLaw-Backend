@@ -83,11 +83,9 @@ export class RequestForgetPasswordUseCase implements IRequestForgetPasswordUseCa
       );
 
       return "Password reset OTP sent successfully.";
-    } catch (error: any) {
-      throw new BadRequestError(
-        error.message ||
-        "An unexpected error occurred while requesting password reset."
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An unexpected error occurred while requesting password reset.";
+      throw new BadRequestError(message);
     }
   }
 }

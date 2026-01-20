@@ -18,7 +18,7 @@ export class SubscriptionController {
                 message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
                 data: plans
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -39,7 +39,7 @@ export class SubscriptionController {
                 message: MessageConstants.SUBSCRIPTION.CURRENT_FETCH_SUCCESS,
                 data: subscription
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

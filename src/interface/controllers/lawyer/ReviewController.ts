@@ -17,7 +17,7 @@ export class ReviewController {
                 message: MessageConstants.LAWYER.REVIEWS_FETCH_SUCCESS,
                 data: reviews
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

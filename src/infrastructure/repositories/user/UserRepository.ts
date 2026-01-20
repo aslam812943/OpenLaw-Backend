@@ -13,6 +13,8 @@ import { BadRequestError } from "../../errors/BadRequestError";
 
 //  UserRepository
 
+import mongoose from "mongoose";
+
 export class UserRepository extends BaseRepository<IUserDocument> implements IUserRepository {
   constructor() {
     super(UserModel);
@@ -25,7 +27,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async verifyUser(userId: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(userId, { isVerified: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while verifying user.");
     }
   }
@@ -51,7 +53,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
         hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false,
         isPassword: userDoc.password ? true : false
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching user by email.");
     }
   }
@@ -76,8 +78,9 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
         isBlock: userDoc.isBlock,
         hasSubmittedVerification: userDoc.hasSubmittedVerification ?? false,
       };
-    } catch (error: any) {
-      if (error.code === 11000) {
+    } catch (error: unknown) {
+      const err = error as { code?: number };
+      if (err.code === 11000) {
         throw new ConflictError("A user with this email already exists.");
       }
       throw new InternalServerError("Database error while creating a new user.");
@@ -90,7 +93,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
       await this.update(userId, { password: hashedPassword });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while updating user password.");
     }
   }
@@ -101,7 +104,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
       await this.update(userId, { hasSubmittedVerification: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while marking verification submission.");
     }
   }
@@ -123,7 +126,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       const filter = query.filter?.trim();
       const sort = query.sort;
 
-      const andConditions: any[] = [{ role: "user" }];
+      const andConditions: mongoose.FilterQuery<IUserDocument>[] = [{ role: "user" }];
 
       if (search) {
         andConditions.push({
@@ -146,7 +149,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       const match = { $and: andConditions };
 
       // Sort
-      const sortOption: any = {};
+      const sortOption: { [key: string]: mongoose.SortOrder } = {};
       switch (sort) {
         case "name-asc":
           sortOption.name = 1;
@@ -175,7 +178,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
 
       const users = docs.map((doc) => this.mapToDomain(doc));
       return { users, total };
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching paginated users.");
     }
   }
@@ -186,7 +189,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async blockUser(id: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while blocking user.");
     }
   }
@@ -197,7 +200,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async unBlockUser(id: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new InternalServerError("Database error while unblocking user.");
     }
   }
@@ -283,18 +286,18 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   async save(user: User): Promise<User> {
     if (!user.id) throw new BadRequestError("User ID is required for update");
 
-    const updateData: any = { ...user };
-    delete updateData.id;
-
-    if (user.address) {
-      updateData.address = user.address;
-      delete updateData.address;
-
-    }
-
-    if (user.profileImage) {
-      updateData.profileImage = user.profileImage
-    }
+    const updateData: mongoose.UpdateQuery<IUserDocument> = {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      isVerified: user.isVerified,
+      role: user.role,
+      isBlock: user.isBlock,
+      hasSubmittedVerification: user.hasSubmittedVerification,
+      profileImage: user.profileImage,
+      address: user.address,
+      googleId: user.googleId
+    };
 
     const updatedDoc = await UserModel.findByIdAndUpdate(user.id, updateData, { new: true });
     if (!updatedDoc) throw new NotFoundError("User not found for update");

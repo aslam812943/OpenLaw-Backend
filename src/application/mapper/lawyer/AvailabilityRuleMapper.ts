@@ -59,7 +59,7 @@ export class AvailabilityRuleMapper {
         s.endTime,
         s.sessionType,
         s.isBooked,
-        String(s.consultationFee)
+        s.consultationFee
       )
     })
 

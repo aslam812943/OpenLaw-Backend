@@ -8,7 +8,7 @@ export class StripeService implements IPaymentService {
 
     constructor() {
         this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-            apiVersion: '2025-11-17.clover' as any,
+            apiVersion: '2024-12-18.acacia' as Stripe.StripeConfig['apiVersion'],
         });
     }
 
@@ -83,9 +83,9 @@ export class StripeService implements IPaymentService {
             );
 
             return event;
-        } catch (error: any) {
-
-            throw new Error(`Webhook signature verification failed: ${error.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Webhook signature verification failed';
+            throw new Error(`Webhook signature verification failed: ${message}`);
         }
     }
 
@@ -130,9 +130,9 @@ export class StripeService implements IPaymentService {
                 throw new Error("Failed to create Stripe session URL");
             }
             return session.url;
-        } catch (error: any) {
-
-            throw new InternalServerError(error.message || "Stripe subscription checkout failed");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Stripe subscription checkout failed";
+            throw new InternalServerError(message);
         }
     }
 
@@ -142,9 +142,9 @@ export class StripeService implements IPaymentService {
                 payment_intent: paymentIntentId,
                 ...(amount && { amount: Math.round(amount * 100) })
             });
-        } catch (error: any) {
-
-            throw new InternalServerError(error.message || "Stripe refund failed");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Stripe refund failed";
+            throw new InternalServerError(message);
         }
     }
 }

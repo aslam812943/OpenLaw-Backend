@@ -17,7 +17,7 @@ export class LawyerCasesController {
                 message: MessageConstants.LAWYER.CASES_FETCH_SUCCESS,
                 data: cases
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

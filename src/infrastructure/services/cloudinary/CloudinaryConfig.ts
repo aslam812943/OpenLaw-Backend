@@ -20,7 +20,7 @@ const storage = new CloudinaryStorage({
     resource_type: "auto",
     public_id: (_req: Request, file: Express.Multer.File) =>
       Date.now() + "-" + file.originalname,
-  } as any,
+  } as unknown as Record<string, unknown>,
 });
 
 const upload = multer({ storage });

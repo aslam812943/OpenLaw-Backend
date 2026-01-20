@@ -1,3 +1,27 @@
+export interface ILawyerData {
+  id: string | number;
+  barNumber: string;
+  barAdmissionDate: string | Date;
+  yearsOfPractice: number | string;
+  practiceAreas: string[];
+  languages: string[];
+  addresses?: {
+    address?: string;
+    city?: string;
+    state?: string;
+  };
+  name?: string;
+  email?: string;
+  phone?: string | number;
+  user?: {
+    name?: string;
+    email?: string;
+    phone?: string | number;
+  };
+  profileImage?: string;
+  bio?: string;
+  consultationFee: number;
+}
 
 export class ResponseGetSingleLawyerDTO {
   id: string;
@@ -14,9 +38,9 @@ export class ResponseGetSingleLawyerDTO {
   phone: string;
   profileImage: string;
   bio: string;
-  consultationFee:number
+  consultationFee: number
 
-  constructor(data: any) {
+  constructor(data: ILawyerData) {
     this.id = String(data.id);
     this.barNumber = String(data.barNumber);
     this.barAdmissionDate = String(data.barAdmissionDate);

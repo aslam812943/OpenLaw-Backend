@@ -18,7 +18,7 @@ export class ApproveLawyerController {
         message: MessageConstants.LAWYER.APPROVE_SUCCESS,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

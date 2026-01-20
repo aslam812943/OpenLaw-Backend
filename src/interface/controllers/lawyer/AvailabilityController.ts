@@ -58,7 +58,7 @@ export class AvailabilityController {
         message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }
@@ -96,7 +96,7 @@ export class AvailabilityController {
         message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
         data: result,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }
@@ -119,7 +119,7 @@ export class AvailabilityController {
         message: MessageConstants.LAWYER.AVAILABILITY_FETCH_SUCCESS,
         data: rules,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }
@@ -141,7 +141,7 @@ export class AvailabilityController {
         success: true,
         message: MessageConstants.COMMON.SUCCESS,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }

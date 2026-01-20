@@ -1,17 +1,18 @@
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
+import mongoose, { Types } from "mongoose";
 import { Subscription } from "../../../domain/entities/Subscription";
 import subscriptionModel from '../../../infrastructure/db/models/admin/subscriptionModel'
 
 
 
 export class SubscriptionRepository implements ISubscriptionRepository {
-    async create(data: any): Promise<void> {
+    async create(data: Subscription): Promise<void> {
         await subscriptionModel.create(data)
     }
 
     async findAll(): Promise<Subscription[]> {
         const all = await subscriptionModel.find();
-        return all.map((d: any) => this._mapToSubscription(d));
+        return all.map((d: unknown) => this._mapToSubscription(d));
     }
 
     async findAllSubscription(page: number, limit: number): Promise<{ plans: Subscription[], total: number }> {
@@ -22,14 +23,14 @@ export class SubscriptionRepository implements ISubscriptionRepository {
         ]);
 
         return {
-            plans: plans.map((d: any) => this._mapToSubscription(d)),
+            plans: (plans as unknown[]).map((d: unknown) => this._mapToSubscription(d)),
             total
         };
     }
 
     async findActive(): Promise<Subscription[]> {
         const active = await subscriptionModel.find({ isActive: true });
-        return active.map((d: any) => this._mapToSubscription(d));
+        return active.map((d: unknown) => this._mapToSubscription(d));
     }
 
     async toggleStatus(id: string, status: boolean): Promise<void> {
@@ -41,26 +42,36 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     }
 
     async findById(id: string): Promise<Subscription | null> {
-        const d: any = await subscriptionModel.findById(id);
+        const d = await subscriptionModel.findById(id).lean();
         if (!d) return null;
         return this._mapToSubscription(d);
     }
 
     async findByName(name: string): Promise<Subscription | null> {
-        const d = await subscriptionModel.findOne({ planName: name });
+        const d = await subscriptionModel.findOne({ planName: name }).lean();
         if (!d) return null;
         return this._mapToSubscription(d);
     }
 
-    private _mapToSubscription(d: any): Subscription {
+    private _mapToSubscription(d: unknown): Subscription {
+        const doc = d as {
+            _id?: Types.ObjectId;
+            id?: string;
+            planName: string;
+            duration: number;
+            durationUnit: 'month' | 'year';
+            price: number;
+            commissionPercent?: number;
+            isActive: boolean;
+        };
         return {
-            id: d._id ? d._id.toString() : d.id,
-            planName: d.planName,
-            duration: d.duration,
-            durationUnit: d.durationUnit,
-            price: d.price,
-            commissionPercent: d.commissionPercent || 0,
-            isActive: d.isActive
+            id: doc._id ? doc._id.toString() : (doc.id || ''),
+            planName: doc.planName,
+            duration: doc.duration,
+            durationUnit: doc.durationUnit,
+            price: doc.price,
+            commissionPercent: doc.commissionPercent || 0,
+            isActive: doc.isActive
         };
     }
 }

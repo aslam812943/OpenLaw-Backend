@@ -50,10 +50,10 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         }
 
 
-        
-        let commissionPercent = 0; 
-        if (lawyer && (lawyer as any).subscriptionId) {
-            const subscription = await this._subscriptionRepository.findById((lawyer as any).subscriptionId.toString());
+
+        let commissionPercent = 0;
+        if (lawyer && lawyer.subscriptionId) {
+            const subscription = await this._subscriptionRepository.findById(lawyer.subscriptionId.toString());
             if (subscription) {
                 commissionPercent = subscription.commissionPercent;
             }

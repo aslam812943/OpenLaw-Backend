@@ -46,7 +46,7 @@ export class BookingController {
                 message: MessageConstants.BOOKING.CONFIRM_SUCCESS,
                 data: booking
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -79,7 +79,7 @@ export class BookingController {
                     }
                 }
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

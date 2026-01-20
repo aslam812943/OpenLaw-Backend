@@ -19,7 +19,7 @@ export const commonAuthMiddleware = async (req: Request, res: Response, next: Ne
         req.user = decoded;
 
         next();
-    } catch (error) {
+    } catch (error: unknown) {
         res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid or expired token." });
     }
 };

@@ -27,10 +27,10 @@ export class ReviewController {
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
-        message: MessageConstants.LAWYER.REVIEWS_FETCH_SUCCESS, 
+        message: MessageConstants.LAWYER.REVIEWS_FETCH_SUCCESS,
         data: review
       });
-    } catch (error) {
+    } catch (error: unknown) {
       next(error);
     }
   }

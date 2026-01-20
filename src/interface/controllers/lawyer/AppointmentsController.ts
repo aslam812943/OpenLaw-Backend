@@ -20,7 +20,7 @@ export class AppointmentsController {
                 message: MessageConstants.LAWYER.APPOINTMENTS_FETCH_SUCCESS,
                 data
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -36,7 +36,7 @@ export class AppointmentsController {
                 success: true,
                 message: MessageConstants.COMMON.SUCCESS
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

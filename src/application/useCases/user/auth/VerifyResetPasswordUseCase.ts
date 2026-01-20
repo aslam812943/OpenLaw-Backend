@@ -10,10 +10,15 @@ import { IVerifyResetPasswordUseCase } from "../../../interface/use-cases/user/I
 
 //  VerifyResetPasswordUseCase
 
+export interface IResetData {
+    email: string;
+    userId: string;
+}
+
 export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
     constructor(
         private _userRepository: IUserRepository,
-        private _otpService: IOtpService,
+        private _otpService: IOtpService<IResetData>,
         private _lawyerRepository: ILawyerRepository
     ) { }
 
@@ -48,10 +53,9 @@ export class VerifyResetPasswordUseCase implements IVerifyResetPasswordUseCase {
 
 
             return "Password reset successfully.";
-        } catch (error: any) {
-            throw new BadRequestError(
-                error.message || "Failed to reset password. Please try again later."
-            );
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to reset password. Please try again later.";
+            throw new BadRequestError(message);
         }
     }
 }

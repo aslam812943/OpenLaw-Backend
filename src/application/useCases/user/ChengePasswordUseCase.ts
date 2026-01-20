@@ -1,9 +1,7 @@
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import { IChangePasswordUseCase } from "../../interface/use-cases/user/IGetProfileUseCase";
 import { ChangePasswordDTO } from "../../dtos/user/ChangePasswordDTO";
-import { AppError } from "../../../infrastructure/errors/AppError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
-import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
 
 
@@ -13,7 +11,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 export class ChangePasswordUseCase implements IChangePasswordUseCase {
   constructor(private readonly _userRepository: IUserRepository) { }
 
-  async execute(dto: ChangePasswordDTO): Promise<{ message: string }> {
+  async execute(dto: ChangePasswordDTO): Promise<void> {
 
 
     const user = await this._userRepository.findById(dto.id);
@@ -28,6 +26,5 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
       dto.newPassword
     );
 
-    return { message: "Password changed successfully." };
   }
 }

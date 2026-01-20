@@ -29,7 +29,7 @@ export class GetProfileController {
         message: MessageConstants.COMMON.SUCCESS,
         data
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -51,7 +51,7 @@ export class GetProfileController {
         success: true,
         message: MessageConstants.USER.PASSWORD_CHANGE_SUCCESS
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -66,9 +66,9 @@ export class GetProfileController {
         });
       }
 
-      let profileImage = undefined;
+      let profileImage: string = "";
       if (req.file) {
-        profileImage = (req.file as any).path;
+        profileImage = (req.file as Express.Multer.File).path;
       }
       const dto = new ProfileUpdateDTO(
         userId,
@@ -87,7 +87,7 @@ export class GetProfileController {
         success: true,
         message: MessageConstants.USER.PROFILE_UPDATE_SUCCESS
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }

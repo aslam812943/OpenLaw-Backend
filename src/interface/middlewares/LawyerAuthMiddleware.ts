@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusCode";
-import { CheckLawyerStatusUseCase } from "../../application/useCases/lawyer/CheckLawyerStatusUseCase";
+import { ICheckLawyerStatusUseCase } from "../../application/interface/use-cases/lawyer/ICheckLawyerStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
@@ -9,7 +9,7 @@ import { JwtPayload } from "../../types/express/index";
 
 export class LawyerAuthMiddleware {
     constructor(
-        private readonly _checkLawyerStatusUseCase: CheckLawyerStatusUseCase,
+        private readonly _checkLawyerStatusUseCase: ICheckLawyerStatusUseCase,
         private readonly _tokenService: ITokenService
     ) { }
 
@@ -31,9 +31,9 @@ export class LawyerAuthMiddleware {
             try {
                 decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
-            } catch (error: any) {
+            } catch (error: unknown) {
 
-                if (error.name === "TokenExpiredError") {
+                if (error instanceof Error && error.name === "TokenExpiredError") {
 
                     const refreshToken = req.cookies?.refreshToken;
 
@@ -44,14 +44,14 @@ export class LawyerAuthMiddleware {
 
                     try {
 
-                        const refreshDecoded = this._tokenService.verifyToken(refreshToken, true) as JwtPayload;
+                        const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
 
                         if (refreshDecoded.role !== UserRole.LAWYER) {
                             res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role." });
                             return;
                         }
 
-                        const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
+                        const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
                         res.cookie("accessToken", newAccessToken, {
                             httpOnly: true,

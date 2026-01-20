@@ -1,9 +1,10 @@
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { ICheckLawyerStatusUseCase } from "../../interface/use-cases/lawyer/ICheckLawyerStatusUseCase";
 
-export class CheckLawyerStatusUseCase {
-    constructor(private _lawyerRepository : ILawyerRepository) { }
+export class CheckLawyerStatusUseCase implements ICheckLawyerStatusUseCase {
+    constructor(private _lawyerRepository: ILawyerRepository) { }
 
     async check(lawyerId: string): Promise<{ isActive: boolean }> {
 
@@ -11,7 +12,7 @@ export class CheckLawyerStatusUseCase {
             throw new BadRequestError("Lawyer ID is required.");
         }
 
-      
+
         const lawyer = await this._lawyerRepository.findById(lawyerId);
 
         if (!lawyer) {
