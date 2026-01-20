@@ -8,13 +8,13 @@ export class GetAvailabilityRuleDTO {
     public startDate: string,
     public endDate: string,
     public availableDays: string[],
-    public bufferTime: string,
-    public slotDuration: string,
-    public maxBookings: string,
+    public bufferTime: number,
+    public slotDuration: number,
+    public maxBookings: number,
     public sessionType: string,
     public exceptionDays: string[],
     public lawyerId: string,
-    public  consultationFee:string
+    public consultationFee: number
 
-  ){}
+  ) { }
 }

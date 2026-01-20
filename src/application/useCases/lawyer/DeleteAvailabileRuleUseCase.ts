@@ -18,10 +18,11 @@ export class DeleteAvailableRuleUseCase implements IDeleteAvailableRuleUseCase {
 
             return;
 
-        } catch (err: any) {
-            throw new BadRequestError(
-                err.message || "Failed to delete availability rule."
-            );
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                throw new BadRequestError(err.message);
+            }
+            throw new BadRequestError("Failed to delete availability rule.");
         }
     }
 }

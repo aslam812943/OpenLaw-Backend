@@ -17,7 +17,7 @@ export class RejectLawyerController {
         success: true,
         message: MessageConstants.LAWYER.REJECT_SUCCESS,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }

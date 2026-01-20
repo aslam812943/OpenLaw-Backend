@@ -21,7 +21,7 @@ export class SpecializationController {
             const createDto = new CreateSpecializationDTO(name, description);
             const result = await this._addSpecializationUseCase.execute(createDto);
             res.status(HttpStatusCode.CREATED).json({ success: true, message: MessageConstants.SPECIALIZATION.CREATE_SUCCESS, data: result });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -33,7 +33,7 @@ export class SpecializationController {
             const updateDto = new UpdateSpecializationDTO(name, description, isActive);
             const result = await this._editSpecializationUseCase.execute(id, updateDto);
             res.status(HttpStatusCode.OK).json({ success: true, message: MessageConstants.SPECIALIZATION.UPDATE_SUCCESS, data: result });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -43,7 +43,7 @@ export class SpecializationController {
             const { id } = req.params;
             await this._deleteSpecializationUseCase.execute(id);
             res.status(HttpStatusCode.OK).json({ success: true, message: MessageConstants.SPECIALIZATION.DELETE_SUCCESS });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -52,7 +52,7 @@ export class SpecializationController {
         try {
             const result = await this._getSpecializationsUseCase.execute();
             res.status(HttpStatusCode.OK).json({ success: true, message: MessageConstants.SPECIALIZATION.FETCH_SUCCESS, data: result });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

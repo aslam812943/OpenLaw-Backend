@@ -26,7 +26,7 @@ export class MessageRepository implements IMessageRepository {
 
     return docs.map(doc =>
       new Message(
-        doc.id.toString(),
+        String(doc._id),
         doc.roomId.toString(),
         doc.senderId.toString(),
         doc.senderRole,

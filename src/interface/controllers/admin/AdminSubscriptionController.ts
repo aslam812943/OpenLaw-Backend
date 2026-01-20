@@ -25,7 +25,7 @@ export class AdminSubscriptionController {
                 success: true,
                 message: MessageConstants.SUBSCRIPTION.CREATE_SUCCESS
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -47,7 +47,7 @@ export class AdminSubscriptionController {
                 success: true,
                 message: MessageConstants.SUBSCRIPTION.UPDATE_SUCCESS
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -62,7 +62,7 @@ export class AdminSubscriptionController {
                 message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
                 data: result
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -76,7 +76,7 @@ export class AdminSubscriptionController {
                 success: true,
                 message: MessageConstants.SUBSCRIPTION.STATUS_UPDATE_SUCCESS
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

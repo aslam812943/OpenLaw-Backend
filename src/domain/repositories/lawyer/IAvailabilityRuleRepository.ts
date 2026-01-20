@@ -3,14 +3,16 @@ import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/Upda
 import { AvailabilityRule } from "../../entities/AvailabilityRule";
 import { Slot } from "../../entities/Slot";
 import { Booking } from "../../entities/Booking";
+import { IGeneratedSlot } from "../../../application/interface/services/ISlotGeneratorService";
+
 export interface IAvailabilityRuleRepository {
-    createRule(rule: CreateAvailabilityRuleDTO): Promise<any>;
-    updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<any>;
-    createSlots(ruleId: string, lawyerId: string, slots: any[]): Promise<any>;
+    createRule(rule: AvailabilityRule): Promise<AvailabilityRule>;
+    updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<AvailabilityRule>;
+    createSlots(ruleId: string, lawyerId: string, slots: IGeneratedSlot[]): Promise<Slot[]>;
     deleteSlotsByRuleId(ruleId: string): Promise<void>;
     deleteUnbookedSlotsByRuleId(ruleId: string): Promise<void>;
-    getBookedSlotsByRuleId(ruleId: string): Promise<any[]>;
-    getRuleById(ruleId: string): Promise<any>;
+    getBookedSlotsByRuleId(ruleId: string): Promise<Slot[]>;
+    getRuleById(ruleId: string): Promise<AvailabilityRule>;
     getAllRules(id: string): Promise<AvailabilityRule[]>;
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>

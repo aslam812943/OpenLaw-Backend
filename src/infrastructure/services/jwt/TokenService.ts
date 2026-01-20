@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { ITokenService } from '../../../application/interface/services/TokenServiceInterface';
+import { ITokenService, TokenPayload } from '../../../application/interface/services/TokenServiceInterface';
 import { UserRole } from '../../interface/enums/UserRole';
 
 dotenv.config();
@@ -21,8 +21,8 @@ export class TokenService implements ITokenService {
     return jwt.sign({ id, role, isBlock }, this._refreshSecret, { expiresIn: '7d' });
   }
 
-  verifyToken(token: string, isRefresh: boolean = false): any {
+  verifyToken(token: string, isRefresh: boolean = false): TokenPayload {
     const secret = isRefresh ? this._refreshSecret : this._accessSecret;
-    return jwt.verify(token, secret);
+    return jwt.verify(token, secret) as TokenPayload;
   }
 }

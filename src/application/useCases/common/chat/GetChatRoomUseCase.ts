@@ -37,7 +37,7 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
             userId,
             lawyerId,
             bookingId: activeBooking.id
-        } as any);
+        });
 
         return ChatRoomMapper.toDTO(newRoom);
     }

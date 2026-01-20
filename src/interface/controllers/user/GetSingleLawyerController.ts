@@ -13,7 +13,7 @@ export class GetSingleLawyerController {
   async getLawyer(req: Request, res: Response, next: NextFunction) {
     try {
       const lawyerId = req.params.id;
-      
+
 
       if (!lawyerId) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
@@ -27,7 +27,7 @@ export class GetSingleLawyerController {
       if (!lawyer) {
         return res.status(HttpStatusCode.NOT_FOUND).json({
           success: false,
-          message: MessageConstants.COMMON.INTERNAL_ERROR 
+          message: MessageConstants.COMMON.INTERNAL_ERROR
         });
       }
 
@@ -37,7 +37,7 @@ export class GetSingleLawyerController {
         data: lawyer,
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -61,7 +61,7 @@ export class GetSingleLawyerController {
         data: slots,
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
       next(error);
     }
   }

@@ -2,23 +2,26 @@ import { CreateAvailabilityRuleDTO } from "../../../dtos/lawyer/CreateAvailabili
 import { AvailabilityRule } from "../../../../domain/entities/AvailabilityRule";
 import { UpdateAvailabilityRuleDTO } from "../../../dtos/lawyer/UpdateAvailabilityRuleDTO";
 
+import { IGeneratedSlot } from "../../../interface/services/ISlotGeneratorService";
 
-export interface ICreateAvailabilityRuleUseCase{
-    execute(dto:CreateAvailabilityRuleDTO):Promise<{rule:AvailabilityRule;slots:any}>
+export interface ICreateAvailabilityRuleUseCase {
+    execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: IGeneratedSlot[] }>
 }
 
 
-export interface IUpdateAvailabilityRuleUseCase{
-    execute(ruleId:string,dto:UpdateAvailabilityRuleDTO):Promise<{rule:any,slots:any}>
+import { Slot } from "../../../../domain/entities/Slot";
+
+export interface IUpdateAvailabilityRuleUseCase {
+    execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule, slots: (Slot | IGeneratedSlot)[] }>
 }
 
 
-export interface IGetAllAvailableRuleUseCase{
-    execute(id:string):Promise<AvailabilityRule[]>
+export interface IGetAllAvailableRuleUseCase {
+    execute(id: string): Promise<AvailabilityRule[]>
 }
 
 
-export interface IDeleteAvailableRuleUseCase{
-    execute(ruleId:string):Promise<void>
+export interface IDeleteAvailableRuleUseCase {
+    execute(ruleId: string): Promise<void>
 }
 

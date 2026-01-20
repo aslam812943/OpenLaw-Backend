@@ -16,7 +16,7 @@ export class UNBlockUserController {
         success: true,
         message: MessageConstants.USER.UNBLOCK_SUCCESS,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

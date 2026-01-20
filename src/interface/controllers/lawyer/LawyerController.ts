@@ -10,7 +10,7 @@ export class LawyerController {
   async registerLawyer(req: Request, res: Response, next: NextFunction) {
     try {
       const documentUrls = Array.isArray(req.files)
-        ? req.files.map((file: any) => file.path)
+        ? (req.files as Express.Multer.File[]).map((file) => file.path)
         : [];
 
       const dto = new VerificationLawyerDTO({
@@ -26,10 +26,10 @@ export class LawyerController {
 
       res.status(HttpStatusCode.CREATED).json({
         success: true,
-        message: MessageConstants.LAWYER.APPROVE_SUCCESS, 
+        message: MessageConstants.LAWYER.APPROVE_SUCCESS,
         data: lawyer,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }

@@ -35,7 +35,7 @@ export class GetAllLawyersController {
         }
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
       next(error);
     }
   }

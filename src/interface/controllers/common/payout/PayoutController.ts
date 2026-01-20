@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { RequestPayoutUseCase } from "../../../../application/useCases/lawyer/RequestPayoutUseCase";
-import { ApprovePayoutUseCase } from "../../../../application/useCases/Admin/ApprovePayoutUseCase";
-import { RejectPayoutUseCase } from "../../../../application/useCases/Admin/RejectPayoutUseCase";
+import { IRequestPayoutUseCase } from "../../../../application/interface/use-cases/lawyer/IRequestPayoutUseCase";
+import { IApprovePayoutUseCase } from "../../../../application/interface/use-cases/admin/IApprovePayoutUseCase";
+import { IRejectPayoutUseCase } from "../../../../application/interface/use-cases/admin/IRejectPayoutUseCase";
 import { IWithdrawalRepository } from "../../../../domain/repositories/IWithdrawalRepository";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
 
 export class PayoutController {
     constructor(
-        private _requestPayoutUseCase: RequestPayoutUseCase,
-        private _approvePayoutUseCase: ApprovePayoutUseCase,
-        private _rejectPayoutUseCase: RejectPayoutUseCase,
+        private _requestPayoutUseCase: IRequestPayoutUseCase,
+        private _approvePayoutUseCase: IApprovePayoutUseCase,
+        private _rejectPayoutUseCase: IRejectPayoutUseCase,
         private _withdrawalRepository: IWithdrawalRepository
     ) { }
 
@@ -29,7 +29,7 @@ export class PayoutController {
             const lawyerId = req.user?.id;
             const data = await this._withdrawalRepository.findByLawyerId(lawyerId!);
             res.status(HttpStatusCode.OK).json({ success: true, data });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -38,7 +38,7 @@ export class PayoutController {
         try {
             const data = await this._withdrawalRepository.findAllPending();
             res.status(HttpStatusCode.OK).json({ success: true, data });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -48,7 +48,7 @@ export class PayoutController {
             const { id } = req.params;
             await this._approvePayoutUseCase.execute(id);
             res.status(HttpStatusCode.OK).json({ success: true, message: "Payout approved and processed successfully" });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

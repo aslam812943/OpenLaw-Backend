@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusCode";
-import { CheckUserStatusUseCase } from "../../application/useCases/user/checkUserStatusUseCase";
+import { ICheckUserStatusUseCase } from "../../application/interface/use-cases/user/ICheckUserStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
@@ -9,7 +9,7 @@ import { JwtPayload } from "../../types/express/index";
 
 export class UserAuthMiddleware {
   constructor(
-    private readonly _checkUserStatusUseCase: CheckUserStatusUseCase,
+    private readonly _checkUserStatusUseCase: ICheckUserStatusUseCase,
     private readonly _tokenService: ITokenService
   ) { }
 
@@ -32,9 +32,9 @@ export class UserAuthMiddleware {
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
-      } catch (error: any) {
+      } catch (error: unknown) {
 
-        if (error.name === "TokenExpiredError") {
+        if (error instanceof Error && error.name === "TokenExpiredError") {
 
           const refreshToken = req.cookies?.refreshToken;
 
@@ -45,10 +45,10 @@ export class UserAuthMiddleware {
 
           try {
 
-            const refreshDecoded = this._tokenService.verifyToken(refreshToken, true) as JwtPayload;
+            const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
 
 
-            const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshToken.isBlock);
+            const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
             if (refreshDecoded.role === UserRole.USER) {
 

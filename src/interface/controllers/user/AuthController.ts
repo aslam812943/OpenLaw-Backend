@@ -35,7 +35,7 @@ export class AuthController {
         success: true,
         message: result.message || "User registered successfully! OTP sent to email.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -50,7 +50,7 @@ export class AuthController {
         message: "OTP verified successfully!",
         data: result,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -64,7 +64,7 @@ export class AuthController {
         success: true,
         message: message || "OTP resent successfully!",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -78,7 +78,7 @@ export class AuthController {
         success: true,
         message: message || "Password reset OTP sent successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -91,7 +91,7 @@ export class AuthController {
         success: true,
         message: message || "Password reset successful!",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -128,7 +128,7 @@ export class AuthController {
           user,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
@@ -170,13 +170,13 @@ export class AuthController {
         success: true,
         message: logoutMessage,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }
 
   async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  
+
     try {
       const { token: idToken, role } = req.body;
       const result = await this._googleAuthUseCase.execute(idToken, role);
@@ -221,7 +221,7 @@ export class AuthController {
           needsVerificationSubmission: result.needsVerificationSubmission
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

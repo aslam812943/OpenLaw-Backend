@@ -5,6 +5,9 @@ import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
 
+import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
+import { Slot } from "../../../domain/entities/Slot";
+
 export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUseCase {
   constructor(
     private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
@@ -16,7 +19,7 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
     return h * 60 + m;
   }
 
-  async execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: any; slots: any; }> {
+  async execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: (Slot | IGeneratedSlot)[]; }> {
     try {
       const updateRule = await this._availabilityRuleRepository.updateRule(ruleId, dto);
       if (!updateRule) throw new NotFoundError("Rule not found");
@@ -49,8 +52,11 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
         rule: updateRule,
         slots: [...bookedSlots, ...filteredSlots],
       };
-    } catch (error: any) {
-      throw new BadRequestError(error.message || "Failed to update rule");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestError(error.message);
+      }
+      throw new BadRequestError("Failed to update rule");
     }
   }
 }

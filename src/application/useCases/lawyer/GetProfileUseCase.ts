@@ -4,10 +4,12 @@ import { GetProfileMapper } from "../../mapper/lawyer/GetProfileMapper";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
+import { ResponseGetProfileDTO } from "../../dtos/lawyer/ResponseGetProfileDTO";
+
 export class GetProfileUseCase implements IGetProfileUseCase {
   constructor(private readonly _lawyerRepository: ILawyerRepository) { }
 
-  async execute(lawyerId: string): Promise<any> {
+  async execute(lawyerId: string): Promise<ResponseGetProfileDTO> {
 
     try {
       const data = await this._lawyerRepository.findById(lawyerId);
@@ -17,10 +19,11 @@ export class GetProfileUseCase implements IGetProfileUseCase {
 
       return GetProfileMapper.toDTO(data);
 
-    } catch (err: any) {
-      throw new BadRequestError(
-        err.message || "Failed to fetch profile data."
-      );
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        throw new BadRequestError(err.message);
+      }
+      throw new BadRequestError("Failed to fetch profile data.");
     }
   }
 }

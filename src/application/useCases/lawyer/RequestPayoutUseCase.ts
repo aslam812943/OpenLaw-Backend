@@ -3,8 +3,9 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { Withdrawal } from "../../../domain/entities/Withdrawal";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { IRequestPayoutUseCase } from "../../interface/use-cases/lawyer/IRequestPayoutUseCase";
 
-export class RequestPayoutUseCase {
+export class RequestPayoutUseCase implements IRequestPayoutUseCase {
     constructor(
         private _withdrawalRepository: IWithdrawalRepository,
         private _lawyerRepository: ILawyerRepository

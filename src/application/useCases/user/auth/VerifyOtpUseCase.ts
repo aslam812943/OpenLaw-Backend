@@ -5,19 +5,31 @@ import { IOtpService } from "../../../interface/services/IOtpService";
 import { UserMapper } from "../../../mapper/user/UserMapper";
 import bcrypt from "bcrypt";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
+import { User } from "../../../../domain/entities/User";
+import { Lawyer } from "../../../../domain/entities/Lawyer";
 import { IVerifyOtpUseCase } from "../../../interface/use-cases/user/IVerifyOtpUseCase";
 import { AppError } from "../../../../infrastructure/errors/AppError";
 import { UserRole } from "../../../../infrastructure/interface/enums/UserRole";
+
+export interface IRegisterData {
+  name: string;
+  email: string;
+  phone: number;
+  password: string;
+  role: string;
+  isBlock: boolean;
+  isVerified: boolean;
+}
 
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
     private _userRepository: IUserRepository,
     private _lawyerRepository: ILawyerRepository,
-    private _otpService: IOtpService
+    private _otpService: IOtpService<IRegisterData>
   ) { }
 
 
-  async execute(email: string, otp: string): Promise<any> {
+  async execute(email: string, otp: string): Promise<User | Lawyer> {
     try {
       if (!email || !otp) {
         throw new BadRequestError("Email and OTP are required for verification.");
@@ -47,13 +59,12 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
       }
 
       return savedUser;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new BadRequestError(
-        error.message || "OTP verification failed. Please try again later."
-      );
+      const message = error instanceof Error ? error.message : "OTP verification failed. Please try again later.";
+      throw new BadRequestError(message);
     }
   }
 }

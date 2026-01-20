@@ -31,7 +31,7 @@ export class SubscriptionPaymentController {
                 message: MessageConstants.SUBSCRIPTION.CHECKOUT_SESSION_CREATE_SUCCESS,
                 data: { url }
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }
@@ -60,7 +60,7 @@ export class SubscriptionPaymentController {
                     message: MessageConstants.COMMON.BAD_REQUEST
                 });
             }
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

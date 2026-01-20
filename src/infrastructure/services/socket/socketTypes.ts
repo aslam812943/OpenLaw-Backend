@@ -28,5 +28,5 @@ export interface VideoJoinPayload {
 
 export interface VideoSignalPayload {
     bookingId: string;
-    signal: any;
+    signal: unknown;
 }

@@ -13,7 +13,7 @@ interface PaginationInput {
 }
 
 export class GetAllUsersController {
-  constructor(private readonly _getAllUserUseCase: IGetAllUsersUseCase<PaginationInput,{ users: GetAllUserDTO[]; total: number }>) { }
+  constructor(private readonly _getAllUserUseCase: IGetAllUsersUseCase<PaginationInput, { users: GetAllUserDTO[]; total: number }>) { }
 
   async handle(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
@@ -35,7 +35,7 @@ export class GetAllUsersController {
         totalPages: Math.ceil(total / limit),
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       next(err);
     }
   }

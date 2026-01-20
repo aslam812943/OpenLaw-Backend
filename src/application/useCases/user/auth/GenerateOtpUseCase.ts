@@ -27,11 +27,12 @@ export class GenerateOtpUseCase implements IGenerateOtpUseCase {
 
 
       return otp;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new BadRequestError(error.message || "Unexpected error while generating OTP.");
+      const message = error instanceof Error ? error.message : "Unexpected error while generating OTP.";
+      throw new BadRequestError(message);
     }
   }
 }

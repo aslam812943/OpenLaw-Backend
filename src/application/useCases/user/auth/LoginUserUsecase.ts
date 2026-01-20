@@ -2,7 +2,7 @@
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import bcrypt from "bcrypt";
 import { LoginUserDTO } from "../../../dtos/user/LoginUserDTO";
-import { LoginResponseMapper } from "../../../mapper/user/LoignResponseMapper";
+import { ILoginResponseMapper } from "../../../mapper/user/LoignResponseMapper"; 
 import { LoginResponseDTO } from "../../../dtos/user/LoginResponseDTO";
 import { ITokenService } from "../../../interface/services/TokenServiceInterface";
 import { ILawyerRepository } from '../../../../domain/repositories/lawyer/ILawyerRepository'
@@ -10,25 +10,29 @@ import { BadRequestError } from "../../../../infrastructure/errors/BadRequestErr
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 import { ForbiddenError } from "../../../../infrastructure/errors/ForbiddenError";
 import { UnauthorizedError } from "../../../../infrastructure/errors/UnauthorizedError";
+import { User } from "../../../../domain/entities/User";
+import { Lawyer } from "../../../../domain/entities/Lawyer";
 import { ILoginUserUseCase } from "../../../interface/use-cases/user/ILoginUserUseCase";
+
+
 // LoginUserUsecase
 
 export class LoginUserUsecase implements ILoginUserUseCase {
   constructor(
     private _userRepository: IUserRepository,
-    private _LoginResponseMapper: LoginResponseMapper,
+    private _LoginResponseMapper: ILoginResponseMapper,
     private _tokenService: ITokenService,
     private _lawyerRepository: ILawyerRepository
   ) { }
 
 
-  async execute( data: LoginUserDTO): Promise<{ token: string; refreshToken: string; user: LoginResponseDTO }> {
-   
-   
+  async execute(data: LoginUserDTO): Promise<{ token: string; refreshToken: string; user: LoginResponseDTO }> {
+
+
     if (!data.email || !data.password) {
       throw new BadRequestError("Email and password are required for login.");
     }
-    let user: any = await this._userRepository.findByEmail(data.email);
+    let user: User | Lawyer | null = await this._userRepository.findByEmail(data.email);
     if (!user) {
       user = await this._lawyerRepository.findByEmail(data.email);
 
@@ -70,7 +74,7 @@ export class LoginUserUsecase implements ILoginUserUseCase {
 
 
     return {
-      user: this._LoginResponseMapper.toDTO(user),
+      user: this._LoginResponseMapper.toDTO(user as User),
       token: accessToken,
       refreshToken,
     };

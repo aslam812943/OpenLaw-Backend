@@ -1,5 +1,5 @@
 import { Response, Request, NextFunction } from "express";
-import { IGetAllLawyersUseCase } from "../../../application/interface/use-cases/admin/IGetAllLawyersUseCase";
+import { IGetAllLawyersUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
@@ -33,7 +33,7 @@ export class GetAllLawyersController {
                totalPages: Math.ceil(result.total / limit)
             }
          });
-      } catch (error: any) {
+      } catch (error: unknown) {
          next(error);
       }
    }

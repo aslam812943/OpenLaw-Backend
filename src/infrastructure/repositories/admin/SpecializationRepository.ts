@@ -53,7 +53,7 @@ export class SpecializationRepository implements ISpecializationRepository {
 
     private mapToEntity(doc: ISpecializationDocument): Specialization {
         return new Specialization(
-            (doc as any)._id.toString(),
+            String(doc._id),
             doc.name,
             doc.description,
             doc.isActive

@@ -1,10 +1,10 @@
 import { RedisCacheService } from "./RedisCacheService";
 import { IOtpService } from "../../../application/interface/services/IOtpService";
 
-export class OtpService implements IOtpService {
+export class OtpService<T = unknown> implements IOtpService<T> {
   constructor(private cache: RedisCacheService) { }
 
-  async generateOtp(email: string, data: any): Promise<string> {
+  async generateOtp(email: string, data: T): Promise<string> {
     try {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -18,29 +18,29 @@ export class OtpService implements IOtpService {
     }
   }
 
-  async verifyOtp(email: string, otp: string): Promise<any> {
+  async verifyOtp(email: string, otp: string): Promise<T | null> {
     try {
 
 
       const stored = await this.cache.get(`otp:${email}`);
 
       if (!stored) {
-        throw new Error("OTP expired or does not exist.");
+        return null;
       }
 
       const { otp: savedOtp, data } = JSON.parse(stored);
 
       if (savedOtp !== otp) {
-        throw new Error("Invalid OTP.");
+        return null;
       }
 
 
       await this.cache.del(`otp:${email}`);
 
-      return data;
-    } catch (error: any) {
-
-      throw new Error(error.message || "OTP verification failed.");
+      return data as T;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "OTP verification failed.";
+      throw new Error(message);
     }
   }
 }

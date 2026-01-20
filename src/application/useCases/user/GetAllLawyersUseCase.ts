@@ -1,9 +1,10 @@
 import { IGetAllLawyersUseCase } from "../../interface/use-cases/user/IGetAllLawyersUseCase";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { UserLawyerMapper } from "../../mapper/user/UserLawyerMapper";
-import { AppError } from "../../../infrastructure/errors/AppError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+
+import { ResponseGetLawyersDTO } from "../../dtos/user/ResponseGetLawyersDTO";
 
 export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
   constructor(private _lawyerRepository: ILawyerRepository) { }
@@ -15,7 +16,7 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
     sort?: string;
     filter?: string;
     fromAdmin?: boolean;
-  }): Promise<any> {
+  }): Promise<{ success: boolean; total: number; lawyers: ResponseGetLawyersDTO[] }> {
     try {
 
       const { lawyers, total } = await this._lawyerRepository.findAll(query);
@@ -32,11 +33,11 @@ export class GetAllLawyersUseCase implements IGetAllLawyersUseCase {
         lawyers: lawyerDTOs,
       };
 
-    } catch (error: any) {
-
-      throw new BadRequestError(
-        error.message || "Failed to fetch lawyers. Please try again later."
-      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestError(error.message);
+      }
+      throw new BadRequestError("Failed to fetch lawyers. Please try again later.");
     }
   }
 }

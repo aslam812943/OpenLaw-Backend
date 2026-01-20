@@ -11,7 +11,7 @@ import { InternalServerError } from "../../errors/InternalServerError";
 export class AdminRepository implements IAdminRepository {
 
   // ------------------------------------------------------------
-  //  findByEmail() - Fetches an admin by their email address.
+  //  findByEmail() 
   // ------------------------------------------------------------
 
   async findByEmail(email: string): Promise<Admin | null> {
@@ -29,14 +29,14 @@ export class AdminRepository implements IAdminRepository {
         adminDoc.email,
         adminDoc.password
       );
-    } catch (error: any) {
- 
+    } catch (error: unknown) {
+
       throw new InternalServerError("Database error while fetching admin by email.");
     }
   }
 
   // ------------------------------------------------------------
-  // createAdmin() - Creates a new admin in the database.
+  // createAdmin() 
   // ------------------------------------------------------------
   async createAdmin(admin: Admin): Promise<Admin> {
     try {
@@ -54,9 +54,9 @@ export class AdminRepository implements IAdminRepository {
         newAdmin.email,
         newAdmin.password
       );
-    } catch (error: any) {
-
-      if (error.code === 11000) {
+    } catch (error: unknown) {
+      const err = error as { code?: number };
+      if (err.code === 11000) {
         throw new ConflictError("Admin with this email already exists.");
       }
 

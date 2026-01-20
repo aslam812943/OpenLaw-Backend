@@ -17,7 +17,7 @@ export class LawyerEarningsController {
                 message: MessageConstants.LAWYER.EARNINGS_FETCH_SUCCESS,
                 data: earnings
             });
-        } catch (error) {
+        } catch (error: unknown) {
             next(error);
         }
     }

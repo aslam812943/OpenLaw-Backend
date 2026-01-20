@@ -2,16 +2,21 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { InternalServerError } from "../../errors/InternalServerError";
+import mongoose, { Types } from "mongoose";
 
 export class BookingRepository implements IBookingRepository {
 
     private mapToEntity(doc: IBookingDocument): Booking {
-        const docObj = doc.toObject() as any;
+        const docObj = doc.toObject() as {
+            userId?: { _id: Types.ObjectId, name: string },
+            lawyerId?: { _id: Types.ObjectId, name: string },
+            createdAt?: Date
+        };
 
         return new Booking(
             doc.id,
-            (doc.userId as any)?._id?.toString() || doc.userId?.toString() || "",
-            (doc.lawyerId as any)?._id?.toString() || doc.lawyerId?.toString() || "",
+            docObj.userId?._id?.toString() || doc.userId?.toString() || "",
+            docObj.lawyerId?._id?.toString() || doc.lawyerId?.toString() || "",
             doc.date,
             doc.startTime,
             doc.endTime,
@@ -41,7 +46,7 @@ export class BookingRepository implements IBookingRepository {
             const savedBooking = await newBooking.save();
 
             return this.mapToEntity(savedBooking);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while creating booking.");
         }
     }
@@ -51,7 +56,7 @@ export class BookingRepository implements IBookingRepository {
             const booking = await BookingModel.findById(id);
             if (!booking) return null;
             return this.mapToEntity(booking);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching booking by ID.");
         }
     }
@@ -70,7 +75,7 @@ export class BookingRepository implements IBookingRepository {
                 updateData.lawyerFeedback = lawyerFeedback;
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while updating booking status.");
         }
     }
@@ -93,7 +98,7 @@ export class BookingRepository implements IBookingRepository {
                 bookings: bookings.map(booking => this.mapToEntity(booking)),
                 total
             };
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching user bookings.");
         }
     }
@@ -107,7 +112,7 @@ export class BookingRepository implements IBookingRepository {
                 paymentStatus: 'paid'
             });
             return count > 0;
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while checking booking existence.");
         }
     }
@@ -141,7 +146,7 @@ export class BookingRepository implements IBookingRepository {
             if (!booking) return null;
 
             return this.mapToEntity(booking);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching active booking.");
         }
     }
@@ -152,7 +157,7 @@ export class BookingRepository implements IBookingRepository {
             if (!booking) return null;
 
             return this.mapToEntity(booking);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching booking by session ID.");
         }
     }
@@ -163,7 +168,7 @@ export class BookingRepository implements IBookingRepository {
                 .sort({ createdAt: -1 });
 
             return bookings.map(booking => this.mapToEntity(booking));
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching lawyer bookings.");
         }
     }
@@ -175,7 +180,7 @@ export class BookingRepository implements IBookingRepository {
                 updateData.isCallActive = isCallActive;
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while updating call status.");
         }
     }
@@ -183,7 +188,7 @@ export class BookingRepository implements IBookingRepository {
     async findAll(page: number = 1, limit: number = 10, status?: string): Promise<{ bookings: Booking[], total: number }> {
         try {
             const skip = (page - 1) * limit;
-            const query: any = {};
+            const query: mongoose.FilterQuery<IBookingDocument> = {};
             if (status) {
                 query.status = status;
             }
@@ -202,7 +207,7 @@ export class BookingRepository implements IBookingRepository {
                 bookings: bookings.map(booking => this.mapToEntity(booking)),
                 total
             };
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching all bookings.");
         }
     }

@@ -19,7 +19,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             const { id, ...data } = chatRoom;
             const doc = await ChatRoomModel.create(data);
             return this.mapToEntity(doc);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error saving chat room");
         }
     }
@@ -29,7 +29,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             const doc = await ChatRoomModel.findById(id);
             if (!doc) return null;
             return this.mapToEntity(doc);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error finding chat room by ID");
         }
     }
@@ -47,9 +47,9 @@ export class ChatRoomRepository implements IChatRoomRepository {
                 userId: doc.userId as unknown as PopulatedUser,
                 lawyerId: doc.lawyerId as unknown as PopulatedLawyer,
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as IChatRoomDocumentWithTimestamps).createdAt
+                createdAt: (doc as unknown as { createdAt: Date }).createdAt
             };
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error finding populated chat room by ID");
         }
     }
@@ -59,7 +59,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             const doc = await ChatRoomModel.findOne({ userId, lawyerId });
             if (!doc) return null;
             return this.mapToEntity(doc);
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error finding chat room");
         }
     }
@@ -74,9 +74,9 @@ export class ChatRoomRepository implements IChatRoomRepository {
                 userId: doc.userId as unknown as PopulatedUser,
                 lawyerId: doc.lawyerId.toString(),
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as IChatRoomDocumentWithTimestamps).createdAt
+                createdAt: (doc as unknown as { createdAt: Date }).createdAt
             }));
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error finding lawyer chat rooms");
         }
     }
@@ -91,9 +91,9 @@ export class ChatRoomRepository implements IChatRoomRepository {
                 userId: doc.userId.toString(),
                 lawyerId: doc.lawyerId as unknown as PopulatedLawyer,
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as IChatRoomDocumentWithTimestamps).createdAt
+                createdAt: (doc as unknown as { createdAt: Date }).createdAt
             }));
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error finding user chat rooms");
         }
     }
@@ -101,7 +101,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
     async updateBookingId(roomId: string, bookingId: string): Promise<void> {
         try {
             await ChatRoomModel.findByIdAndUpdate(roomId, { bookingId });
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error updating chat room booking ID");
         }
     }
@@ -115,7 +115,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             if (room && room.bookingId.toString() !== activeBooking.id) {
                 await ChatRoomModel.findByIdAndUpdate(room._id, { bookingId: activeBooking.id });
             }
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error synchronizing chat room booking ID");
         }
     }
@@ -123,12 +123,12 @@ export class ChatRoomRepository implements IChatRoomRepository {
     async updateLastMessage(roomId: string): Promise<void> {
         try {
             await ChatRoomModel.findByIdAndUpdate(roomId, { updatedAt: new Date() });
-        } catch (error) {
+        } catch (error: unknown) {
             throw new InternalServerError("Error updating chat room last message time");
         }
     }
 
     private mapToEntity(doc: IChatRoomDocument): ChatRoom {
-        return new ChatRoom(doc.id.toString(), doc.userId.toString(), doc.lawyerId.toString(), doc.bookingId.toString());
+        return new ChatRoom(String(doc._id), doc.userId.toString(), doc.lawyerId.toString(), doc.bookingId.toString());
     }
 }

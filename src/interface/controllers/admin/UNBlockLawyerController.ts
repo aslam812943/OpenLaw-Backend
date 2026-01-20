@@ -16,7 +16,7 @@ export class UNBlockLawyerController {
         success: true,
         message: MessageConstants.LAWYER.UNBLOCK_SUCCESS,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       next(error);
     }
   }

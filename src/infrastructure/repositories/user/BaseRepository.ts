@@ -9,20 +9,20 @@ export class BaseRepository<T extends Document> {
     }
 
 
-   
+
     async create(data: Partial<T>): Promise<T> {
         try {
             return await this.model.create(data);
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while creating document.");
         }
     }
 
-    
+
     async findOne(filter: FilterQuery<T>): Promise<T | null> {
         try {
             return await this.model.findOne(filter).exec();
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while finding document.");
         }
     }
@@ -31,7 +31,7 @@ export class BaseRepository<T extends Document> {
     async update(id: string, data: UpdateQuery<T>): Promise<T | null> {
         try {
             return await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
-        } catch (error: any) {
+        } catch (error: unknown) {
             throw new InternalServerError("Database error while updating document.");
         }
     }

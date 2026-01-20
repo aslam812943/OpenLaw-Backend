@@ -106,14 +106,14 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         throw new BadRequestError("Failed to generate slots.");
       }
 
-      await this._availabilityRuleRepository.createSlots(savedRule._id.toString(), dto.lawyerId, slots);
+      await this._availabilityRuleRepository.createSlots(savedRule.id, dto.lawyerId, slots);
 
       return { rule: savedRule, slots };
 
-    } catch (err: any) {
-
+    } catch (err: unknown) {
+      const error = err as Error;
       throw new BadRequestError(
-        err.message || "Something went wrong while creating availability rule."
+        error.message || "Something went wrong while creating availability rule."
       );
     }
   }

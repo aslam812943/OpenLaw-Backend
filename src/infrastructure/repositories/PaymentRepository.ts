@@ -3,7 +3,9 @@ import { Payment } from "../../domain/entities/Payment";
 import { PaymentModel, IPaymentDocument } from "../db/models/admin/PaymentModel";
 import { BookingModel } from "../db/models/BookingModel";
 import { WithdrawalModel } from "../db/models/admin/WithdrawalModel";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
+
+import { IDashboardStats, ILawyerDashboardStats } from "../../domain/repositories/IPaymentRepository";
 
 export class PaymentRepository implements IPaymentRepository {
     async create(payment: Partial<Payment>): Promise<Payment> {
@@ -26,8 +28,8 @@ export class PaymentRepository implements IPaymentRepository {
         return payment ? this.mapToEntity(payment) : null;
     }
 
-    async findAll(filters?: any): Promise<{ payments: Payment[]; total: number }> {
-        const query: any = {};
+    async findAll(filters?: { search?: string, status?: string, type?: string, startDate?: Date, endDate?: Date, page?: number, limit?: number }): Promise<{ payments: Payment[]; total: number }> {
+        const query: mongoose.FilterQuery<IPaymentDocument> = {};
 
         if (filters?.search) {
             query.$or = [
@@ -65,17 +67,17 @@ export class PaymentRepository implements IPaymentRepository {
         ]);
 
         return {
-            payments: payments.map(p => this.mapToEntity(p)),
+            payments: (payments as unknown as IPaymentDocument[]).map((p: IPaymentDocument) => this.mapToEntity(p)),
             total
         };
     }
 
-    async getDashboardStats(startDate?: Date, endDate?: Date): Promise<any> {
+    async getDashboardStats(startDate?: Date, endDate?: Date): Promise<IDashboardStats> {
         const now = new Date();
 
-        const dateFilter: any = {};
+        const dateFilter: mongoose.FilterQuery<unknown> = {};
         if (startDate || endDate) {
-            const range: any = {};
+            const range: Record<string, unknown> = {};
             if (startDate) range.$gte = startDate;
             if (endDate) range.$lte = endDate;
             dateFilter.createdAt = range;
@@ -209,7 +211,7 @@ export class PaymentRepository implements IPaymentRepository {
             rejected: 0,
             confirmed: 0
         };
-        bookingStats.forEach((stat: any) => {
+        bookingStats.forEach((stat: { _id: string; count: number }) => {
             if (stat._id in formattedBookingStats) {
                 formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
             }
@@ -217,7 +219,7 @@ export class PaymentRepository implements IPaymentRepository {
 
         // Format Monthly Revenue
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const formattedMonthlyRevenue = monthlyRevenue.map((m: any) => ({
+        const formattedMonthlyRevenue = monthlyRevenue.map((m: { _id: { month: number }; revenue: number }) => ({
             month: monthNames[m._id.month - 1],
             revenue: m.revenue
         }));
@@ -235,10 +237,10 @@ export class PaymentRepository implements IPaymentRepository {
         };
     }
 
-    async getLawyerDashboardStats(lawyerId: string, startDate?: Date, endDate?: Date): Promise<any> {
-        const dateFilter: any = {};
+    async getLawyerDashboardStats(lawyerId: string, startDate?: Date, endDate?: Date): Promise<ILawyerDashboardStats> {
+        const dateFilter: mongoose.FilterQuery<unknown> = {};
         if (startDate || endDate) {
-            const range: any = {};
+            const range: Record<string, unknown> = {};
             if (startDate) range.$gte = startDate;
             if (endDate) range.$lte = endDate;
             dateFilter.createdAt = range;
@@ -307,14 +309,14 @@ export class PaymentRepository implements IPaymentRepository {
             rejected: 0,
             confirmed: 0
         };
-        bookingStats.forEach((stat: any) => {
+        bookingStats.forEach((stat: { _id: string; count: number }) => {
             if (stat._id in formattedBookingStats) {
                 formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
             }
         });
 
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const formattedMonthlyEarnings = monthlyEarnings.map((m: any) => ({
+        const formattedMonthlyEarnings = monthlyEarnings.map((m: { _id: { month: number }; earnings: number }) => ({
             month: monthNames[m._id.month - 1],
             earnings: m.earnings
         }));
@@ -328,22 +330,24 @@ export class PaymentRepository implements IPaymentRepository {
     }
 
     private mapToEntity(doc: IPaymentDocument): Payment {
+        const lawyerId = doc.lawyerId as unknown;
+        const userId = doc.userId as unknown;
         return new Payment(
             doc._id as string,
-            doc.userId ? (typeof doc.userId === 'object' && 'name' in doc.userId ? (doc.userId as any)._id.toString() : String(doc.userId)) : '',
-            typeof doc.lawyerId === 'object' && 'name' in doc.lawyerId ? (doc.lawyerId as any)._id.toString() : String(doc.lawyerId),
+            doc.userId ? (typeof userId === 'object' && userId !== null && '_id' in userId ? (userId as { _id: Types.ObjectId })._id.toString() : String(doc.userId)) : '',
+            typeof lawyerId === 'object' && lawyerId !== null && '_id' in lawyerId ? (lawyerId as { _id: Types.ObjectId })._id.toString() : String(doc.lawyerId),
             doc.amount,
             doc.currency,
             doc.status as 'pending' | 'completed' | 'failed' | 'refunded',
             doc.transactionId,
             doc.paymentMethod,
-            (doc as any).createdAt,
-            (doc as any).updatedAt,
+            (doc as unknown as { createdAt: Date }).createdAt,
+            (doc as unknown as { updatedAt: Date }).updatedAt,
             doc.bookingId ? String(doc.bookingId) : undefined,
             doc.subscriptionId ? String(doc.subscriptionId) : undefined,
             doc.type as 'booking' | 'subscription' | undefined,
-            typeof doc.lawyerId === 'object' && 'name' in doc.lawyerId ? (doc.lawyerId as any).name : undefined,
-            doc.userId && typeof doc.userId === 'object' && 'name' in doc.userId ? (doc.userId as any).name : undefined
+            typeof lawyerId === 'object' && lawyerId !== null && 'name' in lawyerId ? (lawyerId as { name: string }).name : undefined,
+            doc.userId && typeof userId === 'object' && userId !== null && 'name' in userId ? (userId as { name: string }).name : undefined
         );
     }
 }
