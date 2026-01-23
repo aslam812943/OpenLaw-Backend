@@ -33,12 +33,7 @@ app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes
 
 app.use(express.json());
 
-// const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url=>url.trim());
-const allowedOrigins = [
-  "https://www.openlaw.sbs",
-  "https://openlaw.sbs",
-  "http://localhost:3000",
-];
+ const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url=>url.trim());
 
 app.use(
   cors({
@@ -54,9 +49,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// 🔴 THIS LINE WAS MISSING — REQUIRED
-// app.options("*", cors());
 
 
 

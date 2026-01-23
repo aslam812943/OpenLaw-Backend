@@ -14,7 +14,15 @@ export class StripeService implements IPaymentService {
 
     async createCheckoutSession(bookingDetails: BookingDTO): Promise<string> {
         try {
-            const clientUrl = process.env.CLIENT_URL;
+            const clientUrls = (process.env.CLIENT_URL?.split(',') || []).map(url => url.trim());
+            let clientUrl = clientUrls[0] || 'http://localhost:3000';
+
+            if (process.env.NODE_ENV === 'production') {
+                const productionUrl = clientUrls.find(url => !url.includes('localhost'));
+                if (productionUrl) {
+                    clientUrl = productionUrl;
+                }
+            }
 
 
             const session = await this.stripe.checkout.sessions.create({
