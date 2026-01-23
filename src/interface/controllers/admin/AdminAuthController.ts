@@ -19,6 +19,7 @@ export class AdminAuthController {
         httpOnly: true,
         secure: cookieSecure,
         sameSite: cookieSameSite,
+        domain: process.env.COOKIE_DOMAIN,
         path: '/',
         maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
       });
@@ -27,6 +28,7 @@ export class AdminAuthController {
         httpOnly: true,
         secure: cookieSecure,
         sameSite: cookieSameSite,
+        domain: process.env.COOKIE_DOMAIN,
         path: '/',
         maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000
       });
@@ -51,6 +53,7 @@ export class AdminAuthController {
         httpOnly: true,
         secure: cookieSecure,
         sameSite: cookieSameSite,
+        domain: process.env.COOKIE_DOMAIN,
         path: '/'
       });
 
@@ -58,6 +61,7 @@ export class AdminAuthController {
         httpOnly: true,
         secure: cookieSecure,
         sameSite: cookieSameSite,
+        domain: process.env.COOKIE_DOMAIN,
         path: '/'
       });
 

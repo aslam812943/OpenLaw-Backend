@@ -10,6 +10,7 @@ export class LawyerLogoutController {
                 httpOnly: true,
                 secure: process.env.COOKIE_SECURE === 'true',
                 sameSite: 'lax',
+                domain: process.env.COOKIE_DOMAIN,
                 path: '/'
             });
 
@@ -17,6 +18,7 @@ export class LawyerLogoutController {
                 httpOnly: true,
                 secure: process.env.COOKIE_SECURE === 'true',
                 sameSite: 'lax',
+                domain: process.env.COOKIE_DOMAIN,
                 path: '/'
             });
 
