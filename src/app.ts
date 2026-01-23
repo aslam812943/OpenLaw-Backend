@@ -35,17 +35,29 @@ app.use(express.json());
 
 // const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url=>url.trim());
 const allowedOrigins = [
-  "https://www.openlaw.sbs",'http://localhost:3000','https:openlaw.sbs'
+  "https://www.openlaw.sbs",
+  "https://openlaw.sbs",
+  "http://localhost:3000",
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow server-to-server
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE",'HEAD'],
-    allowedHeaders: ["Content-Type", "Authorization", "Upgrade", "Connection"]
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// 🔴 THIS LINE WAS MISSING — REQUIRED
+app.options("*", cors());
+
 
 
 //  ROUTES
