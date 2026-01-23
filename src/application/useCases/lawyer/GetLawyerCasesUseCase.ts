@@ -7,7 +7,7 @@ export class GetLawyerCasesUseCase implements IGetLawyerCasesUseCase {
     constructor(private _bookingRepository: IBookingRepository) { }
 
     async execute(lawyerId: string): Promise<GetLawyerCasesDTO[]> {
-        const bookings = await this._bookingRepository.findByLawyerId(lawyerId);
+        const { bookings } = await this._bookingRepository.findByLawyerId(lawyerId);
         const confirmedBookings = bookings.filter(b => b.status === "confirmed");
         return LawyerCasesMapper.toDTO(confirmedBookings);
     }
