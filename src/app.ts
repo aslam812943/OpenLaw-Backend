@@ -33,13 +33,16 @@ app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes
 
 app.use(express.json());
 
-const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',');
+// const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url=>url.trim());
+const allowedOrigins = [
+  "https://www.openlaw.sbs",'http://localhost:3000','https:openlaw.sbs'
+];
 
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE",'HEAD'],
     allowedHeaders: ["Content-Type", "Authorization", "Upgrade", "Connection"]
   })
 );
