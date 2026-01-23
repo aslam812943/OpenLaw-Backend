@@ -97,7 +97,7 @@ export class StripeService implements IPaymentService {
         subscriptionId: string
     ): Promise<string> {
         try {
-            const clientUrl = process.env.CLIENT_URL;
+            const clientUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3000';
 
             const session = await this.stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
