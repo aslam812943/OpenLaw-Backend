@@ -33,12 +33,14 @@ app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes
 
 app.use(express.json());
 
+const allowedOrigins = (process.env.CLIENT_URL ?? '').split('');
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization", "Upgrade", "Connection"]
   })
 );
 
@@ -59,7 +61,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true
   }
 });
