@@ -42,8 +42,8 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow server-to-server
+    origin: (origin:any, callback:any) => {
+      if (!origin) return callback(null, true); 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -56,7 +56,7 @@ app.use(
 );
 
 // 🔴 THIS LINE WAS MISSING — REQUIRED
-app.options("*", cors());
+// app.options("*", cors());
 
 
 
