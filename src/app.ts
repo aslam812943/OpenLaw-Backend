@@ -33,7 +33,7 @@ app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes
 
 app.use(express.json());
 
-const allowedOrigins = (process.env.CLIENT_URL ?? '').split('');
+const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',');
 
 app.use(
   cors({
