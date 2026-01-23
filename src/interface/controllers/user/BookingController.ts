@@ -63,20 +63,18 @@ export class BookingController {
 
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 5;
+            const status = req.query.status as string;
+            const search = req.query.search as string;
+            const date = req.query.date as string;
 
-            const result = await this._getUserAppointmentsUseCase.execute(userId, page, limit);
+            const result = await this._getUserAppointmentsUseCase.execute(userId, { page, limit, status, search, date });
 
             res.status(HttpStatusCode.OK).json({
                 success: true,
                 message: MessageConstants.BOOKING.FETCH_SUCCESS,
                 data: {
                     appointments: result.appointments,
-                    pagination: {
-                        currentPage: page,
-                        totalItems: result.total,
-                        totalPages: Math.ceil(result.total / limit),
-                        limit
-                    }
+                    total: result.total
                 }
             });
         } catch (error: unknown) {

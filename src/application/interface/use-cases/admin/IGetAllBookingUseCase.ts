@@ -1,5 +1,6 @@
 import { AdminBookingDTO } from "../../../dtos/admin/AdminBookingDTO";
+import { BookingSearchDTO } from "../../../dtos/common/BookingSearchDTO";
 
 export interface IGetAllBookingUseCase {
-    execute(page: number, limit: number, status?: string): Promise<{ bookings: AdminBookingDTO[], total: number }>
+    execute(searchDTO: BookingSearchDTO): Promise<{ bookings: AdminBookingDTO[], total: number }>
 }

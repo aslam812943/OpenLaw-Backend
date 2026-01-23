@@ -102,7 +102,7 @@ const getProfileUseCase = new GetProfileUseCase(lawyerRepository);
 const updateProfileUseCase = new UpdateProfileUseCase(lawyerRepository);
 const changePasswordUseCase = new ChangePasswordUseCase(lawyerRepository);
 const checkLawyerStatusUseCase = new CheckLawyerStatusUseCase(lawyerRepository);
-const getAppoimentsUseCase = new GetAppoimentsUseCase(availabilityRuleRepository);
+const getAppoimentsUseCase = new GetAppoimentsUseCase(bookingRepository);
 const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
   availabilityRuleRepository,
   bookingRepository,

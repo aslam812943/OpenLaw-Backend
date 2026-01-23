@@ -19,7 +19,7 @@ export class AdminAuthController {
         httpOnly: true,
         secure: cookieSecure,
         sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN || '.http://localhost:8080',
+        domain: process.env.COOKIE_DOMAIN,
         path: '/',
         maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
       });

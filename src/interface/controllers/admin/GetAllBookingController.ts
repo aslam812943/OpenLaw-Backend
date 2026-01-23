@@ -12,8 +12,10 @@ export class GetAllBookingController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const status = req.query.status as string;
+            const search = req.query.search as string;
+            const date = req.query.date as string;
 
-            const result = await this._getallbookingusecase.execute(page, limit, status);
+            const result = await this._getallbookingusecase.execute({ page, limit, status, search, date });
             res.status(HttpStatusCode.OK).json({
                 success: true,
                 message: MessageConstants.ADMIN.BOOKING_FETCH_SUCCESS,

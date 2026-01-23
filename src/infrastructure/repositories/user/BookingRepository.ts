@@ -3,6 +3,8 @@ import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { InternalServerError } from "../../errors/InternalServerError";
 import mongoose, { Types } from "mongoose";
+import LawyerModel from "../../db/models/LawyerModel";
+import UserModel from "../../db/models/UserModel";
 
 export class BookingRepository implements IBookingRepository {
 
@@ -81,17 +83,32 @@ export class BookingRepository implements IBookingRepository {
     }
 
 
-    async findByUserId(userId: string, page: number = 1, limit: number = 10): Promise<{ bookings: Booking[], total: number }> {
+    async findByUserId(userId: string, page: number = 1, limit: number = 10, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }> {
         try {
-            const skip = (page - 1) * limit;
+            const p = Number(page) || 1;
+            const l = Number(limit) || 10;
+            const skip = (p - 1) * l;
+            const query: any = { userId: new Types.ObjectId(userId) };
+
+            if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
+                query.status = status.trim();
+            }
+            if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
+                query.date = date.trim();
+            }
+
+            if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
+                const lawyers = await LawyerModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id');
+                query.lawyerId = { $in: lawyers.map(l => l._id) };
+            }
 
             const [bookings, total] = await Promise.all([
-                BookingModel.find({ userId })
+                BookingModel.find(query)
                     .populate('lawyerId', 'name')
                     .sort({ createdAt: -1 })
                     .skip(skip)
-                    .limit(limit),
-                BookingModel.countDocuments({ userId })
+                    .limit(l),
+                BookingModel.countDocuments(query)
             ]);
 
             return {
@@ -161,13 +178,38 @@ export class BookingRepository implements IBookingRepository {
             throw new InternalServerError("Database error while fetching booking by session ID.");
         }
     }
-    async findByLawyerId(lawyerId: string): Promise<Booking[]> {
+    async findByLawyerId(lawyerId: string, page: number = 1, limit: number = 10, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }> {
         try {
-            const bookings = await BookingModel.find({ lawyerId })
-                .populate('userId', 'name')
-                .sort({ createdAt: -1 });
+            const p = Number(page) || 1;
+            const l = Number(limit) || 10;
+            const skip = (p - 1) * l;
+            const query: any = { lawyerId: new Types.ObjectId(lawyerId) };
 
-            return bookings.map(booking => this.mapToEntity(booking));
+            if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
+                query.status = status.trim();
+            }
+            if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
+                query.date = date.trim();
+            }
+
+            if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
+                const users = await UserModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id');
+                query.userId = { $in: users.map(u => u._id) };
+            }
+
+            const [bookings, total] = await Promise.all([
+                BookingModel.find(query)
+                    .populate('userId', 'name')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(l),
+                BookingModel.countDocuments(query)
+            ]);
+
+            return {
+                bookings: bookings.map(booking => this.mapToEntity(booking)),
+                total
+            };
         } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching lawyer bookings.");
         }
@@ -185,12 +227,29 @@ export class BookingRepository implements IBookingRepository {
         }
     }
 
-    async findAll(page: number = 1, limit: number = 10, status?: string): Promise<{ bookings: Booking[], total: number }> {
+    async findAll(page: number = 1, limit: number = 10, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }> {
         try {
-            const skip = (page - 1) * limit;
-            const query: mongoose.FilterQuery<IBookingDocument> = {};
-            if (status) {
-                query.status = status;
+            const p = Number(page) || 1;
+            const l = Number(limit) || 10;
+            const skip = (p - 1) * l;
+            const query: any = {};
+
+            if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
+                query.status = status.trim();
+            }
+            if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
+                query.date = date.trim();
+            }
+
+            if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
+                const [userIds, lawyerIds] = await Promise.all([
+                    UserModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id'),
+                    LawyerModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id')
+                ]);
+                query.$or = [
+                    { userId: { $in: userIds.map(u => u._id) } },
+                    { lawyerId: { $in: lawyerIds.map(l => l._id) } }
+                ];
             }
 
             const [bookings, total] = await Promise.all([
@@ -199,7 +258,7 @@ export class BookingRepository implements IBookingRepository {
                     .populate('lawyerId', 'name')
                     .sort({ createdAt: -1 })
                     .skip(skip)
-                    .limit(limit),
+                    .limit(l),
                 BookingModel.countDocuments(query)
             ]);
 
