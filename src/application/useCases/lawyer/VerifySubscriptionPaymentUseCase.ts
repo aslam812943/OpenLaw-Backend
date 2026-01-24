@@ -40,7 +40,7 @@ export class VerifySubscriptionPaymentUseCase implements IVerifySubscriptionPaym
             } else if (subscription.durationUnit === 'year') {
                 expiryDate.setFullYear(expiryDate.getFullYear() + subscription.duration);
             } else {
-               
+
                 expiryDate.setDate(expiryDate.getDate() + (subscription.duration * 30));
             }
 
