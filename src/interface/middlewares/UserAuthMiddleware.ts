@@ -16,7 +16,7 @@ export class UserAuthMiddleware {
   execute = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
     try {
-      let token =
+      const token =
         req.cookies?.accessToken ||
         req.headers.authorization?.split(" ")[1];
 
