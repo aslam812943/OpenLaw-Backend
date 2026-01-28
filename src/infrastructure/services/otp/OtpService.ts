@@ -1,4 +1,4 @@
-import { RedisCacheService } from "./RedisCacheService";
+import { RedisCacheService } from "../reddis/RedisCacheService";
 import { IOtpService } from "../../../application/interface/services/IOtpService";
 
 export class OtpService<T = unknown> implements IOtpService<T> {

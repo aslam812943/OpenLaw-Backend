@@ -3,7 +3,7 @@ import { ILoginAdminUseCase } from '../../../application/interface/use-cases/adm
 import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequestDTO';
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
 import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
-
+import logger from '../../../infrastructure/logging/logger';
 export class AdminAuthController {
   constructor(private readonly _loginUseCase: ILoginAdminUseCase) { }
 
@@ -11,7 +11,7 @@ export class AdminAuthController {
     try {
       const loginDto = new AdminLoginRequestDTO(req.body);
       const result = await this._loginUseCase.execute(loginDto);
-
+logger.info('Login attempt',{email:req.body.email})
       const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
