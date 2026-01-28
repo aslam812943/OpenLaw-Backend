@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
+import logger from "./infrastructure/logging/logger";
 
 import userRoutes from "./interface/routes/user/userRoutes";
 import lawyerRoutes from "./interface/routes/lawyer/lawyerRoutes";
@@ -97,5 +98,5 @@ socketServerService.setupSocketServer(io);
 const PORT = process.env.PORT
 
 server.listen(PORT, () => {
-  console.log(` Server + Socket.IO running on port ${PORT}`);
+  logger.info(` Server + Socket.IO running on port ${PORT}`);
 });

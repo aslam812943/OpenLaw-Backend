@@ -3,7 +3,7 @@ import { IHandleWebhookUseCase } from '../../../interface/use-cases/user/IHandle
 import { IConfirmBookingUseCase } from '../../../interface/use-cases/user/IConfirmBookingUseCase';
 import { StripeWebhookEventType } from '../../../../infrastructure/interface/enums/StripeWebhookEvent';
 import { BadRequestError } from '../../../../infrastructure/errors/BadRequestError';
-
+import logger from '../../../../infrastructure/logging/logger';
 
 export class HandleWebhookUseCase implements IHandleWebhookUseCase {
     constructor(
@@ -27,7 +27,8 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
                 break;
 
             default:
-                console.log(`Unhandled event type: ${eventType}`);
+                logger.info('Unhandled event type',{event:eventType})
+
         }
     }
 
@@ -37,7 +38,6 @@ export class HandleWebhookUseCase implements IHandleWebhookUseCase {
 
 
         if (session.payment_status !== 'paid') {
-            console.log(`Payment not completed for session ${session.id}, status: ${session.payment_status}`);
             return;
         }
 

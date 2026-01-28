@@ -16,14 +16,16 @@ export class StripeService implements IPaymentService {
     async createCheckoutSession(bookingDetails: BookingDTO): Promise<string> {
         try {
             const clientUrls = (process.env.CLIENT_URL?.split(',') || []).map(url => url.trim());
-            let clientUrl = clientUrls[0] || 'http://localhost:3000';
+            let clientUrl = process.env.FRONTEND_URL || clientUrls[0] || 'http://localhost:3000';
 
-            if (process.env.NODE_ENV === 'production') {
+            if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
                 const productionUrl = clientUrls.find(url => !url.includes('localhost'));
                 if (productionUrl) {
                     clientUrl = productionUrl;
                 }
             }
+
+            logger.info(`Stripe Checkout Session - Using Success URL base: ${clientUrl}`);
 
 
             const session = await this.stripe.checkout.sessions.create({
@@ -107,14 +109,16 @@ export class StripeService implements IPaymentService {
     ): Promise<string> {
         try {
             const clientUrls = (process.env.CLIENT_URL?.split(',') || []).map(url => url.trim());
-            let clientUrl = clientUrls[0] || 'http://localhost:3000';
+            let clientUrl = process.env.FRONTEND_URL || clientUrls[0] || 'http://localhost:3000';
 
-            if (process.env.NODE_ENV === 'production') {
+            if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
                 const productionUrl = clientUrls.find(url => !url.includes('localhost'));
                 if (productionUrl) {
                     clientUrl = productionUrl;
                 }
             }
+
+            logger.info(`Stripe Subscription Session - Using Success URL base: ${clientUrl}`);
 
             const session = await this.stripe.checkout.sessions.create({
                 payment_method_types: ['card'],

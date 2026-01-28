@@ -9,7 +9,7 @@ import AdminLoginResponseDTO from '../../dtos/admin/AdminLoginResponseDTO'
 import { AdminMapper } from '../../mapper/admin/AdminMapper'
 import { Admin } from '../../../domain/entities/Admin'
 import { UserRole } from '../../../infrastructure/interface/enums/UserRole';
-
+import logger from '../../../infrastructure/logging/logger';
 
 
 
@@ -40,7 +40,7 @@ export class LoginAdminUseCase implements ILoginAdminUseCase {
       await this._adminRepository.createAdmin(admin);
 
     } else {
-      console.log(" Admin already exists");
+      logger.info('Admin already exists')
     }
   }
 
