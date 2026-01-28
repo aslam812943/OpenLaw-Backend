@@ -50,7 +50,7 @@ import { MessageRepository } from "../../../infrastructure/repositories/messageR
 import { ReviewRepository } from "../../../infrastructure/repositories/ReviewRepository";
 import { ReviewController } from "../../controllers/user/ReviewController";
 
-import { RedisCacheService } from "../../../infrastructure/services/otp/RedisCacheService";
+import { RedisCacheService } from "../../../infrastructure/services/reddis/RedisCacheService";
 import { SpecializationRepository } from "../../../infrastructure/repositories/admin/SpecializationRepository";
 import { NodeMailerEmailService } from "../../../infrastructure/services/nodeMailer/NodeMailerEmailService";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";

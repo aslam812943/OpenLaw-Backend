@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { IPaymentService } from '../../application/interface/services/IPaymentService';
 import { BookingDTO } from '../../application/dtos/user/BookingDetailsDTO';
 import { InternalServerError } from '../errors/InternalServerError';
+import logger from '../logging/logger';
 
 export class StripeService implements IPaymentService {
     private stripe: Stripe;
@@ -59,7 +60,7 @@ export class StripeService implements IPaymentService {
             }
             return session.url;
         } catch (error) {
-            console.error("Stripe createCheckoutSession error:", error);
+            logger.error("Stripe createCheckoutSession error:", error);
             throw error;
         }
     }
@@ -68,7 +69,7 @@ export class StripeService implements IPaymentService {
             const session = await this.stripe.checkout.sessions.retrieve(sessionId);
             return session;
         } catch (error) {
-            console.error("Stripe retrieveSession error:", error);
+            logger.error("Stripe retrieveSession error:", error);
             throw error;
         }
     }
@@ -105,7 +106,15 @@ export class StripeService implements IPaymentService {
         subscriptionId: string
     ): Promise<string> {
         try {
-            const clientUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3000';
+            const clientUrls = (process.env.CLIENT_URL?.split(',') || []).map(url => url.trim());
+            let clientUrl = clientUrls[0] || 'http://localhost:3000';
+
+            if (process.env.NODE_ENV === 'production') {
+                const productionUrl = clientUrls.find(url => !url.includes('localhost'));
+                if (productionUrl) {
+                    clientUrl = productionUrl;
+                }
+            }
 
             const session = await this.stripe.checkout.sessions.create({
                 payment_method_types: ['card'],

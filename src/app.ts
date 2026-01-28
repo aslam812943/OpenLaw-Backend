@@ -15,6 +15,11 @@ import videoCallRoutes from "./interface/routes/common/videoCallRoutes";
 import { DbConnection } from "./config/mongoose/DbConnection";
 import { errorHandler } from "./interface/middlewares/errorHandler";
 import { SocketServerService } from "./infrastructure/services/socket/socketServer";
+import { SendMessageUseCase } from "./application/useCases/common/chat/SendMessageUseCase";
+import { MarkMessagesAsReadUseCase } from "./application/useCases/common/chat/MarkMessagesAsReadUseCase";
+import { MessageRepository } from "./infrastructure/repositories/messageRepository";
+import { ChatRoomRepository } from "./infrastructure/repositories/ChatRoomRepository";
+import { SocketAuthService } from "./infrastructure/services/socket/socketAuth";
 
 dotenv.config();
 
@@ -33,12 +38,12 @@ app.use("/api/webhook", express.raw({ type: 'application/json' }), webhookRoutes
 
 app.use(express.json());
 
- const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url=>url.trim());
+const allowedOrigins = (process.env.CLIENT_URL ?? '').split(',').map(url => url.trim());
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); 
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -74,7 +79,18 @@ const io = new Server(server, {
 });
 
 
-const socketServerService = new SocketServerService();
+// Dependency Injection for SocketServerService
+const messageRepository = new MessageRepository();
+const chatRoomRepository = new ChatRoomRepository();
+const sendMessageUseCase = new SendMessageUseCase(messageRepository, chatRoomRepository);
+const markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(messageRepository);
+const socketAuthService = new SocketAuthService();
+
+const socketServerService = new SocketServerService(
+  sendMessageUseCase,
+  markMessagesAsReadUseCase,
+  socketAuthService
+);
 socketServerService.setupSocketServer(io);
 
 

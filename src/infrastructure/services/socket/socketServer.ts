@@ -1,27 +1,25 @@
 import { Server, Socket } from 'socket.io';
-import { SendMessageUseCase } from '../../../application/useCases/common/chat/SendMessageUseCase';
-import { MarkMessagesAsReadUseCase } from '../../../application/useCases/common/chat/MarkMessagesAsReadUseCase';
-import { MessageRepository } from '../../repositories/messageRepository';
-import { ChatRoomRepository } from '../../repositories/ChatRoomRepository';
-import { SocketAuthService } from './socketAuth';
+import { ISendMessageUseCase } from '../../../application/interface/use-cases/common/chat/ISendMessageUseCase';
+import { IMarkMessagesAsReadUseCase } from '../../../application/interface/use-cases/common/chat/IMarkMessagesAsReadUseCase';
+import { ISocketAuth } from '../../../application/interface/services/ISocketAuth';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 import { UserRole } from '../../interface/enums/UserRole';
 
 export class SocketServerService implements ISocketServer {
-  private _messageRepository: MessageRepository;
-  private _chatRoomRepository: ChatRoomRepository;
-  private _sendMessageUseCase: SendMessageUseCase;
-  private _markMessagesAsReadUseCase: MarkMessagesAsReadUseCase;
-  private _socketAuthService: SocketAuthService;
+  private _sendMessageUseCase: ISendMessageUseCase;
+  private _markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase;
+  private _socketAuthService: ISocketAuth;
 
-  constructor() {
-    this._messageRepository = new MessageRepository();
-    this._chatRoomRepository = new ChatRoomRepository();
-    this._sendMessageUseCase = new SendMessageUseCase(this._messageRepository, this._chatRoomRepository);
-    this._markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(this._messageRepository);
-    this._socketAuthService = new SocketAuthService();
+  constructor(
+    sendMessageUseCase: ISendMessageUseCase,
+    markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase,
+    socketAuthService: ISocketAuth
+  ) {
+    this._sendMessageUseCase = sendMessageUseCase;
+    this._markMessagesAsReadUseCase = markMessagesAsReadUseCase;
+    this._socketAuthService = socketAuthService;
   }
 
   public setupSocketServer(io: Server): void {
@@ -140,7 +138,7 @@ export class SocketServerService implements ISocketServer {
       });
 
       socket.on("disconnect", () => {
-        // console.log("Socket disconnected:", socket.id);
+        // Socket cleanup handled automatically
       });
     });
   }
