@@ -1,166 +1,27 @@
 
 
 import { Router } from "express";
-
-// Controllers
-import { LawyerController } from "../../controllers/lawyer/LawyerController";
-import { LawyerLogoutController } from "../../controllers/lawyer/lawyerLogoutController";
-import { AvailabilityController } from "../../controllers/lawyer/AvailabilityController";
-import { LawyerProfileController } from "../../controllers/lawyer/ProfileController";
-import { AppointmentsController } from "../../controllers/lawyer/AppointmentsController";
-import { SubscriptionController } from "../../controllers/lawyer/SubscriptionController";
-import { SubscriptionPaymentController } from "../../controllers/lawyer/SubscriptionPaymentController";
-import { ChatController } from "../../controllers/common/chat/ChatController";
-import { ReviewController } from "../../controllers/lawyer/ReviewController";
-import { LawyerCasesController } from "../../controllers/lawyer/LawyerCasesController";
-import { LawyerEarningsController } from "../../controllers/lawyer/LawyerEarningsController";
-import { PayoutController } from "../../controllers/common/payout/PayoutController";
-import { LawyerDashboardController } from "../../controllers/lawyer/LawyerDashboardController";
-
-// Repositories
-import { AvailabilityRuleRepository } from "../../../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
-import { LawyerRepository } from "../../../infrastructure/repositories/lawyer/LawyerRepository";
-import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
-import { ChatRoomRepository } from "../../../infrastructure/repositories/ChatRoomRepository";
-import { MessageRepository } from "../../../infrastructure/repositories/messageRepository";
-import { SubscriptionRepository } from "../../../infrastructure/repositories/admin/SubscriptionRepository";
-import { PaymentRepository } from "../../../infrastructure/repositories/PaymentRepository";
-import { WithdrawalRepository } from "../../../infrastructure/repositories/WithdrawalRepository";
-import { ReviewRepository } from "../../../infrastructure/repositories/ReviewRepository";
-
-// Services
-import { TokenService } from "../../../infrastructure/services/jwt/TokenService";
-import { StripeService } from "../../../infrastructure/services/StripeService";
-import { upload } from "../../../infrastructure/services/cloudinary/CloudinaryConfig";
-import { SlotGeneratorService } from "../../../infrastructure/services/SlotGenerator/SlotGeneratorService";
-
-// Middlewares
-import { LawyerAuthMiddleware } from "../../middlewares/LawyerAuthMiddleware";
-
-// UseCases
-import { RegisterLawyerUseCase } from "../../../application/useCases/lawyer/VerificationLawyerUseCase";
-import { CreateAvailabilityRuleUseCase } from "../../../application/useCases/lawyer/CreateAvailabilityRuleUseCase";
-import { UpdateAvailabilityRuleUseCase } from "../../../application/useCases/lawyer/UpdateAvailabilityRuleUseCase";
-import { GetAllAvailableRuleUseCase } from "../../../application/useCases/lawyer/GetAllAvailabilityRulesUseCase";
-import { DeleteAvailableRuleUseCase } from "../../../application/useCases/lawyer/DeleteAvailabileRuleUseCase";
-import { GetProfileUseCase } from "../../../application/useCases/lawyer/GetProfileUseCase";
-import { UpdateProfileUseCase } from "../../../application/useCases/lawyer/UpdateProfileUseCase";
-import { ChangePasswordUseCase } from "../../../application/useCases/lawyer/ChangePasswordUseCase";
-import { CheckLawyerStatusUseCase } from "../../../application/useCases/lawyer/CheckLawyerStatusUseCase";
-import { GetAppoimentsUseCase } from "../../../application/useCases/lawyer/GetAppoimentsUseCase";
-import { UpdateAppointmentStatusUseCase } from "../../../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
-import { GetSubscriptionPlansUseCase } from "../../../application/useCases/lawyer/GetSubscriptionPlansUseCase";
-import { GetCurrentSubscriptionUseCase } from "../../../application/useCases/lawyer/GetCurrentSubscriptionUseCase";
-import { CreateSubscriptionCheckoutUseCase } from "../../../application/useCases/lawyer/CreateSubscriptionCheckoutUseCase";
-import { VerifySubscriptionPaymentUseCase } from "../../../application/useCases/lawyer/VerifySubscriptionPaymentUseCase";
-import { CheckChatAccessUseCase } from "../../../application/useCases/common/chat/CheckChatAccessUseCase";
-import { GetChatRoomUseCase } from "../../../application/useCases/common/chat/GetChatRoomUseCase";
-import { GetMessagesUseCase } from "../../../application/useCases/common/chat/GetMessagesUseCase";
-import { GetAllReviewsUseCase } from "../../../application/useCases/lawyer/review/GetAllReviewsUseCase";
-import { GetLawyerCasesUseCase } from "../../../application/useCases/lawyer/GetLawyerCasesUseCase";
-import { GetLawyerEarningsUseCase } from "../../../application/useCases/lawyer/GetLawyerEarningsUseCase";
-import { RequestPayoutUseCase } from "../../../application/useCases/lawyer/RequestPayoutUseCase";
-import { RejectPayoutUseCase } from "../../../application/useCases/Admin/RejectPayoutUseCase";
-import { ApprovePayoutUseCase } from "../../../application/useCases/Admin/ApprovePayoutUseCase";
-import { GetLawyerDashboardStatsUseCase } from "../../../application/useCases/lawyer/GetLawyerDashboardStatsUseCase";
-import { SpecializationController } from "../../controllers/lawyer/SpecializationController";
-import { GetActiveSpecializationsUseCase } from "../../../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
-import { SpecializationRepository } from "../../../infrastructure/repositories/admin/SpecializationRepository";
+import {
+  lawyerController,
+  lawyerLogoutController,
+  availabilityController,
+  getProfileController,
+  appoimentsController,
+  subscriptionController,
+  subscriptionPaymentController,
+  chatController,
+  reviewController,
+  lawyerCasesController,
+  lawyerEarningsController,
+  payoutController,
+  lawyerDashboardController,
+  specializationController,
+  lawyerAuthMiddleware,
+  upload
+} from "../../../di/lawyerContainer";
 
 const router = Router();
 
-// ============================================================================
-//  Repository Instances
-// ============================================================================
-const availabilityRuleRepository = new AvailabilityRuleRepository();
-const lawyerRepository = new LawyerRepository();
-const bookingRepository = new BookingRepository();
-const chatRoomRepository = new ChatRoomRepository();
-const messageRepository = new MessageRepository();
-const subscriptionRepository = new SubscriptionRepository();
-const paymentRepository = new PaymentRepository();
-const withdrawalRepository = new WithdrawalRepository();
-const reviewRepository = new ReviewRepository();
-const specializationRepository = new SpecializationRepository();
-
-// ============================================================================
-//  Service Instances
-// ============================================================================
-const stripeService = new StripeService();
-const tokenService = new TokenService();
-const slotGeneratorService = new SlotGeneratorService();
-
-// ============================================================================
-//  UseCase Instances
-// ============================================================================
-const registerLawyerUseCase = new RegisterLawyerUseCase(lawyerRepository);
-const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
-const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
-const getAllAvailableRuleUseCase = new GetAllAvailableRuleUseCase(availabilityRuleRepository);
-const deleteAvailableRuleUseCase = new DeleteAvailableRuleUseCase(availabilityRuleRepository);
-const getProfileUseCase = new GetProfileUseCase(lawyerRepository);
-const updateProfileUseCase = new UpdateProfileUseCase(lawyerRepository);
-const changePasswordUseCase = new ChangePasswordUseCase(lawyerRepository);
-const checkLawyerStatusUseCase = new CheckLawyerStatusUseCase(lawyerRepository);
-const getAppoimentsUseCase = new GetAppoimentsUseCase(bookingRepository);
-const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
-  availabilityRuleRepository,
-  bookingRepository,
-  stripeService,
-  lawyerRepository,
-  chatRoomRepository
-);
-
-const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
-const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
-const createSubscriptionCheckoutUseCase = new CreateSubscriptionCheckoutUseCase(stripeService, lawyerRepository, subscriptionRepository);
-const verifySubscriptionPaymentUseCase = new VerifySubscriptionPaymentUseCase(stripeService, lawyerRepository, paymentRepository, subscriptionRepository);
-
-const checkChatAccessUseCase = new CheckChatAccessUseCase(bookingRepository);
-const getChatRoomUseCase = new GetChatRoomUseCase(chatRoomRepository, bookingRepository);
-const getMessagesUseCase = new GetMessagesUseCase(messageRepository);
-
-const getAllReviewsUseCase = new GetAllReviewsUseCase(reviewRepository);
-const getLawyerCasesUseCase = new GetLawyerCasesUseCase(bookingRepository);
-const getLawyerEarningsUseCase = new GetLawyerEarningsUseCase(bookingRepository, lawyerRepository);
-
-const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawyerRepository);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository);
-const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepository, lawyerRepository);
-const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);
-const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(specializationRepository);
-
-// ============================================================================
-//  Controller Instances
-// ============================================================================
-const lawyerController = new LawyerController(registerLawyerUseCase);
-const lawyerLogoutController = new LawyerLogoutController();
-const availabilityController = new AvailabilityController(
-  createAvailabilityRuleUseCase,
-  updateAvailabilityRuleUseCase,
-  getAllAvailableRuleUseCase,
-  deleteAvailableRuleUseCase
-);
-const getProfileController = new LawyerProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
-const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase);
-const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
-const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
-const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);
-const reviewController = new ReviewController(getAllReviewsUseCase);
-const lawyerCasesController = new LawyerCasesController(getLawyerCasesUseCase);
-const lawyerEarningsController = new LawyerEarningsController(getLawyerEarningsUseCase);
-const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepository);
-const lawyerDashboardController = new LawyerDashboardController(getLawyerDashboardStatsUseCase);
-const specializationController = new SpecializationController(getActiveSpecializationsUseCase);
-
-// ============================================================================
-//  Middleware Instances
-// ============================================================================
-const lawyerAuthMiddleware = new LawyerAuthMiddleware(checkLawyerStatusUseCase, tokenService);
-
-// ============================================================================
-//  Routes
-// ============================================================================
 
 router.post(
   "/verifyDetils",
@@ -231,3 +92,4 @@ router.get('/dashboard/stats', lawyerAuthMiddleware.execute, (req, res, next) =>
 router.get('/specializations', (req, res, next) => specializationController.getSpecializations(req, res, next));
 
 export default router;
+

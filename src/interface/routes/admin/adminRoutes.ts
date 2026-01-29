@@ -1,164 +1,33 @@
 
 import express from 'express';
-import { AdminAuthMiddleware } from '../../middlewares/admin/AdminAuthMiddleware';
-import { NodeMailerEmailService } from '../../../infrastructure/services/nodeMailer/NodeMailerEmailService';
+import {
+    adminAuth,
+    adminAuthController,
+    getAllUsersController,
+    blockUserController,
+    unBlockUserController,
+    getAllLawyersController,
+    blockLawyerController,
+    unBlockLawyerController,
+    approveLawyerController,
+    rejectLawyerController,
+    adminSubscriptionController,
+    getAllBookingController,
+    specializationController,
+    adminPaymentController,
+    payoutController,
+    adminDashboardController
+} from '../../../di/adminContainer';
 
-//  Admin Authentication
-import { AdminAuthController } from '../../controllers/admin/AdminAuthController';
-import { AdminRepository } from '../../../infrastructure/repositories/admin/AdminRepository';
-import { LoginAdminUseCase } from '../../../application/useCases/Admin/LoginAdminUseCase';
-import { TokenService } from '../../../infrastructure/services/jwt/TokenService';
-
-//  User Management
-import { GetAllUsersController } from '../../controllers/admin/GetAllUsersController';
-import { UserRepository } from '../../../infrastructure/repositories/user/UserRepository';
-import { GetAllUsersUseCase } from '../../../application/useCases/Admin/GetAllUsersUseCase';
-import { BlockUserController } from '../../controllers/admin/BlockUserController';
-import { BlockUserUseCase } from '../../../application/useCases/Admin/BlockUserUseCase';
-import { UNBlockuserUseCase } from '../../../application/useCases/Admin/UNBlockUserUseCase';
-import { UNBlockUserController } from '../../controllers/admin/UNBlockUserController';
-import { BookingRepository } from '../../../infrastructure/repositories/user/BookingRepository';
-// Lawyer Management
-import { LawyerRepository } from '../../../infrastructure/repositories/lawyer/LawyerRepository';
-import { GetAllLawyersController } from '../../controllers/admin/GetAllLawyersController';
-import { GetAllLawyersUseCase } from '../../../application/useCases/Admin/GetAllLawyersUseCase';
-import { BlockLawyerUseCase } from '../../../application/useCases/Admin/BlockLawyerUseCase';
-import { BlockLawyerController } from '../../controllers/admin/BlockLawyerController';
-import { UNBlockLawyerUseCase } from '../../../application/useCases/Admin/UNBlockLawyerUseCase';
-import { UNBlockLawyerController } from '../../controllers/admin/UNBlockLawyerController';
-import { ApproveLawyerUseCase } from '../../../application/useCases/Admin/ApproveLawyerUseCase';
-import { ApproveLawyerController } from '../../controllers/admin/ApproveLawyerController';
-import { RejectLawyerUseCase } from '../../../application/useCases/Admin/RejectLawyerUseCase';
-import { RejectLawyerController } from '../../controllers/admin/RejectLawyerController';
-
-
-import { GetAllBookingController } from '../../controllers/admin/GetAllBookingController';
-import { GetAllBookingUseCase } from '../../../application/useCases/Admin/GetAllBookingUseCase';
-
-// Subscription Management
-import { SubscriptionRepository } from '../../../infrastructure/repositories/admin/SubscriptionRepository';
-import { CreateSubscriptionUseCase } from '../../../application/useCases/Admin/CreateSubscriptionUseCase';
-import { GetSubscriptionsUseCase } from '../../../application/useCases/Admin/GetSubscriptionsUseCase';
-import { ToggleSubscriptionStatusUseCase } from '../../../application/useCases/Admin/ToggleSubscriptionStatusUseCase';
-import { UpdateSubscriptionUseCase } from '../../../application/useCases/Admin/UpdateSubscriptionUseCase';
-import { AdminSubscriptionController } from '../../controllers/admin/AdminSubscriptionController';
-import { WithdrawalRepository } from '../../../infrastructure/repositories/WithdrawalRepository';
-import { RequestPayoutUseCase } from '../../../application/useCases/lawyer/RequestPayoutUseCase';
-import { ApprovePayoutUseCase } from '../../../application/useCases/Admin/ApprovePayoutUseCase';
-import { RejectPayoutUseCase } from '../../../application/useCases/Admin/RejectPayoutUseCase';
-import { PayoutController } from '../../controllers/common/payout/PayoutController';
-import { GetAdminDashboardStatsUseCase } from '../../../application/useCases/Admin/GetAdminDashboardStatsUseCase';
-import { AdminDashboardController } from '../../controllers/admin/AdminDashboardController';
 const router = express.Router();
-
-// ------------------------------------------------------
-// Initialize Services & Core Dependencies
-// ------------------------------------------------------
-const tokenService = new TokenService();
-const adminRepo = new AdminRepository();
-const nodeMailerEmailService = new NodeMailerEmailService()
-const adminAuth = new AdminAuthMiddleware().execute;
-// ------------------------------------------------------
-//  Admin Authentication
-// ------------------------------------------------------
-const loginUseCase = new LoginAdminUseCase(adminRepo, tokenService);
-const controller = new AdminAuthController(loginUseCase);
-
-// ------------------------------------------------------
-// User Management Setup
-// ------------------------------------------------------
-const userRepo = new UserRepository();
-const getAllUsersUseCase = new GetAllUsersUseCase(userRepo);
-const getAllUsersController = new GetAllUsersController(getAllUsersUseCase);
-const blockUserUseCase = new BlockUserUseCase(userRepo);
-const blockUserController = new BlockUserController(blockUserUseCase);
-const unBlockuserUseCase = new UNBlockuserUseCase(userRepo);
-const unBlockUserController = new UNBlockUserController(unBlockuserUseCase);
-
-// ------------------------------------------------------
-// Lawyer Management Setup
-// ------------------------------------------------------
-const lawyerRepo = new LawyerRepository();
-const getAllLawyersUseCase = new GetAllLawyersUseCase(lawyerRepo);
-const getAllLawyersController = new GetAllLawyersController(getAllLawyersUseCase);
-const blockLawyerUseCase = new BlockLawyerUseCase(lawyerRepo);
-const blockLawyerController = new BlockLawyerController(blockLawyerUseCase);
-const unBlockLawyerUseCase = new UNBlockLawyerUseCase(lawyerRepo);
-const unBlockLawyerController = new UNBlockLawyerController(unBlockLawyerUseCase);
-const approveLawyerUseCase = new ApproveLawyerUseCase(lawyerRepo, nodeMailerEmailService);
-const approveLawyerController = new ApproveLawyerController(approveLawyerUseCase);
-const rejectLawyerUseCase = new RejectLawyerUseCase(lawyerRepo, nodeMailerEmailService);
-const rejectLawyerController = new RejectLawyerController(rejectLawyerUseCase);
-
-
-
-
-const subscriptionRepo = new SubscriptionRepository();
-const createSubscriptionUseCase = new CreateSubscriptionUseCase(subscriptionRepo);
-const getSubscriptionsUseCase = new GetSubscriptionsUseCase(subscriptionRepo);
-const toggleSubscriptionStatusUseCase = new ToggleSubscriptionStatusUseCase(subscriptionRepo);
-const updateSubscriptionUseCase = new UpdateSubscriptionUseCase(subscriptionRepo);
-const adminSubscriptionController = new AdminSubscriptionController(createSubscriptionUseCase, getSubscriptionsUseCase, toggleSubscriptionStatusUseCase, updateSubscriptionUseCase);
-
-const bookingRepo = new BookingRepository();
-const getAllBookingUseCase = new GetAllBookingUseCase(bookingRepo);
-const getAllBookingController = new GetAllBookingController(getAllBookingUseCase);
-
-
-
-
-// ------------------------------------------------------
-// Specialization Management Setup
-// ------------------------------------------------------
-import { SpecializationRepository } from '../../../infrastructure/repositories/admin/SpecializationRepository';
-import { AddSpecializationUseCase } from '../../../application/useCases/Admin/specialization/AddSpecializationUseCase';
-import { EditSpecializationUseCase } from '../../../application/useCases/Admin/specialization/EditSpecializationUseCase';
-import { DeleteSpecializationUseCase } from '../../../application/useCases/Admin/specialization/DeleteSpecializationUseCase';
-import { GetSpecializationsUseCase } from '../../../application/useCases/Admin/specialization/GetSpecializationsUseCase';
-import { SpecializationController } from '../../controllers/admin/SpecializationController';
-
-const specializationRepo = new SpecializationRepository();
-const addSpecializationUseCase = new AddSpecializationUseCase(specializationRepo);
-const editSpecializationUseCase = new EditSpecializationUseCase(specializationRepo);
-const deleteSpecializationUseCase = new DeleteSpecializationUseCase(specializationRepo);
-const getSpecializationsUseCase = new GetSpecializationsUseCase(specializationRepo);
-const specializationController = new SpecializationController(
-    addSpecializationUseCase,
-    editSpecializationUseCase,
-    deleteSpecializationUseCase,
-    getSpecializationsUseCase
-);
-// Payment Management Setup
-// ------------------------------------------------------
-import { PaymentRepository } from '../../../infrastructure/repositories/PaymentRepository';
-import { GetPaymentsUseCase } from '../../../application/useCases/Admin/GetPaymentsUseCase';
-import { AdminPaymentController } from '../../controllers/admin/AdminPaymentController';
-
-const paymentRepo = new PaymentRepository();
-const getPaymentsUseCase = new GetPaymentsUseCase(paymentRepo);
-const adminPaymentController = new AdminPaymentController(getPaymentsUseCase);
-
-// Payout Management Setup
-const withdrawalRepo = new WithdrawalRepository();
-const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo);
-const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepo, lawyerRepo);
-const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepo);
-const getAdminDashboardStatsUseCase = new GetAdminDashboardStatsUseCase(paymentRepo);
-const adminDashboardController = new AdminDashboardController(getAdminDashboardStatsUseCase);
-
-
-
-
 
 // ------------------------------------------------------
 //  Admin Routes
 // ------------------------------------------------------
 
-
 //  Admin Login and Logout
-router.post('/login', (req, res, next) => controller.login(req, res, next));
-router.post('/logout', (req, res, next) => controller.logout(req, res, next))
+router.post('/login', (req, res, next) => adminAuthController.login(req, res, next));
+router.post('/logout', (req, res, next) => adminAuthController.logout(req, res, next))
 
 //  User Management Routes
 router.get('/users', adminAuth, (req, res, next) => getAllUsersController.handle(req, res, next));
@@ -201,3 +70,5 @@ router.get('/specialization', adminAuth, (req, res, next) => specializationContr
 
 router.get('/bookings', adminAuth, (req, res, next) => getAllBookingController.execute(req, res, next));
 export default router
+
+
