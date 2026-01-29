@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 import logger from "./infrastructure/logging/logger";
-
 import userRoutes from "./interface/routes/user/userRoutes";
 import lawyerRoutes from "./interface/routes/lawyer/lawyerRoutes";
 import adminRoutes from "./interface/routes/admin/adminRoutes";
@@ -15,12 +14,7 @@ import videoCallRoutes from "./interface/routes/common/videoCallRoutes";
 
 import { DbConnection } from "./config/mongoose/DbConnection";
 import { errorHandler } from "./interface/middlewares/errorHandler";
-import { SocketServerService } from "./infrastructure/services/socket/socketServer";
-import { SendMessageUseCase } from "./application/useCases/common/chat/SendMessageUseCase";
-import { MarkMessagesAsReadUseCase } from "./application/useCases/common/chat/MarkMessagesAsReadUseCase";
-import { MessageRepository } from "./infrastructure/repositories/messageRepository";
-import { ChatRoomRepository } from "./infrastructure/repositories/ChatRoomRepository";
-import { SocketAuthService } from "./infrastructure/services/socket/socketAuth";
+import { socketServerService } from "./di/container";
 
 dotenv.config();
 
@@ -79,19 +73,6 @@ const io = new Server(server, {
   }
 });
 
-
-// Dependency Injection for SocketServerService
-const messageRepository = new MessageRepository();
-const chatRoomRepository = new ChatRoomRepository();
-const sendMessageUseCase = new SendMessageUseCase(messageRepository, chatRoomRepository);
-const markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(messageRepository);
-const socketAuthService = new SocketAuthService();
-
-const socketServerService = new SocketServerService(
-  sendMessageUseCase,
-  markMessagesAsReadUseCase,
-  socketAuthService
-);
 socketServerService.setupSocketServer(io);
 
 
