@@ -3,11 +3,12 @@ import { IGetPaymentsUseCase } from "../../../application/interface/use-cases/ad
 import { GetPaymentsRequestDTO } from "../../../application/dtos/admin/GetPaymentsRequestDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class AdminPaymentController {
     constructor(private readonly _getPaymentsUseCase: IGetPaymentsUseCase) { }
 
-    async getAllPayments(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getAllPayments(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 10;
@@ -29,11 +30,7 @@ export class AdminPaymentController {
 
             const result = await this._getPaymentsUseCase.execute(requestDTO);
 
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.PAYMENT.FETCH_SUCCESS,
-                data: result
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.PAYMENT.FETCH_SUCCESS, result);
         } catch (error: unknown) {
             next(error);
         }

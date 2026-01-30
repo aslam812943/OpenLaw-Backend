@@ -13,6 +13,7 @@ import { ForgetPasswordRequestDTO } from "../../../application/dtos/user/ForgetP
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ITokenService } from "../../../application/interface/services/TokenServiceInterface";
 import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class AuthController {
   constructor(
@@ -26,77 +27,61 @@ export class AuthController {
     private readonly _tokenService: ITokenService
   ) { }
 
-  async registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async registerUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const dto = new UserRegisterDTO(req.body);
       const result = await this._registerUserUseCase.execute(dto);
 
-      res.status(HttpStatusCode.CREATED).json({
-        success: true,
-        message: result.message || "User registered successfully! OTP sent to email.",
-      });
+      return ApiResponse.success(res, HttpStatusCode.CREATED, result.message || "User registered successfully! OTP sent to email.");
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const { email, otp } = req.body;
       const result = await this._verifyOtpUseCase.execute(email, otp);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: "OTP verified successfully!",
-        data: result,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, "OTP verified successfully!", result);
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async resendOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const { email } = req.body;
       const message = await this._resendOtpUseCase.execute(email);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: message || "OTP resent successfully!",
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, message || "OTP resent successfully!");
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async requestForgetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async requestForgetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const dto = new ForgetPasswordRequestDTO(req.body);
       const message = await this._requestForgetPasswordUseCase.execute(dto);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: message || "Password reset OTP sent successfully.",
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, message || "Password reset OTP sent successfully.");
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async verifyResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async verifyResetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const message = await this._verifyResetPasswordUseCase.execute(req.body);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: message || "Password reset successful!",
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, message || "Password reset successful!");
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async loginUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUseCase.execute(dto);
@@ -121,21 +106,18 @@ export class AuthController {
         maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: user.role === UserRole.LAWYER ? MessageConstants.LAWYER.LOGIN_SUCCESS : (user.role === UserRole.ADMIN ? MessageConstants.ADMIN.LOGIN_SUCCESS : MessageConstants.USER.LOGIN_SUCCESS),
-        data: {
-          token,
-          refreshToken,
-          user,
-        },
+      const message = user.role === UserRole.LAWYER ? MessageConstants.LAWYER.LOGIN_SUCCESS : (user.role === UserRole.ADMIN ? MessageConstants.ADMIN.LOGIN_SUCCESS : MessageConstants.USER.LOGIN_SUCCESS);
+      return ApiResponse.success(res, HttpStatusCode.OK, message, {
+        token,
+        refreshToken,
+        user,
       });
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async logoutUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logoutUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
@@ -170,16 +152,13 @@ export class AuthController {
         }
       }
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: logoutMessage,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, logoutMessage);
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async googleAuth(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
 
     try {
       const { token: idToken, role } = req.body;
@@ -187,12 +166,8 @@ export class AuthController {
 
 
       if (result.needsRoleSelection) {
-        res.status(HttpStatusCode.OK).json({
-          success: true,
-          message: "Please select a role.",
-          data: {
-            needsRoleSelection: true
-          }
+        return ApiResponse.success(res, HttpStatusCode.OK, "Please select a role.", {
+          needsRoleSelection: true
         });
         return;
       }
@@ -217,15 +192,11 @@ export class AuthController {
         maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE)
       });
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: "Google login successful.",
-        data: {
-          token: result.token,
-          refreshToken: result.refreshToken,
-          user: result.user,
-          needsVerificationSubmission: result.needsVerificationSubmission
-        }
+      return ApiResponse.success(res, HttpStatusCode.OK, "Google login successful.", {
+        token: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+        needsVerificationSubmission: result.needsVerificationSubmission
       });
     } catch (error: unknown) {
       next(error);

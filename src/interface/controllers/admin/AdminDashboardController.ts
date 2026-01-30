@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { IGetAdminDashboardStatsUseCase } from "../../../application/interface/use-cases/admin/IGetAdminDashboardStatsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class AdminDashboardController {
     constructor(private readonly _getAdminDashboardStatsUseCase: IGetAdminDashboardStatsUseCase) { }
 
-    async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { startDate, endDate } = req.query;
             let start: Date | undefined;
@@ -22,11 +23,7 @@ export class AdminDashboardController {
             }
 
             const stats = await this._getAdminDashboardStatsUseCase.execute(start, end);
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.DASHBOARD.STATS_FETCH_SUCCESS,
-                data: stats
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.DASHBOARD.STATS_FETCH_SUCCESS, stats);
         } catch (error: unknown) {
             next(error);
         }

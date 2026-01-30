@@ -15,7 +15,7 @@ export class RejectLawyerUseCase implements IRejectLawyerUseCase {
 
     await this._mailService.sendMail(
       email,
-      "⚠️ Regarding Your Lawyer Verification Status - LegalConnect Platform",
+      "⚠️ Regarding Your Lawyer Verification Status - Open Law Platform",
       `
         <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 40px;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); overflow: hidden;">
@@ -23,7 +23,7 @@ export class RejectLawyerUseCase implements IRejectLawyerUseCase {
             <!-- Header -->
             <div style="background: linear-gradient(to right, #dc2626, #b91c1c); padding: 20px 30px; text-align: center;">
               <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
-                LegalConnect Verification Update
+                Open Law Verification Update
               </h2>
             </div>
 
@@ -71,7 +71,7 @@ export class RejectLawyerUseCase implements IRejectLawyerUseCase {
 
             <!-- Footer -->
             <div style="background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 13px; color: #6b7280;">
-              © 2025 LegalConnect. All Rights Reserved.
+              © 2025 Open Law. All Rights Reserved.
             </div>
           </div>
         </div>

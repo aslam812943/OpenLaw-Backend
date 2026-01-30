@@ -4,6 +4,7 @@ import { IVerifySubscriptionPaymentUseCase } from "../../../application/interfac
 import { CreateSubscriptionCheckoutDTO } from "../../../application/dtos/lawyer/CreateSubscriptionCheckoutDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class SubscriptionPaymentController {
     constructor(
@@ -11,54 +12,37 @@ export class SubscriptionPaymentController {
         private readonly _verifySubscriptionPaymentUseCase: IVerifySubscriptionPaymentUseCase
     ) { }
 
-    async createCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async createCheckout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { lawyerId, email, planName, price, subscriptionId } = req.body;
 
             if (!lawyerId || !planName || !price || !subscriptionId) {
-                res.status(HttpStatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: MessageConstants.COMMON.BAD_REQUEST
-                });
-                return;
+                return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
             }
 
             const dto = new CreateSubscriptionCheckoutDTO(lawyerId, email, planName, price, subscriptionId);
             const url = await this._createSubscriptionCheckoutUseCase.execute(dto);
 
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.SUBSCRIPTION.CHECKOUT_SESSION_CREATE_SUCCESS,
-                data: { url }
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.SUBSCRIPTION.CHECKOUT_SESSION_CREATE_SUCCESS, { url });
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async handleSuccess(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async handleSuccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { session_id } = req.body;
 
             if (!session_id) {
-                res.status(HttpStatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: MessageConstants.COMMON.BAD_REQUEST
-                });
-                return;
+                return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
+                
             }
 
             const success = await this._verifySubscriptionPaymentUseCase.execute(session_id);
             if (success) {
-                res.status(HttpStatusCode.OK).json({
-                    success: true,
-                    message: MessageConstants.COMMON.SUCCESS
-                });
+                return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS);
             } else {
-                res.status(HttpStatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: MessageConstants.COMMON.BAD_REQUEST
-                });
+                return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
             }
         } catch (error: unknown) {
             next(error);

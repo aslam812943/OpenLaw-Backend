@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ICanJoinCallUseCase } from "../../../../application/interface/use-cases/common/ICanJoinCallUseCase";
 import { IJoinCallUseCase } from "../../../../application/interface/use-cases/common/IJoinCallUseCase";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
+import { ApiResponse } from "../../../../infrastructure/utils/ApiResponse";
 
 export class VideoCallController {
     constructor(
@@ -9,7 +10,7 @@ export class VideoCallController {
         private _joinCallUseCase: IJoinCallUseCase
     ) { }
 
-    async canJoinCall(req: Request, res: Response, next: NextFunction) {
+    async canJoinCall(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { bookingId } = req.params;
             const userId = req.user?.id;
@@ -20,18 +21,18 @@ export class VideoCallController {
             }
 
             const result = await this._canJoinCallUseCase.execute(bookingId, userId, role);
-            res.status(HttpStatusCode.OK).json(result);
+            return ApiResponse.success(res, HttpStatusCode.OK, "Ability to join call checked", result);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async joinCall(req: Request, res: Response, next: NextFunction) {
+    async joinCall(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { bookingId } = req.params;
 
             await this._joinCallUseCase.execute(bookingId);
-            res.status(HttpStatusCode.OK).json({ success: true, message: "Joined call successfully" });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Joined call successfully");
         } catch (error: unknown) {
             next(error);
         }

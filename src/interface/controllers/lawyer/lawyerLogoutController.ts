@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class LawyerLogoutController {
-    async handle(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    async handle(_req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
 
             res.clearCookie('accessToken', {
@@ -22,10 +23,7 @@ export class LawyerLogoutController {
                 path: '/'
             });
 
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.LAWYER.LOGOUT_SUCCESS,
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.LOGOUT_SUCCESS);
 
         } catch (error: unknown) {
             next(error);

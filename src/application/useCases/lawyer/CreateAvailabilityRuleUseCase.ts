@@ -73,7 +73,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
       if (timeOverlap) {
         errors.push(
-          `Overlapping rule found with "${rule.title}" (${rule.startTime} - ${rule.endTime})`
+          `Overlapping rule found with "${rule.title}")`
         );
       }
     }

@@ -2,7 +2,6 @@ import { IGetPaymentsUseCase } from "../../interface/use-cases/admin/IGetPayment
 import { IPaymentRepository } from "../../../domain/repositories/IPaymentRepository";
 import { GetPaymentsRequestDTO } from "../../dtos/admin/GetPaymentsRequestDTO";
 import { PaymentResponseDTO } from "../../dtos/admin/PaymentResponseDTO";
-import { Payment } from "../../../domain/entities/Payment";
 
 export class GetPaymentsUseCase implements IGetPaymentsUseCase {
     constructor(private _paymentRepository: IPaymentRepository) { }

@@ -9,6 +9,7 @@ import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/Crea
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 
 
@@ -23,16 +24,13 @@ export class AvailabilityController {
     private readonly _deleteRuleUseCase: IDeleteAvailableRuleUseCase
   ) { }
 
-  async createRule(req: Request, res: Response, next: NextFunction) {
+  async createRule(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const ruleData = req.body.ruleData;
       const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED,
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const dto = new CreateAvailabilityRuleDTO(
@@ -53,25 +51,18 @@ export class AvailabilityController {
 
       const result = await this._createRuleUseCase.execute(dto);
 
-      return res.status(HttpStatusCode.CREATED).json({
-        success: true,
-        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
-        data: result,
-      });
+      return ApiResponse.success(res, HttpStatusCode.CREATED, MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS, result);
     } catch (err: unknown) {
       next(err);
     }
   }
 
-  async updateRule(req: Request, res: Response, next: NextFunction) {
+  async updateRule(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MessageConstants.COMMON.BAD_REQUEST,
-        });
+        return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
       }
 
       const dto = new UpdateAvailabilityRuleDTO(
@@ -91,56 +82,39 @@ export class AvailabilityController {
 
       const result = await this._updateAvailableUseCase.execute(ruleId, dto);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS,
-        data: result,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.AVAILABILITY_UPDATE_SUCCESS, result);
     } catch (err: unknown) {
       next(err);
     }
   }
 
-  async getAllRules(req: Request, res: Response, next: NextFunction) {
+  async getAllRules(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const lawyerId = req.user?.id;
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED,
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const rules = await this._getAllRulesUseCase.execute(lawyerId);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.AVAILABILITY_FETCH_SUCCESS,
-        data: rules,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.AVAILABILITY_FETCH_SUCCESS, rules);
     } catch (err: unknown) {
       next(err);
     }
   }
 
-  async deleteRule(req: Request, res: Response, next: NextFunction) {
+  async deleteRule(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const ruleId = req.params.ruleId;
 
       if (!ruleId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MessageConstants.COMMON.BAD_REQUEST,
-        });
+        return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
       }
 
       await this._deleteRuleUseCase.execute(ruleId);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.COMMON.SUCCESS,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS);
     } catch (err: unknown) {
       next(err);
     }

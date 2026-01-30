@@ -3,6 +3,7 @@ import { IGetSingleLawyerUseCase } from "../../../application/interface/use-case
 import { IGetAllSlotsUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class GetSingleLawyerController {
   constructor(
@@ -16,26 +17,16 @@ export class GetSingleLawyerController {
 
 
       if (!lawyerId) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MessageConstants.COMMON.BAD_REQUEST
-        });
+        return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
       }
 
       const lawyer = await this._getSingleLawyerUseCase.execute(lawyerId);
 
       if (!lawyer) {
-        return res.status(HttpStatusCode.NOT_FOUND).json({
-          success: false,
-          message: MessageConstants.COMMON.INTERNAL_ERROR
-        });
+        return ApiResponse.error(res, HttpStatusCode.NOT_FOUND, MessageConstants.COMMON.INTERNAL_ERROR);
       }
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.FETCH_SUCCESS,
-        data: lawyer,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.FETCH_SUCCESS, lawyer);
 
     } catch (error: unknown) {
       next(error);
@@ -47,19 +38,12 @@ export class GetSingleLawyerController {
       const id = req.params.id;
 
       if (!id) {
-        return res.status(HttpStatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MessageConstants.COMMON.BAD_REQUEST
-        });
+        return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
       }
 
       const slots = await this._getAllSlotsUseCase.execute(id);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.COMMON.SUCCESS,
-        data: slots,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS, slots);
 
     } catch (error: unknown) {
       next(error);

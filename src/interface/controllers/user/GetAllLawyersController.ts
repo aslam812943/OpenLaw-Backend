@@ -2,6 +2,7 @@ import { Response, Request, NextFunction } from "express";
 import { IGetAllLawyersUseCase } from "../../../application/interface/use-cases/user/IGetAllLawyersUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class GetAllLawyersController {
    constructor(private readonly _getAllLawyersUseCase: IGetAllLawyersUseCase) { }
@@ -23,15 +24,11 @@ export class GetAllLawyersController {
             fromAdmin: false
          });
 
-         return res.status(HttpStatusCode.OK).json({
-            success: true,
-            message: MessageConstants.LAWYER.FETCH_SUCCESS,
-            data: {
-               lawyers: result.lawyers,
-               totalCount: result.total,
-               currentPage: page,
-               totalPages: Math.ceil(result.total / limit)
-            }
+         return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.FETCH_SUCCESS, {
+            lawyers: result.lawyers,
+            totalCount: result.total,
+            currentPage: page,
+            totalPages: Math.ceil(result.total / limit)
          });
       } catch (error: unknown) {
          next(error);

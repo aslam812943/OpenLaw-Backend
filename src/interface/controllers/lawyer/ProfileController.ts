@@ -4,6 +4,7 @@ import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateL
 import { ChangePasswordDTO } from "../../../application/dtos/lawyer/ChangePasswordDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class LawyerProfileController {
   constructor(
@@ -12,39 +13,29 @@ export class LawyerProfileController {
     private readonly _changePasswordUseCase: IChangePasswordUseCase
   ) { }
 
-  async getDetails(req: Request, res: Response, next: NextFunction) {
+  async getDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const userId = req.user?.id;
 
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED,
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const data = await this._getProfileUseCase.execute(userId);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.FETCH_SUCCESS,
-        data,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.FETCH_SUCCESS, data);
 
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async updateProfile(req: Request, res: Response, next: NextFunction) {
+  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const userId = req.user?.id;
 
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED,
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const imageUrl = req.file ? req.file.path : "";
@@ -63,34 +54,25 @@ export class LawyerProfileController {
 
       await this._updateProfileUseCase.execute(userId, dto);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.PROFILE_UPDATE_SUCCESS,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.PROFILE_UPDATE_SUCCESS);
 
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async changePassword(req: Request, res: Response, next: NextFunction) {
+  async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const dto = new ChangePasswordDTO(userId, req.body.oldPassword, req.body.newPassword);
 
       await this._changePasswordUseCase.execute(dto);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.LAWYER.PASSWORD_CHANGE_SUCCESS
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.PASSWORD_CHANGE_SUCCESS);
     } catch (error: unknown) {
       next(error);
     }

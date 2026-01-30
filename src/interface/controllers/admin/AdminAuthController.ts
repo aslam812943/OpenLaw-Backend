@@ -4,14 +4,15 @@ import AdminLoginRequestDTO from '../../../application/dtos/admin/AdminLoginRequ
 import { HttpStatusCode } from '../../../infrastructure/interface/enums/HttpStatusCode';
 import { MessageConstants } from '../../../infrastructure/constants/MessageConstants';
 import logger from '../../../infrastructure/logging/logger';
+import { ApiResponse } from '../../../infrastructure/utils/ApiResponse';
 export class AdminAuthController {
   constructor(private readonly _loginUseCase: ILoginAdminUseCase) { }
 
-  async login(req: Request, res: Response, next: NextFunction) {
+  async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const loginDto = new AdminLoginRequestDTO(req.body);
       const result = await this._loginUseCase.execute(loginDto);
-logger.info('Login attempt',{email:req.body.email})
+      logger.info('Login attempt', { email: req.body.email })
       const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
@@ -33,18 +34,14 @@ logger.info('Login attempt',{email:req.body.email})
         maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000
       });
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.ADMIN.LOGIN_SUCCESS,
-        data: result,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.ADMIN.LOGIN_SUCCESS, result);
 
     } catch (error: unknown) {
       next(error);
     }
   }
 
-  async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logout(_req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const cookieSecure = process.env.COOKIE_SECURE === 'true';
       const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
@@ -65,10 +62,7 @@ logger.info('Login attempt',{email:req.body.email})
         path: '/'
       });
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.ADMIN.LOGOUT_SUCCESS,
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.ADMIN.LOGOUT_SUCCESS);
     } catch (error: unknown) {
       next(error);
     }

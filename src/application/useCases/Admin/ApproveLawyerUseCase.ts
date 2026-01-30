@@ -15,7 +15,7 @@ export class ApproveLawyerUseCase implements IApproveLawyerUseCase {
 
 
 
-    const subject = "✅ Congratulations! Your LegalConnect Profile Has Been Approved";
+    const subject = "✅ Congratulations! Your Open Law Profile Has Been Approved";
 
     const htmlContent = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #f9fafb; padding: 40px;">
@@ -36,7 +36,7 @@ export class ApproveLawyerUseCase implements IApproveLawyerUseCase {
             </p>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://legalconnect.in/login" 
+              <a href="https://www.openlaw.sbs/login" 
                 style="background: linear-gradient(to right, #10b981, #059669); 
                        color: #ffffff; 
                        padding: 12px 28px; 
@@ -58,7 +58,7 @@ export class ApproveLawyerUseCase implements IApproveLawyerUseCase {
             </p>
 
             <p style="font-size: 15px; margin-top: 20px;">Warm regards,<br>
-              <strong style="color:#065f46;">LegalConnect Admin Team</strong>
+              <strong style="color:#065f46;">Open Law Admin Team</strong>
             </p>
           </div>
 

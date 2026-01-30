@@ -3,6 +3,7 @@ import { ICheckChatAccessUseCase } from "../../../../application/interface/use-c
 import { IGetChatRoomUseCase } from "../../../../application/interface/use-cases/common/chat/IGetChatRoomUseCase";
 import { IGetMessagesUseCase } from "../../../../application/interface/use-cases/common/chat/IGetMessagesUseCase";
 import { HttpStatusCode } from "../../../../infrastructure/interface/enums/HttpStatusCode";
+import { ApiResponse } from "../../../../infrastructure/utils/ApiResponse";
 
 export class ChatController {
     constructor(
@@ -11,12 +12,12 @@ export class ChatController {
         private _getMessagesUseCase: IGetMessagesUseCase
     ) { }
 
-    async checkAccess(req: Request, res: Response, next: NextFunction) {
+    async checkAccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const userId = req.user?.id;
             const { lawyerId } = req.params;
             const chatAccessDto = await this._checkChatAccessUseCase.execute(userId!, lawyerId);
-            res.status(HttpStatusCode.OK).json({ success: true, hasAccess: chatAccessDto.hasAccess });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Access checked successfully", { hasAccess: chatAccessDto.hasAccess });
         } catch (error: unknown) {
             next(error);
         }
@@ -25,7 +26,7 @@ export class ChatController {
 
 
 
-    async getChatRoom(req: Request, res: Response, next: NextFunction) {
+    async getChatRoom(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const userId = req.user?.id;
             const { lawyerId, userId: targetUserId } = req.body;
@@ -34,53 +35,53 @@ export class ChatController {
                 targetUserId || userId,
                 lawyerId || userId
             );
-            res.status(HttpStatusCode.OK).json({ success: true, data: room });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Chat room retrieved successfully", room);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async getRoomById(req: Request, res: Response, next: NextFunction) {
+    async getRoomById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { roomId } = req.params;
             const room = await this._getChatRoomUseCase.getById(roomId);
-            res.status(HttpStatusCode.OK).json({ success: true, data: room });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Chat room retrieved successfully", room);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async getMessages(req: Request, res: Response, next: NextFunction) {
+    async getMessages(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { roomId } = req.params;
             const messages = await this._getMessagesUseCase.execute(roomId);
-            res.status(HttpStatusCode.OK).json({ success: true, data: messages });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Messages retrieved successfully", messages);
         } catch (error) {
             next(error);
         }
     }
 
-    async getUserRooms(req: Request, res: Response, next: NextFunction) {
+    async getUserRooms(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const userId = req.user?.id;
             const rooms = await this._getChatRoomUseCase.getByUser(userId!);
-            res.status(HttpStatusCode.OK).json({ success: true, data: rooms });
+            return ApiResponse.success(res, HttpStatusCode.OK, "User rooms retrieved successfully", rooms);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async getLawyerRooms(req: Request, res: Response, next: NextFunction) {
+    async getLawyerRooms(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const lawyerId = req.user?.id;
             const rooms = await this._getChatRoomUseCase.getByLawyer(lawyerId!);
-            res.status(HttpStatusCode.OK).json({ success: true, data: rooms });
+            return ApiResponse.success(res, HttpStatusCode.OK, "Lawyer rooms retrieved successfully", rooms);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async uploadFile(req: Request, res: Response, next: NextFunction) {
+    async uploadFile(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             if (!req.file) {
                 throw new Error("No file uploaded");
@@ -90,13 +91,10 @@ export class ChatController {
             const fileName = req.file.originalname;
             const fileSize = req.file.size;
 
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                data: {
-                    fileUrl,
-                    fileName,
-                    fileSize
-                }
+            return ApiResponse.success(res, HttpStatusCode.OK, "File uploaded successfully", {
+                fileUrl,
+                fileName,
+                fileSize
             });
         } catch (error: unknown) {
             next(error);

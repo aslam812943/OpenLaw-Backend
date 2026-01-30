@@ -4,6 +4,7 @@ import { ChangePasswordDTO } from "../../../application/dtos/user/ChangePassword
 import { ProfileUpdateDTO } from "../../../application/dtos/user/ProfileupdateDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class GetProfileController {
   constructor(
@@ -16,19 +17,12 @@ export class GetProfileController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const data = await this._getProfileUseCase.execute(userId);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.COMMON.SUCCESS,
-        data
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS, data);
     } catch (error: unknown) {
       next(error);
     }
@@ -38,19 +32,13 @@ export class GetProfileController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       const dto = new ChangePasswordDTO(userId, req.body.oldPassword, req.body.newPassword);
       await this._changePasswordUseCase.execute(dto);
 
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.USER.PASSWORD_CHANGE_SUCCESS
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.USER.PASSWORD_CHANGE_SUCCESS);
     } catch (error: unknown) {
       next(error);
     }
@@ -60,10 +48,7 @@ export class GetProfileController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          message: MessageConstants.COMMON.UNAUTHORIZED
-        });
+        return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
       let profileImage: string = "";
@@ -83,10 +68,7 @@ export class GetProfileController {
 
       await this._profileEditUseCase.execute(dto);
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.USER.PROFILE_UPDATE_SUCCESS
-      });
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.USER.PROFILE_UPDATE_SUCCESS);
     } catch (err: unknown) {
       next(err);
     }

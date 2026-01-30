@@ -88,7 +88,7 @@ export class BookingRepository implements IBookingRepository {
             const p = Number(page) || 1;
             const l = Number(limit) || 10;
             const skip = (p - 1) * l;
-            const query: any = { userId: new Types.ObjectId(userId) };
+            const query: mongoose.FilterQuery<IBookingDocument> = { userId: new Types.ObjectId(userId) };
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 query.status = status.trim();
@@ -183,7 +183,7 @@ export class BookingRepository implements IBookingRepository {
             const p = Number(page) || 1;
             const l = Number(limit) || 10;
             const skip = (p - 1) * l;
-            const query: any = { lawyerId: new Types.ObjectId(lawyerId) };
+            const query: mongoose.FilterQuery<IBookingDocument> = { lawyerId: new Types.ObjectId(lawyerId) };
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 query.status = status.trim();
@@ -232,7 +232,7 @@ export class BookingRepository implements IBookingRepository {
             const p = Number(page) || 1;
             const l = Number(limit) || 10;
             const skip = (p - 1) * l;
-            const query: any = {};
+            const query: mongoose.FilterQuery<IBookingDocument> = {};
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 query.status = status.trim();

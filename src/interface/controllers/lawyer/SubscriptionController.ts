@@ -3,6 +3,7 @@ import { IGetSubscriptionPlansUseCase } from "../../../application/interface/use
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IGetCurrentSubscriptionUseCase } from "../../../application/interface/use-cases/lawyer/IGetCurrentSubscriptionUseCase";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class SubscriptionController {
     constructor(
@@ -10,35 +11,24 @@ export class SubscriptionController {
         private readonly _getCurrentSubscriptionUseCase: IGetCurrentSubscriptionUseCase
     ) { }
 
-    async getPlans(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getPlans(_req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const plans = await this._getSubscriptionPlansUseCase.execute();
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.SUBSCRIPTION.FETCH_SUCCESS,
-                data: plans
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.SUBSCRIPTION.FETCH_SUCCESS, plans);
         } catch (error: unknown) {
             next(error);
         }
     }
 
-    async getCurrentSubscription(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getCurrentSubscription(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const lawyerId = req.user?.id;
             if (!lawyerId) {
-                res.status(HttpStatusCode.FORBIDDEN).json({
-                    success: false,
-                    message: MessageConstants.COMMON.UNAUTHORIZED
-                });
+                return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
                 return;
             }
             const subscription = await this._getCurrentSubscriptionUseCase.execute(lawyerId);
-            res.status(HttpStatusCode.OK).json({
-                success: true,
-                message: MessageConstants.SUBSCRIPTION.CURRENT_FETCH_SUCCESS,
-                data: subscription
-            });
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.SUBSCRIPTION.CURRENT_FETCH_SUCCESS, subscription);
         } catch (error: unknown) {
             next(error);
         }

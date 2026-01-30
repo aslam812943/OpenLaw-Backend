@@ -3,11 +3,12 @@ import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/Verifica
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { IRegisterLawyerUseCase } from "../../../application/interface/use-cases/lawyer/IRegisterLawyerUseCase";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 export class LawyerController {
   constructor(private readonly _registerLawyerUseCase: IRegisterLawyerUseCase) { }
 
-  async registerLawyer(req: Request, res: Response, next: NextFunction) {
+  async registerLawyer(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const documentUrls = Array.isArray(req.files)
         ? (req.files as Express.Multer.File[]).map((file) => file.path)
@@ -24,11 +25,7 @@ export class LawyerController {
 
       const lawyer = await this._registerLawyerUseCase.execute(dto);
 
-      res.status(HttpStatusCode.CREATED).json({
-        success: true,
-        message: MessageConstants.LAWYER.APPROVE_SUCCESS,
-        data: lawyer,
-      });
+      return ApiResponse.success(res, HttpStatusCode.CREATED, MessageConstants.LAWYER.APPROVE_SUCCESS, lawyer);
     } catch (err: unknown) {
       next(err);
     }
