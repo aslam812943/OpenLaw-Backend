@@ -1,5 +1,7 @@
+
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../infrastructure/errors/AppError";
+import { ApiResponse } from "../../infrastructure/utils/ApiResponse";
 
 export const errorHandler = (
   err: Error,
@@ -8,16 +10,8 @@ export const errorHandler = (
   _next: NextFunction
 ) => {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-    });
+    return ApiResponse.error(res, err.statusCode, err.message);
   }
 
-
-
-  return res.status(500).json({
-    success: false,
-    message: "Internal Server Error",
-  });
+  return ApiResponse.error(res, 500, "Internal Server Error");
 };

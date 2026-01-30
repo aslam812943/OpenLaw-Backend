@@ -3,6 +3,7 @@ import { IGetAllUsersUseCase } from "../../../application/interface/use-cases/ad
 import { GetAllUserDTO } from "../../../application/dtos/admin/GetAllUserDTO";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
+import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 
 interface PaginationInput {
   page: number;
@@ -26,9 +27,7 @@ export class GetAllUsersController {
 
       const { users, total } = await this._getAllUserUseCase.execute({ page, limit, search, filter, sort });
 
-      return res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: MessageConstants.USER.FETCH_SUCCESS,
+      return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.USER.FETCH_SUCCESS, {
         users,
         total,
         currentPage: page,
