@@ -27,10 +27,17 @@ export class SubscriptionRepository implements ISubscriptionRepository {
             total
         };
     }
+    async findActive(page: number, limit: number): Promise<{ plans: Subscription[]; total: number; }> {
+        const skip = (page - 1) * limit;
+        const [plans, total] = await Promise.all([
+            subscriptionModel.find({ isActive: true }).skip(skip).limit(limit).lean(),
+            subscriptionModel.countDocuments({ isActive: true })
+        ]);
 
-    async findActive(): Promise<Subscription[]> {
-        const active = await subscriptionModel.find({ isActive: true });
-        return active.map((d: unknown) => this._mapToSubscription(d));
+        return {
+            plans: (plans as unknown[]).map((d: unknown) => this._mapToSubscription(d)),
+            total
+        };
     }
 
     async toggleStatus(id: string, status: boolean): Promise<void> {

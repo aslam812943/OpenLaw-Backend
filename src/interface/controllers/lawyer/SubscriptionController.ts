@@ -11,9 +11,11 @@ export class SubscriptionController {
         private readonly _getCurrentSubscriptionUseCase: IGetCurrentSubscriptionUseCase
     ) { }
 
-    async getPlans(_req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    async getPlans(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const plans = await this._getSubscriptionPlansUseCase.execute();
+             const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const plans = await this._getSubscriptionPlansUseCase.execute(page,limit);
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.SUBSCRIPTION.FETCH_SUCCESS, plans);
         } catch (error: unknown) {
             next(error);
