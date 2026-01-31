@@ -12,16 +12,22 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
     ) { }
 
     async execute(lawyerId: string): Promise<GetLawyerEarningsDTO> {
-        const [result, lawyer] = await Promise.all([
-            this._bookingRepository.findByLawyerId(lawyerId),
-            this._lawyerRepository.findById(lawyerId)
+        const [result, lawyer, stats] = await Promise.all([
+            this._bookingRepository.findByLawyerId(lawyerId, 1, 10, 'confirmed,completed'),
+            this._lawyerRepository.findById(lawyerId),
+            this._bookingRepository.getEarningsStats(lawyerId)
         ]);
 
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found.");
         }
 
-        return LawyerEarningsMapper.toDTO(result.bookings, lawyer.walletBalance || 0);
+        return LawyerEarningsMapper.toDTO(
+            result.bookings,
+            lawyer.walletBalance || 0,
+            stats.totalGross,
+            stats.pendingNet
+        );
     }
 
 }

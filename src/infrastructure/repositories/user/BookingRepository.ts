@@ -91,7 +91,8 @@ export class BookingRepository implements IBookingRepository {
             const query: mongoose.FilterQuery<IBookingDocument> = { userId: new Types.ObjectId(userId) };
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
-                query.status = status.trim();
+                const statuses = status.split(",").map(s => s.trim());
+                query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
             }
             if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
                 query.date = date.trim();
@@ -186,7 +187,8 @@ export class BookingRepository implements IBookingRepository {
             const query: mongoose.FilterQuery<IBookingDocument> = { lawyerId: new Types.ObjectId(lawyerId) };
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
-                query.status = status.trim();
+                const statuses = status.split(",").map(s => s.trim());
+                query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
             }
             if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
                 query.date = date.trim();
@@ -235,7 +237,8 @@ export class BookingRepository implements IBookingRepository {
             const query: mongoose.FilterQuery<IBookingDocument> = {};
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
-                query.status = status.trim();
+                const statuses = status.split(",").map(s => s.trim());
+                query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
             }
             if (date && typeof date === 'string' && date.trim() !== "" && date !== "undefined" && date !== "null") {
                 query.date = date.trim();
@@ -268,6 +271,53 @@ export class BookingRepository implements IBookingRepository {
             };
         } catch (error: unknown) {
             throw new InternalServerError("Database error while fetching all bookings.");
+        }
+    }
+
+    async getEarningsStats(lawyerId: string): Promise<{ totalGross: number, pendingNet: number }> {
+        try {
+            const stats = await BookingModel.aggregate([
+                { $match: { lawyerId: new Types.ObjectId(lawyerId), paymentStatus: 'paid' } },
+                {
+                    $group: {
+                        _id: null,
+                        totalGross: {
+                            $sum: {
+                                $cond: [
+                                    { $in: ["$status", ["confirmed", "completed"]] },
+                                    "$consultationFee",
+                                    0
+                                ]
+                            }
+                        },
+                        pendingNet: {
+                            $sum: {
+                                $cond: [
+                                    { $eq: ["$status", "confirmed"] },
+                                    {
+                                        $subtract: [
+                                            "$consultationFee",
+                                            { $multiply: ["$consultationFee", { $divide: [{ $ifNull: ["$commissionPercent", 0] }, 100] }] }
+                                        ]
+                                    },
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            if (stats.length === 0) {
+                return { totalGross: 0, pendingNet: 0 };
+            }
+
+            return {
+                totalGross: stats[0].totalGross || 0,
+                pendingNet: stats[0].pendingNet || 0
+            };
+        } catch (error: unknown) {
+            throw new InternalServerError("Database error while calculating earnings stats.");
         }
     }
 }

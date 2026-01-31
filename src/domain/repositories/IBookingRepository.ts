@@ -11,4 +11,5 @@ export interface IBookingRepository {
     findByLawyerId(lawyerId: string, page?: number, limit?: number, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }>;
     updateCallStatus(id: string, lawyerJoined: boolean, isCallActive?: boolean): Promise<void>;
     findAll(page?: number, limit?: number, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }>;
+    getEarningsStats(lawyerId: string): Promise<{ totalGross: number, pendingNet: number }>;
 }
