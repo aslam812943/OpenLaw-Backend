@@ -21,6 +21,7 @@ export class Booking {
         public lawyerJoined?: boolean,
         public commissionPercent: number = 0,
         public lawyerFeedback?: string,
+        public bookingId?: string,
         public createdAt?: Date
     ) { }
 }

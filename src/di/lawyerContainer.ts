@@ -90,8 +90,8 @@ const slotGeneratorService = new SlotGeneratorService();
 //  UseCase Instances
 // ============================================================================
 const registerLawyerUseCase = new RegisterLawyerUseCase(lawyerRepository);
-const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
-const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService);
+const createAvailabilityRuleUseCase = new CreateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService, lawyerRepository);
+const updateAvailabilityRuleUseCase = new UpdateAvailabilityRuleUseCase(availabilityRuleRepository, slotGeneratorService, lawyerRepository);
 const getAllAvailableRuleUseCase = new GetAllAvailableRuleUseCase(availabilityRuleRepository);
 const deleteAvailableRuleUseCase = new DeleteAvailableRuleUseCase(availabilityRuleRepository);
 const getProfileUseCase = new GetProfileUseCase(lawyerRepository);

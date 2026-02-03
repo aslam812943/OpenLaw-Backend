@@ -12,8 +12,6 @@ export class AvailabilityRule {
     public maxBookings: number,
     public sessionType: string,
     public exceptionDays: string[],
-    public lawyerId: string,
-    public consultationFee: number
-
+    public lawyerId: string
   ) { }
 }

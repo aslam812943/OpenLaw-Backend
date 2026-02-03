@@ -55,6 +55,7 @@ export class BookingController {
             const date = req.query.date as string;
 
             const result = await this._getUserAppointmentsUseCase.execute(userId, { page, limit, status, search, date });
+console.log(result);
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.FETCH_SUCCESS, {
                 appointments: result.appointments,

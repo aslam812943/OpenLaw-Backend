@@ -37,6 +37,7 @@ export class BookingRepository implements IBookingRepository {
             doc.lawyerJoined,
             doc.commissionPercent || 0,
             doc.lawyerFeedback,
+            doc.bookingId,
             docObj.createdAt
         );
     }
@@ -44,6 +45,11 @@ export class BookingRepository implements IBookingRepository {
     async create(booking: Booking): Promise<Booking> {
         try {
             const { id, ...bookingData } = booking;
+
+            const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+            const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+            bookingData.bookingId = `BK-${dateStr}-${randomStr}`;
+
             const newBooking = new BookingModel(bookingData);
             const savedBooking = await newBooking.save();
 
@@ -99,8 +105,13 @@ export class BookingRepository implements IBookingRepository {
             }
 
             if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
-                const lawyers = await LawyerModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id');
-                query.lawyerId = { $in: lawyers.map(l => l._id) };
+                const searchStr = search.trim();
+                const lawyers = await LawyerModel.find({ name: { $regex: searchStr, $options: 'i' } }).select('_id');
+
+                query.$or = [
+                    { lawyerId: { $in: lawyers.map(l => l._id) } },
+                    { bookingId: { $regex: searchStr, $options: 'i' } }
+                ];
             }
 
             const [bookings, total] = await Promise.all([

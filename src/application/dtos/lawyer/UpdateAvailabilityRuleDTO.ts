@@ -10,7 +10,6 @@ export class UpdateAvailabilityRuleDTO {
         public slotDuration: number,
         public maxBookings: number,
         public sessionType: string,
-        public exceptionDays: string[],
-        public consultationFee: number
+        public exceptionDays: string[]
     ) { }
 }

@@ -26,7 +26,6 @@ interface IRuleDoc {
   sessionType: 'online' | 'offline';
   exceptionDays: string[];
   lawyerId: mongoose.Types.ObjectId;
-  consultationFee: number;
 }
 
 interface ISlotDoc {
@@ -295,8 +294,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       d.maxBookings,
       d.sessionType,
       d.exceptionDays,
-      d.lawyerId.toString(),
-      d.consultationFee
+      d.lawyerId.toString()
     );
   }
 
@@ -310,7 +308,6 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       d.date,
       d.sessionType,
       d.isBooked,
-      d.consultationFee,
       d.bookingId ?? null,
       d.maxBookings
     );

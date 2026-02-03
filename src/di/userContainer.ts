@@ -104,7 +104,7 @@ const googleAuthUseCase = new GoogleAuthUsecase(userRepository, googleAuthServic
 const getAllLawyersusecase = new GetAllLawyersUseCase(lawyerRepository)
 export const getAllLawyersController = new GetAllLawyersController(getAllLawyersusecase)
 const getSingleLawyerUseCase = new GetSingleLawyerUseCase(lawyerRepository)
-const getAllSlotsUseCase = new GetAllSlotsUseCase(availabilityRuleRepository)
+const getAllSlotsUseCase = new GetAllSlotsUseCase(availabilityRuleRepository, lawyerRepository)
 export const getSingleLawyerController = new GetSingleLawyerController(getSingleLawyerUseCase, getAllSlotsUseCase)
 const checkUserStatusUseCase = new CheckUserStatusUseCase(userRepository);
 export const authMiddleware = new UserAuthMiddleware(checkUserStatusUseCase, tokenService);
@@ -126,7 +126,7 @@ const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(spec
 export const specializationController = new SpecializationController(getActiveSpecializationsUseCase);
 
 // Booking
-const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService);
+const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService, lawyerRepository);
 const confirmBookingUseCase = new ConfirmBookingUseCase(
     bookingRepository,
     stripeService,

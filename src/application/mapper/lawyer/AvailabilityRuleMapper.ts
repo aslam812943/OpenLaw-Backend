@@ -18,8 +18,7 @@ export class AvailabilityRuleMapper {
       dto.maxBookings,
       dto.sessionType,
       dto.exceptionDays,
-      dto.lawyerId,
-      dto.consultationFee
+      dto.lawyerId
     )
   }
 
@@ -38,8 +37,7 @@ export class AvailabilityRuleMapper {
       entity.maxBookings,
       entity.sessionType,
       entity.exceptionDays,
-      entity.lawyerId,
-      entity.consultationFee
+      entity.lawyerId
     );
   }
 
@@ -50,7 +48,7 @@ export class AvailabilityRuleMapper {
 
 
 
-  static toDTOSlots(data: Slot[]): ResponseGetALLSlotsDTO[] {
+  static toDTOSlots(data: Slot[], consultationFee: number): ResponseGetALLSlotsDTO[] {
     const slots = data.map((s) => {
       return new ResponseGetALLSlotsDTO(
         s.id,
@@ -59,7 +57,7 @@ export class AvailabilityRuleMapper {
         s.endTime,
         s.sessionType,
         s.isBooked,
-        s.consultationFee
+        consultationFee
       )
     })
 

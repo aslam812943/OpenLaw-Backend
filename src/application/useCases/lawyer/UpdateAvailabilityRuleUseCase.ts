@@ -1,5 +1,6 @@
 import { IUpdateAvailabilityRuleUseCase } from "../../interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { UpdateAvailabilityRuleDTO } from "../../dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
@@ -11,7 +12,8 @@ import { Slot } from "../../../domain/entities/Slot";
 export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUseCase {
   constructor(
     private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
-    private readonly _slotGeneratorService: ISlotGeneratorService
+    private readonly _slotGeneratorService: ISlotGeneratorService,
+    private readonly _lawyerRepository: ILawyerRepository
   ) { }
 
   private toMinutes(time: string): number {

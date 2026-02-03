@@ -1,4 +1,4 @@
-export class ResponseGetAppointments {
+export class ResponseGetAppointmentsDTO {
     constructor(
         public id: string,
         public lawyerId: string,
@@ -12,6 +12,8 @@ export class ResponseGetAppointments {
         public cancellationReason: string | undefined,
         public refundAmount?: number,
         public refundStatus?: string,
-        public lawyerFeedback?: string
+        public lawyerFeedback?: string,
+        public bookingId?:string,
+        public paymentId?:string
     ) { }
 }
