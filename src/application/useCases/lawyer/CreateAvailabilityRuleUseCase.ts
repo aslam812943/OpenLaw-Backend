@@ -1,5 +1,6 @@
 import { ICreateAvailabilityRuleUseCase } from "../../interface/use-cases/lawyer/ICreateAvailabilityRuleUseCase";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityRuleDTO";
 import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapper";
@@ -10,7 +11,8 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
 
   constructor(
     private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
-    private readonly _slotGeneratorService: ISlotGeneratorService
+    private readonly _slotGeneratorService: ISlotGeneratorService,
+    private readonly _lawyerRepository: ILawyerRepository
   ) { }
 
   private toMinutes(time: string): number {

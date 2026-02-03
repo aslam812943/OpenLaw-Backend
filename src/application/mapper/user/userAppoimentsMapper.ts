@@ -1,4 +1,4 @@
-import { ResponseGetAppointments } from "../../dtos/user/ResponseGetAppointments";
+import { ResponseGetAppointmentsDTO } from "../../dtos/user/ResponseGetAppointments";
 
 interface IBookingWithPopulatedLawyer {
     id: string;
@@ -14,12 +14,14 @@ interface IBookingWithPopulatedLawyer {
     refundAmount?: number;
     refundStatus?: 'none' | 'full' | 'partial';
     lawyerFeedback?: string;
+    paymentId?:string;
+    bookingId?:string;
 }
 
 export class UserAppointmentsMapper {
-    static mapToDto(data: IBookingWithPopulatedLawyer[]): ResponseGetAppointments[] {
+    static mapToDto(data: IBookingWithPopulatedLawyer[]): ResponseGetAppointmentsDTO[] {
         return data.map((booking) => {
-            return new ResponseGetAppointments(
+            return new ResponseGetAppointmentsDTO(
                 booking.id,
                 booking.lawyerId,
                 booking.date,
@@ -32,7 +34,9 @@ export class UserAppointmentsMapper {
                 booking.cancellationReason,
                 booking.refundAmount,
                 booking.refundStatus,
-                booking.lawyerFeedback
+                booking.lawyerFeedback,
+                booking.bookingId,
+                booking.paymentId
             );
         });
     }

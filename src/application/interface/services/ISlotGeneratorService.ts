@@ -6,7 +6,6 @@ export interface IGeneratedSlot {
     endTime: string;
     sessionType: string;
     maxBookings: number;
-    consultationFee: number;
 }
 
 export interface ISlotGeneratorService {

@@ -13,8 +13,6 @@ export class GetAvailabilityRuleDTO {
     public maxBookings: number,
     public sessionType: string,
     public exceptionDays: string[],
-    public lawyerId: string,
-    public consultationFee: number
-
+    public lawyerId: string
   ) { }
 }

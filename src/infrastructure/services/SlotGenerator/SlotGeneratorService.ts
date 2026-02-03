@@ -35,8 +35,7 @@ export class SlotGeneratorService implements ISlotGeneratorService {
             startTime: currentStart.toTimeString().slice(0, 5),
             endTime: nextSlot.toTimeString().slice(0, 5),
             sessionType: rule.sessionType,
-            maxBookings: maxBookings,
-            consultationFee: rule.consultationFee
+            maxBookings: maxBookings
           });
 
           currentStart = new Date(

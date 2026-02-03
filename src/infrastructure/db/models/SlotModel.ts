@@ -8,8 +8,7 @@ export interface ISlotModel extends Document {
   endTime: string,
   sessionType: string,
   maxBookings: number,
-  isBooked: boolean,
-  consultationFee: string
+  isBooked: boolean
 }
 
 
@@ -21,8 +20,7 @@ const SlotSchema = new Schema<ISlotModel>({
   endTime: String,
   sessionType: String,
   maxBookings: Number,
-  isBooked: { type: Boolean, default: false },
-  consultationFee: String
+  isBooked: { type: Boolean, default: false }
 }, { timestamps: true })
 
 

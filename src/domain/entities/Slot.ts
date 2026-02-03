@@ -10,7 +10,6 @@ export class Slot {
     public date: string,
     public sessionType: string,
     public isBooked: boolean,
-    public consultationFee: number,
     public bookingId?: string | null,
     public maxBookings: number = 1
   ) { }
