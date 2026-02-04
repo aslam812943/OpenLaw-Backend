@@ -18,6 +18,7 @@ import { LawyerDashboardController } from "../interface/controllers/lawyer/Lawye
 import { AvailabilityRuleRepository } from "../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
 import { LawyerRepository } from "../infrastructure/repositories/lawyer/LawyerRepository";
 import { BookingRepository } from "../infrastructure/repositories/user/BookingRepository";
+import { WalletRepository } from "../infrastructure/repositories/user/WalletRepository";
 import { ChatRoomRepository } from "../infrastructure/repositories/ChatRoomRepository";
 import { MessageRepository } from "../infrastructure/repositories/messageRepository";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
@@ -71,6 +72,7 @@ import { SpecializationRepository } from "../infrastructure/repositories/admin/S
 const availabilityRuleRepository = new AvailabilityRuleRepository();
 const lawyerRepository = new LawyerRepository();
 const bookingRepository = new BookingRepository();
+const walletRepository = new WalletRepository();
 const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
 const subscriptionRepository = new SubscriptionRepository();
@@ -104,7 +106,8 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     bookingRepository,
     stripeService,
     lawyerRepository,
-    chatRoomRepository
+    chatRoomRepository,
+    walletRepository
 );
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);

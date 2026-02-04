@@ -3,6 +3,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
+import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { IUpdateAppointmentStatusUseCase } from "../../interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
@@ -13,7 +14,8 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _bookingRepository: IBookingRepository,
         private readonly _paymentService: IPaymentService,
         private readonly _lawyerRepository: ILawyerRepository,
-        private readonly _chatRoomRepository: IChatRoomRepository
+        private readonly _chatRoomRepository: IChatRoomRepository,
+        private readonly _walletRepository: IWalletRepository
     ) { }
 
     async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
@@ -29,6 +31,27 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         if (status === 'rejected') {
             if (booking.paymentStatus === 'paid' && booking.paymentId) {
                 await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
+
+                const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
+
+                // Credit user wallet
+                await this._walletRepository.addTransaction(booking.userId, booking.consultationFee, {
+                    type: 'credit',
+                    amount: booking.consultationFee,
+                    date: new Date(),
+                    status: 'completed',
+                    bookingId: appointmentId,
+                    description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Lawyer Rejected`,
+                    metadata: {
+                        reason: feedback || 'Lawyer rejected the appointment',
+                        lawyerName: lawyer?.name,
+                        lawyerId: booking.lawyerId,
+                        date: booking.date,
+                        time: booking.startTime,
+                        displayId: booking.bookingId
+                    }
+                });
+
                 await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, {
                     amount: booking.consultationFee,
                     status: 'full'

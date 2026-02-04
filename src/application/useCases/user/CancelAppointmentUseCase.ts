@@ -4,6 +4,7 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { ICancelAppointmentUseCase } from "../../interface/use-cases/user/ICancelAppointmentUseCase";
 import { IPaymentService } from "../../interface/services/IPaymentService";
+import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 
@@ -13,7 +14,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private _slotRepository: IAvailabilityRuleRepository,
         private _paymentService: IPaymentService,
         private _lawyerRepository: ILawyerRepository,
-        private _chatRoomRepository: IChatRoomRepository
+        private _chatRoomRepository: IChatRoomRepository,
+        private _walletRepository: IWalletRepository
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -56,6 +58,26 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         if (booking.paymentStatus === 'paid' && booking.paymentId) {
             await this._paymentService.refundPayment(booking.paymentId, refundAmount);
 
+            const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
+
+            // Credit user wallet
+            await this._walletRepository.addTransaction(booking.userId, refundAmount, {
+                type: 'credit',
+                amount: refundAmount,
+                date: new Date(),
+                status: 'completed',
+                bookingId: bookingId,
+                description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Cancelled by User`,
+                metadata: {
+                    reason: reason,
+                    lawyerName: lawyer?.name,
+                    lawyerId: booking.lawyerId,
+                    date: booking.date,
+                    time: booking.startTime,
+                    displayId: booking.bookingId
+                }
+            });
+
 
             if (booking.status === 'completed') {
                 await this._lawyerRepository.updateWalletBalance(booking.lawyerId, -refundAmount);
@@ -68,7 +90,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         });
         await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
-    
+
         await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }

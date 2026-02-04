@@ -44,6 +44,7 @@ import { AvailabilityRuleRepository } from "../infrastructure/repositories/lawye
 import { LawyerRepository } from "../infrastructure/repositories/lawyer/LawyerRepository";
 import { PaymentRepository } from "../infrastructure/repositories/PaymentRepository";
 import { BookingRepository } from "../infrastructure/repositories/user/BookingRepository";
+import { WalletRepository } from "../infrastructure/repositories/user/WalletRepository";
 import { ChatRoomRepository } from "../infrastructure/repositories/ChatRoomRepository";
 import { MessageRepository } from "../infrastructure/repositories/messageRepository";
 import { ReviewRepository } from "../infrastructure/repositories/ReviewRepository";
@@ -59,6 +60,8 @@ import { SubscriptionRepository } from "../infrastructure/repositories/admin/Sub
 
 import { WebhookController } from "../interface/controllers/user/WebhookController";
 import { HandleWebhookUseCase } from "../application/useCases/user/booking/HandleWebhookUseCase";
+import { GetWalletUseCase } from "../application/useCases/user/GetWalletUseCase";
+import { WalletController } from "../interface/controllers/user/WalletController";
 
 
 import { RedisCacheService } from "../infrastructure/services/reddis/RedisCacheService";
@@ -80,6 +83,8 @@ const tokenService = new TokenService();
 const lawyerRepository = new LawyerRepository()
 const availabilityRuleRepository = new AvailabilityRuleRepository()
 const paymentRepository = new PaymentRepository();
+// WalletRepository
+const walletRepository = new WalletRepository();
 // BookingRepository 
 const bookingRepository = new BookingRepository();
 const chatRoomRepository = new ChatRoomRepository();
@@ -137,7 +142,9 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     subscriptionRepository
 );
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository, walletRepository);
+const getWalletUseCase = new GetWalletUseCase(walletRepository);
+export const walletController = new WalletController(getWalletUseCase);
 
 export const bookingController = new BookingController(
     createBookingPaymentUseCase,

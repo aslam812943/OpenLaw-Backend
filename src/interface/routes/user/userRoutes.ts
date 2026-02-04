@@ -8,6 +8,7 @@ import {
   getAllLawyersController,
   chatController,
   reviewController,
+  walletController,
   authMiddleware,
   upload
 } from "../../../di/userContainer";
@@ -28,6 +29,7 @@ router.post('/logout', (req, res, next) => authController.logoutUser(req, res, n
 router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getProfileDetails(req, res, next) });
 router.put("/profile/update", authMiddleware.execute, upload.single("profileImage"), (req, res, next) => getProfileController.editProfile(req, res, next));
 router.put('/profile/password', authMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next));
+router.get('/wallet', authMiddleware.execute, (req, res, next) => walletController.getWallet(req, res, next));
 
 // Lawyer Routes
 router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next));
