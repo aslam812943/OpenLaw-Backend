@@ -252,7 +252,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           o.lawyerJoined,
           o.commissionPercent,
           o.lawyerFeedback,
-          o.createdAt
+          o.createdAt.toString()
         );
       });
 
