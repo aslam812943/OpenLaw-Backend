@@ -1,6 +1,5 @@
 export class CreateAvailabilityRuleDTO {
     constructor(
-
         public title: string,
         public startTime: string,
         public endTime: string,
