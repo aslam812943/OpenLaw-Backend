@@ -1,4 +1,3 @@
-
 export class GetAvailabilityRuleDTO {
   constructor(
     public id: string,

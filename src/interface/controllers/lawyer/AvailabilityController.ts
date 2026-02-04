@@ -40,13 +40,12 @@ export class AvailabilityController {
         ruleData.startDate,
         ruleData.endDate,
         ruleData.availableDays,
-        ruleData.bufferTime.toString(),
+        ruleData.bufferTime,
         ruleData.slotDuration,
         ruleData.maxBookings,
         ruleData.sessionType,
         ruleData.exceptionDays,
-        lawyerId,
-        ruleData.consultationFee
+        lawyerId
       );
 
       const result = await this._createRuleUseCase.execute(dto);
@@ -76,8 +75,7 @@ export class AvailabilityController {
         req.body.slotDuration,
         req.body.maxBookings,
         req.body.sessionType,
-        req.body.exceptionDays,
-        req.body.consultationFee
+        req.body.exceptionDays
       );
 
       const result = await this._updateAvailableUseCase.execute(ruleId, dto);
