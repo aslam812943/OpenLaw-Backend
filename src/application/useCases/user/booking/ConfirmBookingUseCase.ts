@@ -11,7 +11,7 @@ import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRe
 import { ISubscriptionRepository } from "../../../../domain/repositories/admin/ISubscriptionRepository";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
-
+import { ISendNotificationUseCase } from "../../../interface/use-cases/common/notification/ISendNotificationUseCase";
 
 export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
     constructor(
@@ -21,7 +21,8 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         private _lawyerRepository: ILawyerRepository,
         private _paymentRepository: IPaymentRepository,
         private _chatRoomRepository: IChatRoomRepository,
-        private _subscriptionRepository: ISubscriptionRepository
+        private _subscriptionRepository: ISubscriptionRepository,
+        private _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
 
     async execute(sessionId: string): Promise<ResponseBookingDetilsDTO> {
@@ -107,6 +108,14 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         );
 
         await this._paymentRepository.create(payment);
+
+        // Notify Lawyer
+        await this._sendNotificationUseCase.execute(
+            metadata.lawyerId,
+            `You have a new booking from a client for ${metadata.date} at ${metadata.startTime}. Booking ID: ${data.bookingId}`,
+            'NEW_BOOKING',
+            { appointmentId: data.id }
+        );
 
 
         return new ResponseBookingDetilsDTO(

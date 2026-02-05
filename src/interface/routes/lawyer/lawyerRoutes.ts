@@ -19,6 +19,7 @@ import {
   lawyerAuthMiddleware,
   upload
 } from "../../../di/lawyerContainer";
+import { notificationController } from "../../../di/container";
 
 const router = Router();
 
@@ -90,6 +91,10 @@ router.get('/dashboard/stats', lawyerAuthMiddleware.execute, (req, res, next) =>
 
 // Specialization Routes
 router.get('/specializations', (req, res, next) => specializationController.getSpecializations(req, res, next));
+
+// Notification Routes
+router.get("/notifications/:userId", lawyerAuthMiddleware.execute, (req, res,next) => notificationController.getNotifications(req, res,next));
+router.patch("/notifications/:notificationId/read", lawyerAuthMiddleware.execute, (req, res,next) => notificationController.markAsRead(req, res,next));
 
 export default router;
 

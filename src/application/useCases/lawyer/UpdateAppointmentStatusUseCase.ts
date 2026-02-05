@@ -4,6 +4,7 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
+import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { IUpdateAppointmentStatusUseCase } from "../../interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
@@ -15,7 +16,8 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _paymentService: IPaymentService,
         private readonly _lawyerRepository: ILawyerRepository,
         private readonly _chatRoomRepository: IChatRoomRepository,
-        private readonly _walletRepository: IWalletRepository
+        private readonly _walletRepository: IWalletRepository,
+        private readonly _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
 
     async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
@@ -60,6 +62,21 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                 await this._bookingRepository.updateStatus(appointmentId, 'rejected');
             }
 
+            await this._sendNotificationUseCase.execute(
+                booking.userId,
+                `Your appointment (${booking.bookingId}) with the lawyer has been rejected. ${feedback ? `Reason: ${feedback}` : ''}. A refund of ₹${booking.consultationFee} has been credited to your wallet.`,
+                'APPOINTMENT_REJECTED',
+                { appointmentId }
+            );
+
+          
+            await this._sendNotificationUseCase.execute(
+                booking.userId,
+                `A refund of ₹${booking.consultationFee} for appointment ${booking.bookingId} has been added to your wallet.`,
+                'WALLET_REFUND',
+                { appointmentId, amount: booking.consultationFee }
+            );
+
             await this._repository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
         } else if (status === 'completed') {
             const currentStatus = booking.status;
@@ -81,6 +98,13 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
 
             await this._bookingRepository.updateStatus(appointmentId, 'completed', undefined, undefined, feedback);
 
+            await this._sendNotificationUseCase.execute(
+                booking.userId,
+                `Your consultation ${booking.bookingId} has been marked as completed. Please leave a review!`,
+                'APPOINTMENT_COMPLETED',
+                { appointmentId }
+            );
+
             const commissionPercent = booking.commissionPercent || 0;
             const commissionAmount = booking.consultationFee * (commissionPercent / 100);
             const netAmount = booking.consultationFee - commissionAmount;
@@ -89,6 +113,15 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
 
         } else {
             await this._bookingRepository.updateStatus(appointmentId, status);
+
+            if (status === 'confirmed') {
+                await this._sendNotificationUseCase.execute(
+                    booking.userId,
+                    `Good news! Your appointment ${booking.bookingId} has been confirmed by the lawyer.`,
+                    'APPOINTMENT_CONFIRMED',
+                    { appointmentId }
+                );
+            }
         }
 
 

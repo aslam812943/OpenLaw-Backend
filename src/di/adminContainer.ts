@@ -1,6 +1,7 @@
 
 import { AdminAuthMiddleware } from '../interface/middlewares/admin/AdminAuthMiddleware';
 import { NodeMailerEmailService } from '../infrastructure/services/nodeMailer/NodeMailerEmailService';
+import { sendNotificationUseCase } from './container';
 
 //  Admin Authentication
 import { AdminAuthController } from '../interface/controllers/admin/AdminAuthController';
@@ -148,7 +149,7 @@ export const adminPaymentController = new AdminPaymentController(getPaymentsUseC
 // ------------------------------------------------------
 const withdrawalRepo = new WithdrawalRepository();
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepo, lawyerRepo);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepo, lawyerRepo, sendNotificationUseCase);
 const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepo, lawyerRepo);
 export const payoutController = new PayoutController(requestPayoutUseCase, approvePayoutUseCase, rejectPayoutUseCase, withdrawalRepo);
 

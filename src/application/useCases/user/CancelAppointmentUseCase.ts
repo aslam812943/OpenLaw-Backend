@@ -7,6 +7,7 @@ import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
 
 export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     constructor(
@@ -15,7 +16,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private _paymentService: IPaymentService,
         private _lawyerRepository: ILawyerRepository,
         private _chatRoomRepository: IChatRoomRepository,
-        private _walletRepository: IWalletRepository
+        private _walletRepository: IWalletRepository,
+        private _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -88,6 +90,25 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             amount: refundAmount,
             status: refundStatus
         });
+
+        // Notify User about refund
+        if (refundAmount > 0) {
+            await this._sendNotificationUseCase.execute(
+                booking.userId,
+                `Your appointment (${booking.bookingId}) has been cancelled. A refund of ₹${refundAmount} has been credited to your wallet.`,
+                'WALLET_REFUND',
+                { appointmentId: bookingId, amount: refundAmount }
+            );
+        }
+
+        // Notify Lawyer about cancellation
+        await this._sendNotificationUseCase.execute(
+            booking.lawyerId,
+            `User cancelled appointment (${booking.bookingId}) for ${booking.date} at ${booking.startTime}. Reason: ${reason}`,
+            'APPOINTMENT_CANCELLED',
+            { appointmentId: bookingId }
+        );
+
         await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
 
