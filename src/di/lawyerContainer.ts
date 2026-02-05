@@ -1,3 +1,4 @@
+import { socketServerService, sendNotificationUseCase } from "./container";
 
 // Controllers
 import { LawyerController } from "../interface/controllers/lawyer/LawyerController";
@@ -107,7 +108,8 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     stripeService,
     lawyerRepository,
     chatRoomRepository,
-    walletRepository
+    walletRepository,
+    sendNotificationUseCase
 );
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
@@ -124,7 +126,7 @@ const getLawyerCasesUseCase = new GetLawyerCasesUseCase(bookingRepository);
 const getLawyerEarningsUseCase = new GetLawyerEarningsUseCase(bookingRepository, lawyerRepository);
 
 const requestPayoutUseCase = new RequestPayoutUseCase(withdrawalRepository, lawyerRepository);
-const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository);
+const approvePayoutUseCase = new ApprovePayoutUseCase(withdrawalRepository, lawyerRepository, sendNotificationUseCase);
 const rejectPayoutUseCase = new RejectPayoutUseCase(withdrawalRepository, lawyerRepository);
 const getLawyerDashboardStatsUseCase = new GetLawyerDashboardStatsUseCase(paymentRepository);
 const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(specializationRepository);

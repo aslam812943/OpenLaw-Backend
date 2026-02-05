@@ -11,6 +11,7 @@ export class SocketServerService implements ISocketServer {
   private _sendMessageUseCase: ISendMessageUseCase;
   private _markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase;
   private _socketAuthService: ISocketAuth;
+  private io: Server | null = null;
 
   constructor(
     sendMessageUseCase: ISendMessageUseCase,
@@ -23,9 +24,16 @@ export class SocketServerService implements ISocketServer {
   }
 
   public setupSocketServer(io: Server): void {
+    this.io = io;
     io.use(this._socketAuthService.socketAuth.bind(this._socketAuthService));
 
     io.on("connection", (socket: Socket) => {
+      const userId = socket.data.userId
+      console.log(`Socket connected: ${socket.id}, UserID: ${userId}`);
+      if (userId) {
+        socket.join(`user-${userId}`);
+        console.log(`User ${userId} joined room: user-${userId}`);
+      }
       // JOIN ROOM
       socket.on("join-room", ({ roomId }: JoinRoomPayload) => {
         if (!roomId) return;
@@ -137,9 +145,23 @@ export class SocketServerService implements ISocketServer {
 
       });
 
+
+
+
       socket.on("disconnect", () => {
         // Socket cleanup handled automatically
       });
     });
+  }
+
+
+  public sendNotification(userId: string, data: string): void {
+    console.log(`Attempting to send notification to user: ${userId}, Data: ${data}`);
+    if (this.io) {
+      this.io.to(`user-${userId}`).emit("notification", JSON.parse(data));
+      console.log(`Emitted 'notification' event to room: user-${userId}`);
+    } else {
+      console.log('Socket IO instance not initialized');
+    }
   }
 }

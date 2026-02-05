@@ -1,4 +1,5 @@
 import { AuthController } from "../interface/controllers/user/AuthController";
+import { sendNotificationUseCase } from "./container";
 import { GetSingleLawyerController } from "../interface/controllers/user/GetSingleLawyerController";
 
 import { RegisterUserUsecase } from "../application/useCases/user/auth/RegisterUserUsecase";
@@ -139,10 +140,11 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     lawyerRepository,
     paymentRepository,
     chatRoomRepository,
-    subscriptionRepository
+    subscriptionRepository,
+    sendNotificationUseCase
 );
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository, walletRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository, walletRepository, sendNotificationUseCase);
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
 export const walletController = new WalletController(getWalletUseCase);
 

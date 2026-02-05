@@ -12,6 +12,7 @@ import {
   authMiddleware,
   upload
 } from "../../../di/userContainer";
+import { notificationController } from "../../../di/container";
 
 const router = express.Router();
 
@@ -50,5 +51,9 @@ router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewCont
 
 // Specialization Routes
 router.get('/specializations', authMiddleware.execute, (req, res, next) => specializationController.getSpecializations(req, res, next));
+
+// Notification Routes
+router.get("/notifications/:userId", authMiddleware.execute, (req, res,next) => notificationController.getNotifications(req, res,next));
+router.patch("/notifications/:notificationId/read", authMiddleware.execute, (req, res,next) => notificationController.markAsRead(req, res,next));
 
 export default router;
