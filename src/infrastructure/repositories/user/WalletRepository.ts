@@ -1,6 +1,6 @@
 import { Wallet, WalletTransaction } from "../../../domain/entities/Wallet";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
-import { WalletModel, IWalletDocument } from "../../db/models/Wallet";
+import { WalletModel, IWalletDocument, ITransactions } from "../../db/models/Wallet";
 import { BaseRepository } from "../user/BaseRepository";
 import { InternalServerError } from "../../errors/InternalServerError";
 import mongoose from "mongoose";
@@ -48,13 +48,62 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
                     await newWallet.save({ session });
                 } else {
                     wallet.balance += amount;
-                    wallet.transactions.push(transaction as any);
+                    wallet.transactions.push(transaction as unknown as ITransactions);
                     await wallet.save({ session });
                 }
             });
             await session.endSession();
         } catch (error: unknown) {
             throw new InternalServerError("Database error while updating wallet.");
+        }
+    }
+
+    async getPaginatedTransactions(userId: string, page: number, limit: number): Promise<{ transactions: WalletTransaction[], total: number, balance: number }> {
+        try {
+            const skip = (page - 1) * limit;
+
+            const result = await WalletModel.aggregate([
+                { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+                {
+                    $project: {
+                        balance: 1,
+                        totalTransactions: { $size: "$transactions" },
+                        transactions: {
+                            $slice: [
+                                { $reverseArray: "$transactions" },
+                                skip,
+                                limit
+                            ]
+                        }
+                    }
+                }
+            ]);
+
+            if (!result || result.length === 0) {
+                return { transactions: [], total: 0, balance: 0 };
+            }
+
+            const { transactions, totalTransactions, balance } = result[0] as {
+                transactions: any[];
+                totalTransactions: number;
+                balance: number;
+            };
+
+            return {
+                transactions: transactions.map((t) => ({
+                    type: t.type,
+                    amount: t.amount,
+                    date: t.date,
+                    status: t.status,
+                    bookingId: String(t.bookingId),
+                    description: t.description,
+                    metadata: t.metadata
+                })),
+                total: totalTransactions,
+                balance: balance
+            };
+        } catch (error: unknown) {
+            throw new InternalServerError("Database error while fetching paginated transactions.");
         }
     }
 

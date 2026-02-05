@@ -14,8 +14,11 @@ export class WalletController {
                 return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
             }
 
-            const wallet = await this._getWalletUseCase.execute(userId);
-            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS, wallet);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+
+            const walletData = await this._getWalletUseCase.execute(userId, page, limit);
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS, walletData);
         } catch (error: unknown) {
             next(error);
         }
