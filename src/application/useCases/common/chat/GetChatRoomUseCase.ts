@@ -6,11 +6,12 @@ import { PopulatedChatRoomDTO } from "../../../dtos/chat/PopulatedChatRoomDTO";
 import { ChatRoomMapper } from "../../../mapper/chat/ChatRoomMapper";
 import { PopulatedChatRoomMapper } from "../../../mapper/chat/PopulatedChatRoomMapper";
 import { IGetChatRoomUseCase } from "../../../interface/use-cases/common/chat/IGetChatRoomUseCase";
+import { InternalServerError } from "../../../../infrastructure/errors/InternalServerError";
 
 export class GetChatRoomUseCase implements IGetChatRoomUseCase {
     constructor(
         private _chatRoomRepository: IChatRoomRepository,
-        private _bookingRepository: IBookingRepository
+        private _bookingRepository: IBookingRepository,
     ) { }
 
     async execute(userId: string, lawyerId: string): Promise<ChatRoomDTO> {
@@ -42,20 +43,33 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
         return ChatRoomMapper.toDTO(newRoom);
     }
 
-    async getById(roomId: string): Promise<PopulatedChatRoomDTO> {
-        const room = await this._chatRoomRepository.findByIdPopulated(roomId);
-        if (!room) throw new NotFoundError("Chat room not found");
-
-        return PopulatedChatRoomMapper.toDTO(room);
+    async getById(id: string): Promise<PopulatedChatRoomDTO> {
+        try {
+            const room = await this._chatRoomRepository.findByIdPopulated(id);
+            if (!room) throw new NotFoundError("Chat room not found")
+            return PopulatedChatRoomMapper.toDTO(room);
+        } catch (error: unknown) {
+            console.error(error);
+            if (error instanceof NotFoundError) throw error;
+            throw new InternalServerError("Error getting chat room");
+        }
     }
 
     async getByUser(userId: string): Promise<PopulatedChatRoomDTO[]> {
-        const rooms = await this._chatRoomRepository.findByUserId(userId);
-        return PopulatedChatRoomMapper.toDTOArray(rooms);
+        try {
+            const rooms = await this._chatRoomRepository.findByUserId(userId);
+            return PopulatedChatRoomMapper.toDTOArray(rooms);
+        } catch (error: unknown) {
+            throw new InternalServerError("Error getting user chat rooms");
+        }
     }
 
     async getByLawyer(lawyerId: string): Promise<PopulatedChatRoomDTO[]> {
-        const rooms = await this._chatRoomRepository.findByLawyerId(lawyerId);
-        return PopulatedChatRoomMapper.toDTOArray(rooms);
+        try {
+            const rooms = await this._chatRoomRepository.findByLawyerId(lawyerId);
+            return PopulatedChatRoomMapper.toDTOArray(rooms);
+        } catch (error: unknown) {
+            throw new InternalServerError("Error getting lawyer chat rooms");
+        }
     }
 }

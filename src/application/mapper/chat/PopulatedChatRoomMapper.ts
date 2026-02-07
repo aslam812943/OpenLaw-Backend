@@ -1,12 +1,11 @@
 import { PopulatedChatRoom, PopulatedUser, PopulatedLawyer } from "../../../domain/repositories/IChatRoomRepository";
 import { PopulatedChatRoomDTO } from "../../dtos/chat/PopulatedChatRoomDTO";
-import { Types } from "mongoose";
 
 interface IChatRoomDoc {
-    _id: Types.ObjectId;
+    _id: string;
     userId: string | PopulatedUser;
     lawyerId: string | PopulatedLawyer;
-    bookingId: Types.ObjectId | string;
+    bookingId: string;
     createdAt: Date;
 }
 
@@ -19,17 +18,18 @@ export class PopulatedChatRoomMapper {
                 : {
                     _id: chatRoom.userId._id.toString(),
                     name: chatRoom.userId.name,
-                    profileImage: chatRoom.userId.profileImage
+                    profileImage: chatRoom.userId.profileImage,
                 },
             typeof chatRoom.lawyerId === 'string'
                 ? chatRoom.lawyerId
                 : {
                     _id: chatRoom.lawyerId._id.toString(),
                     name: chatRoom.lawyerId.name,
-                    profileImage: chatRoom.lawyerId.profileImage
+                    profileImage: chatRoom.lawyerId.profileImage || chatRoom.lawyerId.Profileimageurl,
                 },
             chatRoom.bookingId,
-            chatRoom.createdAt
+            chatRoom.createdAt,
+            chatRoom.lastMessage
         );
     }
 
@@ -38,6 +38,7 @@ export class PopulatedChatRoomMapper {
     }
 
     static fromDocument(doc: IChatRoomDoc): PopulatedChatRoomDTO {
+        const chatRoom = doc as unknown as PopulatedChatRoom;
         return new PopulatedChatRoomDTO(
             doc._id.toString(),
             typeof doc.userId === 'string'
@@ -45,17 +46,18 @@ export class PopulatedChatRoomMapper {
                 : {
                     _id: doc.userId._id.toString(),
                     name: doc.userId.name,
-                    profileImage: doc.userId.profileImage
+                    profileImage: doc.userId.profileImage,
                 },
             typeof doc.lawyerId === 'string'
                 ? doc.lawyerId
                 : {
                     _id: doc.lawyerId._id.toString(),
                     name: doc.lawyerId.name,
-                    profileImage: doc.lawyerId.profileImage
+                    profileImage: (doc.lawyerId as any).profileImage || (doc.lawyerId as any).Profileimageurl,
                 },
             doc.bookingId.toString(),
-            doc.createdAt
+            doc.createdAt,
+            chatRoom.lastMessage
         );
     }
 }

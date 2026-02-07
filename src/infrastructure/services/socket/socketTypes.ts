@@ -30,3 +30,11 @@ export interface VideoSignalPayload {
     bookingId: string;
     signal: unknown;
 }
+
+export interface UserOnlinePayload {
+    userId: string;
+}
+
+export interface UserOfflinePayload {
+    userId: string;
+}

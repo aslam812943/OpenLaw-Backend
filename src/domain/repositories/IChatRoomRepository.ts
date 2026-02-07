@@ -13,6 +13,7 @@ export interface PopulatedLawyer {
     _id: Types.ObjectId;
     name: string;
     profileImage?: string;
+    Profileimageurl?: string;
 }
 
 export interface IChatRoomDocumentWithTimestamps extends IChatRoomDocument, Document {
@@ -34,6 +35,10 @@ export interface PopulatedChatRoom {
     lawyerId: string | PopulatedLawyer;
     bookingId: string;
     createdAt: Date;
+    lastMessage?: {
+        content: string;
+        createdAt: Date;
+    };
 }
 
 export interface IChatRoomRepository {
