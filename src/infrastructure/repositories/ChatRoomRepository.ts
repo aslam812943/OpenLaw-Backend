@@ -2,7 +2,6 @@ import {
     IChatRoomRepository,
     PopulatedUser,
     PopulatedLawyer,
-    IChatRoomDocumentWithTimestamps,
     PopulatedChatRoom
 } from "../../domain/repositories/IChatRoomRepository";
 import { ChatRoom } from "../../domain/entities/ChatRoom";
@@ -36,20 +35,66 @@ export class ChatRoomRepository implements IChatRoomRepository {
 
     async findByIdPopulated(id: string): Promise<PopulatedChatRoom | null> {
         try {
-            const doc = await ChatRoomModel.findById(id)
-                .populate("userId", "name profileImage")
-                .populate("lawyerId", "name profileImage");
+            const docs = await ChatRoomModel.aggregate([
+                { $match: { _id: new Types.ObjectId(id) } },
+                {
+                    $lookup: {
+                        from: "messageschemas",
+                        let: { roomId: "$_id" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
+                            { $sort: { createdAt: -1 } },
+                            { $limit: 1 }
+                        ],
+                        as: "lastMessage"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$lastMessage",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "userId"
+                    }
+                },
+                { $unwind: "$userId" },
+                {
+                    $lookup: {
+                        from: "lawyers",
+                        localField: "lawyerId",
+                        foreignField: "_id",
+                        as: "lawyerId"
+                    }
+                },
+                { $unwind: "$lawyerId" }
+            ]);
 
-            if (!doc) return null;
+            if (docs.length === 0) return null;
+            const doc = docs[0];
 
             return {
-                id: (doc._id as Types.ObjectId).toString(),
+                id: doc._id.toString(),
                 userId: doc.userId as unknown as PopulatedUser,
-                lawyerId: doc.lawyerId as unknown as PopulatedLawyer,
+                lawyerId: {
+                    _id: doc.lawyerId._id,
+                    name: doc.lawyerId.name,
+                    profileImage: doc.lawyerId.profileImage || doc.lawyerId.Profileimageurl
+                } as unknown as PopulatedLawyer,
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as { createdAt: Date }).createdAt
+                createdAt: doc.createdAt,
+                lastMessage: doc.lastMessage ? {
+                    content: doc.lastMessage.content,
+                    createdAt: doc.lastMessage.createdAt
+                } : undefined
             };
         } catch (error: unknown) {
+            console.error(error);
             throw new InternalServerError("Error finding populated chat room by ID");
         }
     }
@@ -66,32 +111,103 @@ export class ChatRoomRepository implements IChatRoomRepository {
 
     async findByLawyerId(lawyerId: string): Promise<PopulatedChatRoom[]> {
         try {
-            const docs = await ChatRoomModel.find({ lawyerId })
-                .populate("userId", "name profileImage")
-                .sort({ updatedAt: -1 });
+            const docs = await ChatRoomModel.aggregate([
+                { $match: { lawyerId: new Types.ObjectId(lawyerId) } },
+                {
+                    $lookup: {
+                        from: "messageschemas",
+                        let: { roomId: "$_id" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
+                            { $sort: { createdAt: -1 } },
+                            { $limit: 1 }
+                        ],
+                        as: "lastMessage"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$lastMessage",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "userId"
+                    }
+                },
+                { $unwind: "$userId" },
+                { $sort: { "lastMessage.createdAt": -1, updatedAt: -1 } }
+            ]);
+
             return docs.map((doc) => ({
-                id: (doc._id as Types.ObjectId).toString(),
+                id: doc._id.toString(),
                 userId: doc.userId as unknown as PopulatedUser,
                 lawyerId: doc.lawyerId.toString(),
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as { createdAt: Date }).createdAt
+                createdAt: doc.createdAt,
+                lastMessage: doc.lastMessage ? {
+                    content: doc.lastMessage.content,
+                    createdAt: doc.lastMessage.createdAt
+                } : undefined
             }));
         } catch (error: unknown) {
+            console.error(error);
             throw new InternalServerError("Error finding lawyer chat rooms");
         }
     }
 
     async findByUserId(userId: string): Promise<PopulatedChatRoom[]> {
         try {
-            const docs = await ChatRoomModel.find({ userId })
-                .populate("lawyerId", "name profileImage")
-                .sort({ updatedAt: -1 });
+            const docs = await ChatRoomModel.aggregate([
+                { $match: { userId: new Types.ObjectId(userId) } },
+                {
+                    $lookup: {
+                        from: "messageschemas",
+                        let: { roomId: "$_id" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
+                            { $sort: { createdAt: -1 } },
+                            { $limit: 1 }
+                        ],
+                        as: "lastMessage"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$lastMessage",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "lawyers",
+                        localField: "lawyerId",
+                        foreignField: "_id",
+                        as: "lawyerId"
+                    }
+                },
+                { $unwind: "$lawyerId" },
+                { $sort: { "lastMessage.createdAt": -1, updatedAt: -1 } }
+            ]);
+
             return docs.map((doc) => ({
-                id: (doc._id as Types.ObjectId).toString(),
+                id: doc._id.toString(),
                 userId: doc.userId.toString(),
-                lawyerId: doc.lawyerId as unknown as PopulatedLawyer,
+                lawyerId: {
+                    _id: doc.lawyerId._id,
+                    name: doc.lawyerId.name,
+                    profileImage: doc.lawyerId.profileImage || doc.lawyerId.Profileimageurl
+                } as unknown as PopulatedLawyer,
                 bookingId: doc.bookingId.toString(),
-                createdAt: (doc as unknown as { createdAt: Date }).createdAt
+                createdAt: doc.createdAt,
+                lastMessage: doc.lastMessage ? {
+                    content: doc.lastMessage.content,
+                    createdAt: doc.lastMessage.createdAt
+                } : undefined
             }));
         } catch (error: unknown) {
             throw new InternalServerError("Error finding user chat rooms");

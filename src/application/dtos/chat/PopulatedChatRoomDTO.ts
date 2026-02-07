@@ -12,6 +12,10 @@ export class PopulatedChatRoomDTO {
             profileImage?: string;
         } | string,
         public bookingId: string,
-        public createdAt: Date
+        public createdAt: Date,
+        public lastMessage?: {
+            content: string;
+            createdAt: Date;
+        }
     ) { }
 }
