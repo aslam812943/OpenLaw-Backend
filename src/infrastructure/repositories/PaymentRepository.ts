@@ -7,25 +7,48 @@ import mongoose, { Types } from "mongoose";
 
 import { IDashboardStats, ILawyerDashboardStats } from "../../domain/repositories/IPaymentRepository";
 
-export class PaymentRepository implements IPaymentRepository {
+import { BaseRepository } from "./BaseRepository";
+import { MessageConstants } from "../constants/MessageConstants";
+import { InternalServerError } from "../errors/InternalServerError";
+
+export class PaymentRepository extends BaseRepository<IPaymentDocument> implements IPaymentRepository {
+    constructor() {
+        super(PaymentModel);
+    }
     async create(payment: Partial<Payment>): Promise<Payment> {
-        const newPayment = await PaymentModel.create(payment);
-        return this.mapToEntity(newPayment);
+        try {
+            const newPayment = await PaymentModel.create(payment);
+            return this.mapToEntity(newPayment);
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
+        }
     }
 
     async findById(id: string): Promise<Payment | null> {
-        const payment = await PaymentModel.findById(id);
-        return payment ? this.mapToEntity(payment) : null;
+        try {
+            const payment = await PaymentModel.findById(id);
+            return payment ? this.mapToEntity(payment) : null;
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
+        }
     }
 
     async findByBookingId(bookingId: string): Promise<Payment | null> {
-        const payment = await PaymentModel.findOne({ bookingId });
-        return payment ? this.mapToEntity(payment) : null;
+        try {
+            const payment = await PaymentModel.findOne({ bookingId });
+            return payment ? this.mapToEntity(payment) : null;
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
+        }
     }
 
     async findByTransactionId(transactionId: string): Promise<Payment | null> {
-        const payment = await PaymentModel.findOne({ transactionId });
-        return payment ? this.mapToEntity(payment) : null;
+        try {
+            const payment = await PaymentModel.findOne({ transactionId });
+            return payment ? this.mapToEntity(payment) : null;
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
+        }
     }
 
     async findAll(filters?: { search?: string, status?: string, type?: string, startDate?: Date, endDate?: Date, page?: number, limit?: number }): Promise<{ payments: Payment[]; total: number }> {
@@ -56,20 +79,24 @@ export class PaymentRepository implements IPaymentRepository {
         const limit = filters?.limit || 10;
         const skip = (page - 1) * limit;
 
-        const [payments, total] = await Promise.all([
-            PaymentModel.find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .populate('lawyerId', 'name')
-                .populate('userId', 'name'),
-            PaymentModel.countDocuments(query)
-        ]);
+        try {
+            const [payments, total] = await Promise.all([
+                PaymentModel.find(query)
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .populate('lawyerId', 'name')
+                    .populate('userId', 'name'),
+                PaymentModel.countDocuments(query)
+            ]);
 
-        return {
-            payments: (payments as unknown as IPaymentDocument[]).map((p: IPaymentDocument) => this.mapToEntity(p)),
-            total
-        };
+            return {
+                payments: (payments as unknown as IPaymentDocument[]).map((p: IPaymentDocument) => this.mapToEntity(p)),
+                total
+            };
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+        }
     }
 
     async getDashboardStats(startDate?: Date, endDate?: Date): Promise<IDashboardStats> {
@@ -83,158 +110,161 @@ export class PaymentRepository implements IPaymentRepository {
             dateFilter.createdAt = range;
         }
 
-        const [revenueStats, bookingStats, withdrawalStats, topLawyers, monthlyRevenue] = await Promise.all([
-
-            BookingModel.aggregate([
-                { $match: { paymentStatus: 'paid', ...dateFilter } },
-                {
-                    $lookup: {
-                        from: 'lawyers',
-                        localField: 'lawyerId',
-                        foreignField: '_id',
-                        as: 'lawyer'
-                    }
-                },
-                { $unwind: '$lawyer' },
-                {
-                    $lookup: {
-                        from: 'subscriptions',
-                        localField: 'lawyer.subscriptionId',
-                        foreignField: '_id',
-                        as: 'subscription'
-                    }
-                },
-                { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
-                {
-                    $group: {
-                        _id: null,
-                        totalRevenue: { $sum: '$consultationFee' },
-                        totalCommission: {
-                            $sum: {
-                                $multiply: [
-                                    '$consultationFee',
-                                    { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }
-                                ]
+        try {
+            const [revenueStats, bookingStats, withdrawalStats, topLawyers, monthlyRevenue] = await Promise.all([
+                BookingModel.aggregate([
+                    { $match: { paymentStatus: 'paid', ...dateFilter } },
+                    {
+                        $lookup: {
+                            from: 'lawyers',
+                            localField: 'lawyerId',
+                            foreignField: '_id',
+                            as: 'lawyer'
+                        }
+                    },
+                    { $unwind: '$lawyer' },
+                    {
+                        $lookup: {
+                            from: 'subscriptions',
+                            localField: 'lawyer.subscriptionId',
+                            foreignField: '_id',
+                            as: 'subscription'
+                        }
+                    },
+                    { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
+                    {
+                        $group: {
+                            _id: null,
+                            totalRevenue: { $sum: '$consultationFee' },
+                            totalCommission: {
+                                $sum: {
+                                    $multiply: [
+                                        '$consultationFee',
+                                        { $divide: [{ $ifNull: ['$subscription.commissionPercent', 0] }, 100] }
+                                    ]
+                                }
                             }
                         }
                     }
-                }
-            ]),
+                ]),
 
-            // Booking Stats
-            BookingModel.aggregate([
-                { $match: dateFilter },
-                {
-                    $group: {
-                        _id: '$status',
-                        count: { $sum: 1 }
+                // Booking Stats
+                BookingModel.aggregate([
+                    { $match: dateFilter },
+                    {
+                        $group: {
+                            _id: '$status',
+                            count: { $sum: 1 }
+                        }
                     }
-                }
-            ]),
+                ]),
 
-            // Withdrawal Stats
-            WithdrawalModel.aggregate([
-                { $match: dateFilter },
-                {
-                    $group: {
-                        _id: null,
-                        totalWithdrawn: {
-                            $sum: {
-                                $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0]
-                            }
-                        },
-                        pendingWithdrawals: {
-                            $sum: {
-                                $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0]
+                // Withdrawal Stats
+                WithdrawalModel.aggregate([
+                    { $match: dateFilter },
+                    {
+                        $group: {
+                            _id: null,
+                            totalWithdrawn: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0]
+                                }
+                            },
+                            pendingWithdrawals: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0]
+                                }
                             }
                         }
                     }
+                ]),
+
+                // Top Performing Lawyers
+                BookingModel.aggregate([
+                    { $match: { paymentStatus: 'paid', ...dateFilter } },
+                    {
+                        $group: {
+                            _id: '$lawyerId',
+                            revenue: { $sum: '$consultationFee' },
+                            bookings: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { revenue: -1 } },
+                    { $limit: 5 },
+                    {
+                        $lookup: {
+                            from: 'lawyers',
+                            localField: '_id',
+                            foreignField: '_id',
+                            as: 'lawyer'
+                        }
+                    },
+                    { $unwind: '$lawyer' },
+                    {
+                        $project: {
+                            name: '$lawyer.name',
+                            revenue: 1,
+                            bookings: 1
+                        }
+                    }
+                ]),
+
+
+                BookingModel.aggregate([
+                    {
+                        $match: {
+                            paymentStatus: 'paid',
+                            createdAt: { $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1) }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                month: { $month: '$createdAt' },
+                                year: { $year: '$createdAt' }
+                            },
+                            revenue: { $sum: '$consultationFee' }
+                        }
+                    },
+                    { $sort: { '_id.year': 1, '_id.month': 1 } }
+                ])
+            ]);
+
+            // Format Booking Stats
+            const formattedBookingStats = {
+                completed: 0,
+                cancelled: 0,
+                pending: 0,
+                rejected: 0,
+                confirmed: 0
+            };
+            bookingStats.forEach((stat: { _id: string; count: number }) => {
+                if (stat._id in formattedBookingStats) {
+                    formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
                 }
-            ]),
+            });
 
-            // Top Performing Lawyers
-            BookingModel.aggregate([
-                { $match: { paymentStatus: 'paid', ...dateFilter } },
-                {
-                    $group: {
-                        _id: '$lawyerId',
-                        revenue: { $sum: '$consultationFee' },
-                        bookings: { $sum: 1 }
-                    }
+            // Format Monthly Revenue
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const formattedMonthlyRevenue = monthlyRevenue.map((m: { _id: { month: number }; revenue: number }) => ({
+                month: monthNames[m._id.month - 1],
+                revenue: m.revenue
+            }));
+
+            return {
+                totalRevenue: revenueStats[0]?.totalRevenue || 0,
+                totalCommission: revenueStats[0]?.totalCommission || 0,
+                bookingStats: formattedBookingStats,
+                withdrawalStats: {
+                    totalWithdrawn: withdrawalStats[0]?.totalWithdrawn || 0,
+                    pendingWithdrawals: withdrawalStats[0]?.pendingWithdrawals || 0
                 },
-                { $sort: { revenue: -1 } },
-                { $limit: 5 },
-                {
-                    $lookup: {
-                        from: 'lawyers',
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'lawyer'
-                    }
-                },
-                { $unwind: '$lawyer' },
-                {
-                    $project: {
-                        name: '$lawyer.name',
-                        revenue: 1,
-                        bookings: 1
-                    }
-                }
-            ]),
-
-
-            BookingModel.aggregate([
-                {
-                    $match: {
-                        paymentStatus: 'paid',
-                        createdAt: { $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1) }
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            month: { $month: '$createdAt' },
-                            year: { $year: '$createdAt' }
-                        },
-                        revenue: { $sum: '$consultationFee' }
-                    }
-                },
-                { $sort: { '_id.year': 1, '_id.month': 1 } }
-            ])
-        ]);
-
-        // Format Booking Stats
-        const formattedBookingStats = {
-            completed: 0,
-            cancelled: 0,
-            pending: 0,
-            rejected: 0,
-            confirmed: 0
-        };
-        bookingStats.forEach((stat: { _id: string; count: number }) => {
-            if (stat._id in formattedBookingStats) {
-                formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
-            }
-        });
-
-        // Format Monthly Revenue
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const formattedMonthlyRevenue = monthlyRevenue.map((m: { _id: { month: number }; revenue: number }) => ({
-            month: monthNames[m._id.month - 1],
-            revenue: m.revenue
-        }));
-
-        return {
-            totalRevenue: revenueStats[0]?.totalRevenue || 0,
-            totalCommission: revenueStats[0]?.totalCommission || 0,
-            bookingStats: formattedBookingStats,
-            withdrawalStats: {
-                totalWithdrawn: withdrawalStats[0]?.totalWithdrawn || 0,
-                pendingWithdrawals: withdrawalStats[0]?.pendingWithdrawals || 0
-            },
-            topLawyers: topLawyers,
-            monthlyRevenue: formattedMonthlyRevenue
-        };
+                topLawyers: topLawyers,
+                monthlyRevenue: formattedMonthlyRevenue
+            };
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+        }
     }
 
     async getLawyerDashboardStats(lawyerId: string, startDate?: Date, endDate?: Date): Promise<ILawyerDashboardStats> {
@@ -248,85 +278,89 @@ export class PaymentRepository implements IPaymentRepository {
 
         const lawyerObjectId = new mongoose.Types.ObjectId(lawyerId);
 
-        const [revenueStats, bookingStats, monthlyEarnings] = await Promise.all([
+        try {
+            const [revenueStats, bookingStats, monthlyEarnings] = await Promise.all([
 
-            BookingModel.aggregate([
-                {
-                    $match: {
-                        lawyerId: lawyerObjectId,
-                        paymentStatus: 'paid',
-                        status: { $in: ['confirmed', 'completed'] },
-                        ...dateFilter
+                BookingModel.aggregate([
+                    {
+                        $match: {
+                            lawyerId: lawyerObjectId,
+                            paymentStatus: 'paid',
+                            status: { $in: ['confirmed', 'completed'] },
+                            ...dateFilter
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalEarnings: { $sum: '$consultationFee' },
+                            count: { $sum: 1 }
+                        }
                     }
-                },
-                {
-                    $group: {
-                        _id: null,
-                        totalEarnings: { $sum: '$consultationFee' },
-                        count: { $sum: 1 }
+                ]),
+
+                // Booking Breakdown
+                BookingModel.aggregate([
+                    { $match: { lawyerId: lawyerObjectId, ...dateFilter } },
+                    {
+                        $group: {
+                            _id: '$status',
+                            count: { $sum: 1 }
+                        }
                     }
+                ]),
+
+                // Monthly Earnings Trend
+                BookingModel.aggregate([
+                    {
+                        $match: {
+                            lawyerId: lawyerObjectId,
+                            paymentStatus: 'paid',
+                            status: { $in: ['confirmed', 'completed'] },
+                            createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1) }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                month: { $month: '$createdAt' },
+                                year: { $year: '$createdAt' }
+                            },
+                            earnings: { $sum: '$consultationFee' }
+                        }
+                    },
+                    { $sort: { '_id.year': 1, '_id.month': 1 } }
+                ])
+            ]);
+
+            const formattedBookingStats = {
+                completed: 0,
+                cancelled: 0,
+                pending: 0,
+                rejected: 0,
+                confirmed: 0
+            };
+            bookingStats.forEach((stat: { _id: string; count: number }) => {
+                if (stat._id in formattedBookingStats) {
+                    formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
                 }
-            ]),
+            });
 
-            // Booking Breakdown
-            BookingModel.aggregate([
-                { $match: { lawyerId: lawyerObjectId, ...dateFilter } },
-                {
-                    $group: {
-                        _id: '$status',
-                        count: { $sum: 1 }
-                    }
-                }
-            ]),
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const formattedMonthlyEarnings = monthlyEarnings.map((m: { _id: { month: number }; earnings: number }) => ({
+                month: monthNames[m._id.month - 1],
+                earnings: m.earnings
+            }));
 
-            // Monthly Earnings Trend
-            BookingModel.aggregate([
-                {
-                    $match: {
-                        lawyerId: lawyerObjectId,
-                        paymentStatus: 'paid',
-                        status: { $in: ['confirmed', 'completed'] },
-                        createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1) }
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            month: { $month: '$createdAt' },
-                            year: { $year: '$createdAt' }
-                        },
-                        earnings: { $sum: '$consultationFee' }
-                    }
-                },
-                { $sort: { '_id.year': 1, '_id.month': 1 } }
-            ])
-        ]);
-
-        const formattedBookingStats = {
-            completed: 0,
-            cancelled: 0,
-            pending: 0,
-            rejected: 0,
-            confirmed: 0
-        };
-        bookingStats.forEach((stat: { _id: string; count: number }) => {
-            if (stat._id in formattedBookingStats) {
-                formattedBookingStats[stat._id as keyof typeof formattedBookingStats] = stat.count;
-            }
-        });
-
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const formattedMonthlyEarnings = monthlyEarnings.map((m: { _id: { month: number }; earnings: number }) => ({
-            month: monthNames[m._id.month - 1],
-            earnings: m.earnings
-        }));
-
-        return {
-            totalEarnings: revenueStats[0]?.totalEarnings || 0,
-            totalConsultations: revenueStats[0]?.count || 0,
-            bookingStats: formattedBookingStats,
-            monthlyEarnings: formattedMonthlyEarnings
-        };
+            return {
+                totalEarnings: revenueStats[0]?.totalEarnings || 0,
+                totalConsultations: revenueStats[0]?.count || 0,
+                bookingStats: formattedBookingStats,
+                monthlyEarnings: formattedMonthlyEarnings
+            };
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+        }
     }
 
     private mapToEntity(doc: IPaymentDocument): Payment {

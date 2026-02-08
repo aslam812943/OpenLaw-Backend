@@ -69,7 +69,7 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                 { appointmentId }
             );
 
-          
+
             await this._sendNotificationUseCase.execute(
                 booking.userId,
                 `A refund of ₹${booking.consultationFee} for appointment ${booking.bookingId} has been added to your wallet.`,
@@ -92,9 +92,9 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
             if (modifier === 'AM' && hours === 12) hours = 0;
             appointmentDate.setHours(hours, minutes, 0, 0);
 
-            if (appointmentDate > new Date()) {
-                throw new BadRequestError("Cannot mark a future appointment as completed.");
-            }
+            // if (appointmentDate > new Date()) {
+            //     throw new BadRequestError("Cannot mark a future appointment as completed.");
+            // }
 
             await this._bookingRepository.updateStatus(appointmentId, 'completed', undefined, undefined, feedback);
 

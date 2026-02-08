@@ -7,19 +7,25 @@ import {
 import { ChatRoom } from "../../domain/entities/ChatRoom";
 import ChatRoomModel, { IChatRoomDocument } from "../db/models/ChatRoomModel";
 import { InternalServerError } from "../errors/InternalServerError";
+import { MessageConstants } from "../constants/MessageConstants";
 import { Types } from "mongoose";
 
 
 import { IBookingRepository } from "../../domain/repositories/IBookingRepository";
 
-export class ChatRoomRepository implements IChatRoomRepository {
+import { BaseRepository } from "./BaseRepository";
+
+export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implements IChatRoomRepository {
+    constructor() {
+        super(ChatRoomModel);
+    }
     async save(chatRoom: ChatRoom): Promise<ChatRoom> {
         try {
             const { id, ...data } = chatRoom;
             const doc = await ChatRoomModel.create(data);
             return this.mapToEntity(doc);
         } catch (error: unknown) {
-            throw new InternalServerError("Error saving chat room");
+            throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
@@ -29,7 +35,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {
-            throw new InternalServerError("Error finding chat room by ID");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
         }
     }
 
@@ -95,7 +101,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             };
         } catch (error: unknown) {
             console.error(error);
-            throw new InternalServerError("Error finding populated chat room by ID");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -105,7 +111,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {
-            throw new InternalServerError("Error finding chat room");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
         }
     }
 
@@ -156,7 +162,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
             }));
         } catch (error: unknown) {
             console.error(error);
-            throw new InternalServerError("Error finding lawyer chat rooms");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -210,7 +216,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
                 } : undefined
             }));
         } catch (error: unknown) {
-            throw new InternalServerError("Error finding user chat rooms");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -218,7 +224,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
         try {
             await ChatRoomModel.findByIdAndUpdate(roomId, { bookingId });
         } catch (error: unknown) {
-            throw new InternalServerError("Error updating chat room booking ID");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 
@@ -232,7 +238,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
                 await ChatRoomModel.findByIdAndUpdate(room._id, { bookingId: activeBooking.id });
             }
         } catch (error: unknown) {
-            throw new InternalServerError("Error synchronizing chat room booking ID");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 
@@ -240,7 +246,7 @@ export class ChatRoomRepository implements IChatRoomRepository {
         try {
             await ChatRoomModel.findByIdAndUpdate(roomId, { updatedAt: new Date() });
         } catch (error: unknown) {
-            throw new InternalServerError("Error updating chat room last message time");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 

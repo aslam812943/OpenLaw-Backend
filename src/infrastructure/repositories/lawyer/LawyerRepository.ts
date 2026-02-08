@@ -11,18 +11,17 @@ import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
-
-
-
-
-
+import { MessageConstants } from "../../constants/MessageConstants";
+import { BaseRepository } from "../BaseRepository";
 
 
 //  LawyerRepository
 
-export class LawyerRepository implements ILawyerRepository {
+export class LawyerRepository extends BaseRepository<ILawyerDocument> implements ILawyerRepository {
 
-  constructor() { }
+  constructor() {
+    super(LawyerModel);
+  }
 
   // ------------------------------------------------------------
   //  create() - For initial registration
@@ -36,7 +35,7 @@ export class LawyerRepository implements ILawyerRepository {
       if (err.code === 11000) {
         throw new ConflictError("A lawyer with this email already exists.");
       }
-      throw new InternalServerError("Database error while creating lawyer.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
     }
   }
 
@@ -51,7 +50,7 @@ export class LawyerRepository implements ILawyerRepository {
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
 
-      throw new InternalServerError("Database error while fetching lawyer by email.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.EMAIL_FETCH_ERROR);
     }
   }
 
@@ -81,7 +80,7 @@ export class LawyerRepository implements ILawyerRepository {
 
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while updating lawyer verification details.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.VERIFICATION_SUBMISSION_ERROR);
     }
   }
 
@@ -181,7 +180,7 @@ export class LawyerRepository implements ILawyerRepository {
         total,
       };
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while fetching lawyers.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
     }
   }
 
@@ -193,7 +192,7 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       await LawyerModel.findByIdAndUpdate(id, { isBlock: true });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while blocking lawyer.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.BLOCK_ERROR);
     }
   }
 
@@ -204,7 +203,7 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       await LawyerModel.findByIdAndUpdate(id, { isBlock: false });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while unblocking lawyer.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.UNBLOCK_ERROR);
     }
   }
 
@@ -218,7 +217,7 @@ export class LawyerRepository implements ILawyerRepository {
         verificationStatus: "Approved"
       });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while approving lawyer.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.APPROVE_ERROR);
     }
   }
 
@@ -232,7 +231,7 @@ export class LawyerRepository implements ILawyerRepository {
         verificationStatus: "Rejected"
       });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while rejecting lawyer.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.REJECT_ERROR);
     }
   }
 
@@ -247,7 +246,7 @@ export class LawyerRepository implements ILawyerRepository {
       return this.mapToDomain(doc);
     } catch (error: unknown) {
       const err = error as Error;
-      throw new InternalServerError(err.message || "Database error while fetching lawyer profile.");
+      throw new InternalServerError(err.message || MessageConstants.REPOSITORY.PROFILE_FETCH_ERROR);
     }
   }
 
@@ -280,7 +279,7 @@ export class LawyerRepository implements ILawyerRepository {
       await data.save();
     } catch (error: unknown) {
       const err = error as Error;
-      throw new InternalServerError(err.message || "Database error while updating lawyer profile.");
+      throw new InternalServerError(err.message || MessageConstants.REPOSITORY.PROFILE_UPDATE_ERROR);
     }
   }
 
@@ -303,7 +302,7 @@ export class LawyerRepository implements ILawyerRepository {
     try {
       await LawyerModel.findByIdAndUpdate(id, { googleId });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while updating lawyer googleId.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.GOOGLE_ID_UPDATE_ERROR);
     }
   }
 
@@ -340,7 +339,7 @@ export class LawyerRepository implements ILawyerRepository {
         subscriptionExpiryDate: expiryDate
       });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while updating lawyer subscription status.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.SUBSCRIPTION_UPDATE_ERROR);
     }
   }
 
@@ -384,7 +383,7 @@ export class LawyerRepository implements ILawyerRepository {
         $inc: { walletBalance: amount }
       });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while updating lawyer wallet balance.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.WALLET_UPDATE_ERROR);
     }
   }
 }

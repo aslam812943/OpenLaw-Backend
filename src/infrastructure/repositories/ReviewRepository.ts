@@ -3,7 +3,14 @@ import { IReviewRepository } from "../../domain/repositories/IReviewRepository";
 import { Review } from "../../domain/entities/Review";
 import { ReviewModel, IReview } from "../db/models/ReviewModel";
 
-export class ReviewRepository implements IReviewRepository {
+import { BaseRepository } from "./BaseRepository";
+import { MessageConstants } from "../constants/MessageConstants";
+import { InternalServerError } from "../errors/InternalServerError";
+
+export class ReviewRepository extends BaseRepository<IReview> implements IReviewRepository {
+    constructor() {
+        super(ReviewModel);
+    }
     async addReview(review: Review): Promise<Review> {
         try {
             const newReview = new ReviewModel({
@@ -18,35 +25,42 @@ export class ReviewRepository implements IReviewRepository {
 
             return this.mapToEntity(savedReview);
         } catch (error: unknown) {
-
-            throw error;
+            throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
 
     async findAll(lawyerId: string): Promise<Review[]> {
-        const reviews = await ReviewModel.find({ lawyerId }).populate("userId", "name profileImage").sort({ createdAt: -1 })
+        try {
+            const reviews = await ReviewModel.find({ lawyerId }).populate("userId", "name profileImage").sort({ createdAt: -1 })
 
-        return reviews.map(review => {
-            const user = review.userId as unknown as { _id: Types.ObjectId; name: string; profileImage: string };
-            const userId = user?._id || review.userId || "unknown";
-            return new Review(
-                String(userId),
-                String(review.lawyerId),
-                review.rating,
-                review.comment,
-                review.createdAt,
-                String(review._id),
-                user?.name || "Anonymous User",
-                user?.profileImage || ""
-            )
-        });
+            return reviews.map(review => {
+                const user = review.userId as unknown as { _id: Types.ObjectId; name: string; profileImage: string };
+                const userId = user?._id || review.userId || "unknown";
+                return new Review(
+                    String(userId),
+                    String(review.lawyerId),
+                    review.rating,
+                    review.comment,
+                    review.createdAt,
+                    String(review._id),
+                    user?.name || "Anonymous User",
+                    user?.profileImage || ""
+                )
+            });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+        }
     }
 
     async findByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<Review | null> {
-        const doc = await ReviewModel.findOne({ userId, lawyerId });
-        if (!doc) return null;
-        return this.mapToEntity(doc);
+        try {
+            const doc = await ReviewModel.findOne({ userId, lawyerId });
+            if (!doc) return null;
+            return this.mapToEntity(doc);
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
+        }
     }
 
     private mapToEntity(doc: IReview): Review {

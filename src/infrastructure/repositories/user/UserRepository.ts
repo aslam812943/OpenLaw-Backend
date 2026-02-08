@@ -3,12 +3,13 @@ import { UserRegisterDTO } from "../../../application/dtos/user/RegisterUserDTO"
 import { User } from "../../../domain/entities/User";
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import UserModel, { IUserDocument } from "../../db/models/UserModel";
-import { BaseRepository } from "../user/BaseRepository";
+import { BaseRepository } from "../BaseRepository";
 import bcrypt from "bcrypt";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
+import { MessageConstants } from "../../constants/MessageConstants";
 
 
 //  UserRepository
@@ -28,7 +29,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     try {
       await UserModel.findByIdAndUpdate(userId, { isVerified: true });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while verifying user.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.VERIFY_ERROR);
     }
   }
 
@@ -54,7 +55,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
         isPassword: userDoc.password ? true : false
       };
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while fetching user by email.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.EMAIL_FETCH_ERROR);
     }
   }
 
@@ -83,7 +84,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       if (err.code === 11000) {
         throw new ConflictError("A user with this email already exists.");
       }
-      throw new InternalServerError("Database error while creating a new user.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
     }
   }
 
@@ -92,9 +93,9 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   // ------------------------------------------------------------
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
-      await this.update(userId, { password: hashedPassword });
+      await this.baseUpdate(userId, { password: hashedPassword });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while updating user password.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.PASSWORD_UPDATE_ERROR);
     }
   }
 
@@ -103,9 +104,9 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   // ------------------------------------------------------------
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
-      await this.update(userId, { hasSubmittedVerification: true });
+      await this.baseUpdate(userId, { hasSubmittedVerification: true });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while marking verification submission.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.VERIFICATION_SUBMISSION_ERROR);
     }
   }
 
@@ -179,7 +180,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       const users = docs.map((doc) => this.mapToDomain(doc));
       return { users, total };
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while fetching paginated users.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.PAGINATED_FETCH_ERROR);
     }
   }
 
@@ -190,7 +191,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: true });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while blocking user.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.BLOCK_ERROR);
     }
   }
 
@@ -201,7 +202,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     try {
       await UserModel.findByIdAndUpdate(id, { isBlock: false });
     } catch (error: unknown) {
-      throw new InternalServerError("Database error while unblocking user.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.UNBLOCK_ERROR);
     }
   }
 

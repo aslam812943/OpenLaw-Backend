@@ -4,11 +4,18 @@ import { Admin } from "../../../domain/entities/Admin";
 import { AdminModel } from "../../db/models/admin/AdminModel";
 import { ConflictError } from "../../errors/ConflictError";
 import { InternalServerError } from "../../errors/InternalServerError";
+import { MessageConstants } from "../../constants/MessageConstants";
 
 
 //  AdminRepository
 
-export class AdminRepository implements IAdminRepository {
+import { BaseRepository } from "../BaseRepository";
+import { AdminDocument } from "../../db/models/admin/AdminModel";
+
+export class AdminRepository extends BaseRepository<AdminDocument> implements IAdminRepository {
+  constructor() {
+    super(AdminModel);
+  }
 
   // ------------------------------------------------------------
   //  findByEmail() 
@@ -31,7 +38,7 @@ export class AdminRepository implements IAdminRepository {
       );
     } catch (error: unknown) {
 
-      throw new InternalServerError("Database error while fetching admin by email.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.EMAIL_FETCH_ERROR);
     }
   }
 
@@ -60,7 +67,7 @@ export class AdminRepository implements IAdminRepository {
         throw new ConflictError("Admin with this email already exists.");
       }
 
-      throw new InternalServerError("Database error while creating new admin.");
+      throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
     }
   }
 }

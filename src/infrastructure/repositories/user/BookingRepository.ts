@@ -2,11 +2,17 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { InternalServerError } from "../../errors/InternalServerError";
+import { MessageConstants } from "../../constants/MessageConstants";
 import mongoose, { Types } from "mongoose";
 import LawyerModel from "../../db/models/LawyerModel";
 import UserModel from "../../db/models/UserModel";
 
-export class BookingRepository implements IBookingRepository {
+import { BaseRepository } from "../BaseRepository";
+
+export class BookingRepository extends BaseRepository<IBookingDocument> implements IBookingRepository {
+    constructor() {
+        super(BookingModel);
+    }
 
     private mapToEntity(doc: IBookingDocument): Booking {
         const docObj = doc.toObject() as {
@@ -55,7 +61,7 @@ export class BookingRepository implements IBookingRepository {
 
             return this.mapToEntity(savedBooking);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while creating booking.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
@@ -65,7 +71,7 @@ export class BookingRepository implements IBookingRepository {
             if (!booking) return null;
             return this.mapToEntity(booking);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching booking by ID.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
         }
     }
 
@@ -84,7 +90,7 @@ export class BookingRepository implements IBookingRepository {
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while updating booking status.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 
@@ -128,7 +134,7 @@ export class BookingRepository implements IBookingRepository {
                 total
             };
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching user bookings.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -142,7 +148,7 @@ export class BookingRepository implements IBookingRepository {
             });
             return count > 0;
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while checking booking existence.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.EXISTS_ERROR);
         }
     }
 
@@ -176,7 +182,7 @@ export class BookingRepository implements IBookingRepository {
 
             return this.mapToEntity(booking);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching active booking.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.ACTIVE_FETCH_ERROR);
         }
     }
 
@@ -187,7 +193,7 @@ export class BookingRepository implements IBookingRepository {
 
             return this.mapToEntity(booking);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching booking by session ID.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.SESSION_FETCH_ERROR);
         }
     }
     async findByLawyerId(lawyerId: string, page: number = 1, limit: number = 10, status?: string, search?: string, date?: string): Promise<{ bookings: Booking[], total: number }> {
@@ -224,7 +230,7 @@ export class BookingRepository implements IBookingRepository {
                 total
             };
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching lawyer bookings.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -236,7 +242,7 @@ export class BookingRepository implements IBookingRepository {
             }
             await BookingModel.findByIdAndUpdate(id, updateData);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while updating call status.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.CALL_STATUS_UPDATE_ERROR);
         }
     }
 
@@ -281,7 +287,7 @@ export class BookingRepository implements IBookingRepository {
                 total
             };
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching all bookings.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -328,7 +334,7 @@ export class BookingRepository implements IBookingRepository {
                 pendingNet: stats[0].pendingNet || 0
             };
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while calculating earnings stats.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.EARNINGS_STATS_ERROR);
         }
     }
 }
