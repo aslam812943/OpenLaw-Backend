@@ -145,7 +145,7 @@ export class SocketServerService implements ISocketServer {
       });
 
       socket.on("disconnect", () => {
-        console.log(`Socket disconnected: ${socket.id}, UserID: ${userId}`);
+        // console.log(`Socket disconnected: ${socket.id}, UserID: ${userId}`);
       });
     });
   }

@@ -4,12 +4,13 @@ import { CanJoinCallUseCase } from "../../../application/useCases/common/videoCa
 import { JoinCallUseCase } from "../../../application/useCases/common/videoCall/JoinCallUseCase";
 import { BookingRepository } from "../../../infrastructure/repositories/user/BookingRepository";
 import { commonAuthMiddleware } from "../../middlewares/CommonAuthMiddleware";
+import { socketServerService, sendNotificationUseCase } from "../../../di/container";
 
 const router = Router();
 
 const bookingRepository = new BookingRepository();
 const canJoinCallUseCase = new CanJoinCallUseCase(bookingRepository);
-const joinCallUseCase = new JoinCallUseCase(bookingRepository);
+const joinCallUseCase = new JoinCallUseCase(bookingRepository, socketServerService, sendNotificationUseCase);
 
 const videoCallController = new VideoCallController(
     canJoinCallUseCase,
