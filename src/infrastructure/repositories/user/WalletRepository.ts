@@ -1,8 +1,9 @@
 import { Wallet, WalletTransaction } from "../../../domain/entities/Wallet";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { WalletModel, IWalletDocument, ITransactions } from "../../db/models/Wallet";
-import { BaseRepository } from "../user/BaseRepository";
+import { BaseRepository } from "../BaseRepository";
 import { InternalServerError } from "../../errors/InternalServerError";
+import { MessageConstants } from "../../constants/MessageConstants";
 import mongoose from "mongoose";
 
 export class WalletRepository extends BaseRepository<IWalletDocument> implements IWalletRepository {
@@ -20,7 +21,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
             await walletDoc.save();
             return this.mapToDomain(walletDoc);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while creating wallet.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
@@ -30,7 +31,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
             if (!walletDoc) return null;
             return this.mapToDomain(walletDoc);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching wallet by user ID.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -54,7 +55,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
             });
             await session.endSession();
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while updating wallet.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 
@@ -103,7 +104,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
                 balance: balance
             };
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching paginated transactions.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.TRANSACTION_FETCH_ERROR);
         }
     }
 

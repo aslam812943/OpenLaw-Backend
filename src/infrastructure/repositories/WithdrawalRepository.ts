@@ -2,9 +2,15 @@ import { IWithdrawalRepository } from "../../domain/repositories/IWithdrawalRepo
 import { Withdrawal } from "../../domain/entities/Withdrawal";
 import { WithdrawalModel, IWithdrawalDocument } from "../db/models/admin/WithdrawalModel";
 import { InternalServerError } from "../errors/InternalServerError";
+import { MessageConstants } from "../constants/MessageConstants";
 import mongoose from "mongoose";
 
-export class WithdrawalRepository implements IWithdrawalRepository {
+import { BaseRepository } from "./BaseRepository";
+
+export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> implements IWithdrawalRepository {
+    constructor() {
+        super(WithdrawalModel);
+    }
     async create(withdrawal: Withdrawal): Promise<Withdrawal> {
         try {
             const doc = await WithdrawalModel.create({
@@ -15,7 +21,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
             });
             return this.mapToDomain(doc);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while creating withdrawal request.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.WITHDRAWAL_CREATE_ERROR);
         }
     }
 
@@ -24,7 +30,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
             const doc = await WithdrawalModel.findById(id);
             return doc ? this.mapToDomain(doc) : null;
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching withdrawal by ID.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
         }
     }
 
@@ -38,7 +44,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
             }
             await WithdrawalModel.findByIdAndUpdate(id, updateData);
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while updating withdrawal status.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 
@@ -47,7 +53,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
             const docs = await WithdrawalModel.find({ lawyerId: new mongoose.Types.ObjectId(lawyerId) }).sort({ createdAt: -1 });
             return docs.map(doc => this.mapToDomain(doc));
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching lawyer withdrawals.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
@@ -68,7 +74,7 @@ export class WithdrawalRepository implements IWithdrawalRepository {
                 return withdrawal;
             });
         } catch (error: unknown) {
-            throw new InternalServerError("Database error while fetching pending withdrawals.");
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 
