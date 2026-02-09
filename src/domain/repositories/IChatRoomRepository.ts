@@ -51,4 +51,5 @@ export interface IChatRoomRepository {
     syncChatRoom(userId: string, lawyerId: string, bookingRepo: IBookingRepository): Promise<void>;
     updateLastMessage(roomId: string): Promise<void>;
     findByIdPopulated(id: string): Promise<PopulatedChatRoom | null>;
+    findByBookingId(bookingId: string): Promise<ChatRoom | null>;
 }

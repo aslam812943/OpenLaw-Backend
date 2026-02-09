@@ -1,18 +1,12 @@
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
-import mongoose, { Types } from "mongoose";
+import  { Types } from "mongoose";
 import { Subscription } from "../../../domain/entities/Subscription";
 import subscriptionModel from '../../../infrastructure/db/models/admin/subscriptionModel'
-
-
-
-import { BaseRepository } from "../BaseRepository";
 import { MessageConstants } from "../../constants/MessageConstants";
 import { InternalServerError } from "../../errors/InternalServerError";
 
-export class SubscriptionRepository extends BaseRepository<any> implements ISubscriptionRepository {
-    constructor() {
-        super(subscriptionModel);
-    }
+export class SubscriptionRepository  implements ISubscriptionRepository {
+
     async create(data: Subscription): Promise<void> {
         try {
             await subscriptionModel.create(data);

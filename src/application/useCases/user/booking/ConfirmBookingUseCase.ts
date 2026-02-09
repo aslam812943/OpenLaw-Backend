@@ -7,7 +7,6 @@ import { IConfirmBookingUseCase } from "../../../interface/use-cases/user/IConfi
 import { ResponseBookingDetilsDTO } from "../../../dtos/user/ResponseBookingDetilsDTO";
 import { IAvailabilityRuleRepository } from '../../../../domain/repositories/lawyer/IAvailabilityRuleRepository';
 import { ILawyerRepository } from '../../../../domain/repositories/lawyer/ILawyerRepository';
-import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
 import { ISubscriptionRepository } from "../../../../domain/repositories/admin/ISubscriptionRepository";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
@@ -20,7 +19,6 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         private _slotRepository: IAvailabilityRuleRepository,
         private _lawyerRepository: ILawyerRepository,
         private _paymentRepository: IPaymentRepository,
-        private _chatRoomRepository: IChatRoomRepository,
         private _subscriptionRepository: ISubscriptionRepository,
         private _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
@@ -88,7 +86,6 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         await this._slotRepository.bookSlot(metadata.slotId);
 
 
-        await this._chatRoomRepository.syncChatRoom(metadata.userId, metadata.lawyerId, this._bookingRepository);
 
 
         const payment = new Payment(

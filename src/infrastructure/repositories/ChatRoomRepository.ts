@@ -105,9 +105,21 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
         }
     }
 
-    async findByUserAndLawyer(userId: string, lawyerId: string): Promise<ChatRoom | null> {
+    async findByUserAndLawyer(userId: string, lawyerId: string, bookingId?: string): Promise<ChatRoom | null> {
         try {
-            const doc = await ChatRoomModel.findOne({ userId, lawyerId });
+            const query: any = { userId, lawyerId };
+            if (bookingId) query.bookingId = bookingId;
+            const doc = await ChatRoomModel.findOne(query);
+            if (!doc) return null;
+            return this.mapToEntity(doc);
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
+        }
+    }
+
+    async findByBookingId(bookingId: string): Promise<ChatRoom | null> {
+        try {
+            const doc = await ChatRoomModel.findOne({ bookingId });
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {

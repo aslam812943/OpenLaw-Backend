@@ -14,8 +14,8 @@ interface IBookingWithPopulatedLawyer {
     refundAmount?: number;
     refundStatus?: 'none' | 'full' | 'partial';
     lawyerFeedback?: string;
-    paymentId?:string;
-    bookingId?:string;
+    paymentId?: string;
+    bookingId?: string;
 }
 
 export class UserAppointmentsMapper {

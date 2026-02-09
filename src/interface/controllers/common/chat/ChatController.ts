@@ -29,11 +29,12 @@ export class ChatController {
     async getChatRoom(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const userId = req.user?.id;
-            const { lawyerId, userId: targetUserId } = req.body;
+            const { lawyerId, userId: targetUserId, bookingId } = req.body;
 
             const room = await this._getChatRoomUseCase.execute(
                 targetUserId || userId,
-                lawyerId || userId
+                lawyerId || userId,
+                bookingId
             );
             return ApiResponse.success(res, HttpStatusCode.OK, "Chat room retrieved successfully", room);
         } catch (error: unknown) {
