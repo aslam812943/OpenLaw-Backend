@@ -14,30 +14,29 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
         private _bookingRepository: IBookingRepository,
     ) { }
 
-    async execute(userId: string, lawyerId: string): Promise<ChatRoomDTO> {
+    async execute(userId: string, lawyerId: string, bookingId?: string): Promise<ChatRoomDTO> {
 
-        const activeBooking = await this._bookingRepository.findActiveBooking(userId, lawyerId);
-        if (!activeBooking) {
-            throw new NotFoundError("No active booking found with this lawyer.");
+        let targetBookingId = bookingId;
+
+        if (!targetBookingId) {
+            const activeBooking = await this._bookingRepository.findActiveBooking(userId, lawyerId);
+            if (!activeBooking) {
+                throw new NotFoundError("No active booking found with this lawyer.");
+            }
+            targetBookingId = activeBooking.id;
         }
 
-
-        let room = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId);
+        let room = await this._chatRoomRepository.findByBookingId(targetBookingId);
 
         if (room) {
-
-            if (room.bookingId !== activeBooking.id) {
-                await this._chatRoomRepository.updateBookingId(room.id, activeBooking.id);
-
-                room.bookingId = activeBooking.id;
-            }
             return ChatRoomMapper.toDTO(room);
         }
+
         const newRoom = await this._chatRoomRepository.save({
             id: "",
             userId,
             lawyerId,
-            bookingId: activeBooking.id
+            bookingId: targetBookingId
         });
 
         return ChatRoomMapper.toDTO(newRoom);
@@ -49,7 +48,6 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
             if (!room) throw new NotFoundError("Chat room not found")
             return PopulatedChatRoomMapper.toDTO(room);
         } catch (error: unknown) {
-            console.error(error);
             if (error instanceof NotFoundError) throw error;
             throw new InternalServerError("Error getting chat room");
         }

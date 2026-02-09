@@ -13,7 +13,7 @@ export class ResponseGetAppointmentsDTO {
         public refundAmount?: number,
         public refundStatus?: string,
         public lawyerFeedback?: string,
-        public bookingId?:string,
-        public paymentId?:string
+        public bookingId?: string,
+        public paymentId?: string
     ) { }
 }

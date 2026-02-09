@@ -1,7 +1,6 @@
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
-import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
@@ -15,7 +14,6 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _bookingRepository: IBookingRepository,
         private readonly _paymentService: IPaymentService,
         private readonly _lawyerRepository: ILawyerRepository,
-        private readonly _chatRoomRepository: IChatRoomRepository,
         private readonly _walletRepository: IWalletRepository,
         private readonly _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
@@ -125,6 +123,5 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         }
 
 
-        await this._chatRoomRepository.syncChatRoom(booking.userId, booking.lawyerId, this._bookingRepository);
     }
 }
