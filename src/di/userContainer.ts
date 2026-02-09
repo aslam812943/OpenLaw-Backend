@@ -139,12 +139,11 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     availabilityRuleRepository,
     lawyerRepository,
     paymentRepository,
-    chatRoomRepository,
     subscriptionRepository,
     sendNotificationUseCase
 );
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, chatRoomRepository, walletRepository, sendNotificationUseCase);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, walletRepository, sendNotificationUseCase);
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
 export const walletController = new WalletController(getWalletUseCase);
 

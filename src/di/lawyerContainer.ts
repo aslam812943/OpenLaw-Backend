@@ -107,7 +107,6 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     bookingRepository,
     stripeService,
     lawyerRepository,
-    chatRoomRepository,
     walletRepository,
     sendNotificationUseCase
 );
