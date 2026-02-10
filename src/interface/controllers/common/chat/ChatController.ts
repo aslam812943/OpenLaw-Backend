@@ -82,6 +82,23 @@ export class ChatController {
         }
     }
 
+    async getLawyerSpecificRooms(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const currentId = req.user?.id;
+            const { lawyerId, userId } = req.params;
+
+            // If lawyerId is provided, we assume the current user is a Client looking for a specific Lawyer's rooms
+            // If userId is provided, we assume the current user is a Lawyer looking for a specific Client's rooms
+            const rooms = await this._getChatRoomUseCase.getLawyerSpecificRooms(
+                userId || currentId!,
+                lawyerId || currentId!
+            );
+            return ApiResponse.success(res, HttpStatusCode.OK, "Chat rooms retrieved successfully", rooms);
+        } catch (error: unknown) {
+            next(error);
+        }
+    }
+
     async uploadFile(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             if (!req.file) {

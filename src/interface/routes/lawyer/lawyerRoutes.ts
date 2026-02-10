@@ -64,6 +64,7 @@ router.patch('/appoiments/:id/status', lawyerAuthMiddleware.execute, (req, res, 
 // Chat Routes
 router.get("/chat/messages/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getMessages(req, res, next));
 router.get("/chat/rooms", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getLawyerRooms(req, res, next));
+router.get("/chat/rooms/:userId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getLawyerSpecificRooms(req, res, next));
 router.get("/chat/room/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
 router.post("/chat/room", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
 router.post("/chat/upload", lawyerAuthMiddleware.execute, upload.single("file"), (req, res, next) => chatController.uploadFile(req, res, next));

@@ -140,7 +140,8 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     lawyerRepository,
     paymentRepository,
     subscriptionRepository,
-    sendNotificationUseCase
+    sendNotificationUseCase,
+    chatRoomRepository
 );
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
 const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, walletRepository, sendNotificationUseCase);

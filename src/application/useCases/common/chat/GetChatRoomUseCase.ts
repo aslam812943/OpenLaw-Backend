@@ -15,7 +15,6 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
     ) { }
 
     async execute(userId: string, lawyerId: string, bookingId?: string): Promise<ChatRoomDTO> {
-
         let targetBookingId = bookingId;
 
         if (!targetBookingId) {
@@ -26,7 +25,7 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
             targetBookingId = activeBooking.id;
         }
 
-        let room = await this._chatRoomRepository.findByBookingId(targetBookingId);
+        const room = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, targetBookingId);
 
         if (room) {
             return ChatRoomMapper.toDTO(room);
@@ -68,6 +67,15 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
             return PopulatedChatRoomMapper.toDTOArray(rooms);
         } catch (error: unknown) {
             throw new InternalServerError("Error getting lawyer chat rooms");
+        }
+    }
+
+    async getLawyerSpecificRooms(userId: string, lawyerId: string): Promise<PopulatedChatRoomDTO[]> {
+        try {
+            const rooms = await this._chatRoomRepository.findAllByUserAndLawyer(userId, lawyerId);
+            return PopulatedChatRoomMapper.toDTOArray(rooms);
+        } catch (error: unknown) {
+            throw new InternalServerError("Error getting lawyer specific chat rooms");
         }
     }
 }

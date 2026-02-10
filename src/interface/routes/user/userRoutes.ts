@@ -41,6 +41,7 @@ router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => get
 router.get("/chat/access/:lawyerId", authMiddleware.execute, (req, res, next) => chatController.checkAccess(req, res, next));
 router.get("/chat/messages/:roomId", authMiddleware.execute, (req, res, next) => chatController.getMessages(req, res, next));
 router.get("/chat/rooms", authMiddleware.execute, (req, res, next) => chatController.getUserRooms(req, res, next));
+router.get("/chat/rooms/:lawyerId", authMiddleware.execute, (req, res, next) => chatController.getLawyerSpecificRooms(req, res, next));
 router.get("/chat/room/:roomId", authMiddleware.execute, (req, res, next) => chatController.getRoomById(req, res, next));
 router.post("/chat/room", authMiddleware.execute, (req, res, next) => chatController.getChatRoom(req, res, next));
 router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req, res, next) => chatController.uploadFile(req, res, next));
@@ -53,7 +54,7 @@ router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewCont
 router.get('/specializations', authMiddleware.execute, (req, res, next) => specializationController.getSpecializations(req, res, next));
 
 // Notification Routes
-router.get("/notifications/:userId", authMiddleware.execute, (req, res,next) => notificationController.getNotifications(req, res,next));
-router.patch("/notifications/:notificationId/read", authMiddleware.execute, (req, res,next) => notificationController.markAsRead(req, res,next));
+router.get("/notifications/:userId", authMiddleware.execute, (req, res, next) => notificationController.getNotifications(req, res, next));
+router.patch("/notifications/:notificationId/read", authMiddleware.execute, (req, res, next) => notificationController.markAsRead(req, res, next));
 
 export default router;
