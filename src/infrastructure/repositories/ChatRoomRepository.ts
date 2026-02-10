@@ -78,7 +78,21 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                         as: "lawyerId"
                     }
                 },
-                { $unwind: "$lawyerId" }
+                { $unwind: "$lawyerId" },
+                {
+                    $lookup: {
+                        from: "bookings",
+                        localField: "bookingId",
+                        foreignField: "_id",
+                        as: "bookingDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$bookingDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                }
             ]);
 
             if (docs.length === 0) return null;
@@ -97,10 +111,15 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 lastMessage: doc.lastMessage ? {
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
+                } : undefined,
+                bookingDetails: doc.bookingDetails ? {
+                    bookingId: doc.bookingDetails.bookingId,
+                    startTime: doc.bookingDetails.startTime,
+                    description: doc.bookingDetails.description,
+                    date: doc.bookingDetails.date
                 } : undefined
             };
         } catch (error: unknown) {
-            console.error(error);
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
@@ -131,10 +150,21 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
         try {
             const docs = await ChatRoomModel.aggregate([
                 { $match: { lawyerId: new Types.ObjectId(lawyerId) } },
+                { $sort: { updatedAt: -1 } },
+                {
+                    $group: {
+                        _id: "$userId",
+                        roomId: { $first: "$_id" },
+                        lawyerId: { $first: "$lawyerId" },
+                        bookingId: { $first: "$bookingId" },
+                        createdAt: { $first: "$createdAt" },
+                        updatedAt: { $first: "$updatedAt" }
+                    }
+                },
                 {
                     $lookup: {
                         from: "messageschemas",
-                        let: { roomId: "$_id" },
+                        let: { roomId: "$roomId" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
                             { $sort: { createdAt: -1 } },
@@ -152,17 +182,31 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 {
                     $lookup: {
                         from: "users",
-                        localField: "userId",
+                        localField: "_id",
                         foreignField: "_id",
                         as: "userId"
                     }
                 },
                 { $unwind: "$userId" },
+                {
+                    $lookup: {
+                        from: "bookings",
+                        localField: "bookingId",
+                        foreignField: "_id",
+                        as: "bookingDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$bookingDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
                 { $sort: { "lastMessage.createdAt": -1, updatedAt: -1 } }
             ]);
 
             return docs.map((doc) => ({
-                id: doc._id.toString(),
+                id: doc.roomId.toString(),
                 userId: doc.userId as unknown as PopulatedUser,
                 lawyerId: doc.lawyerId.toString(),
                 bookingId: doc.bookingId.toString(),
@@ -170,10 +214,15 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 lastMessage: doc.lastMessage ? {
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
+                } : undefined,
+                bookingDetails: doc.bookingDetails ? {
+                    bookingId: doc.bookingDetails.bookingId,
+                    startTime: doc.bookingDetails.startTime,
+                    description: doc.bookingDetails.description,
+                    date: doc.bookingDetails.date
                 } : undefined
             }));
         } catch (error: unknown) {
-            console.error(error);
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
@@ -182,10 +231,21 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
         try {
             const docs = await ChatRoomModel.aggregate([
                 { $match: { userId: new Types.ObjectId(userId) } },
+                { $sort: { updatedAt: -1 } },
+                {
+                    $group: {
+                        _id: "$lawyerId",
+                        roomId: { $first: "$_id" },
+                        userId: { $first: "$userId" },
+                        bookingId: { $first: "$bookingId" },
+                        createdAt: { $first: "$createdAt" },
+                        updatedAt: { $first: "$updatedAt" }
+                    }
+                },
                 {
                     $lookup: {
                         from: "messageschemas",
-                        let: { roomId: "$_id" },
+                        let: { roomId: "$roomId" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
                             { $sort: { createdAt: -1 } },
@@ -203,17 +263,31 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 {
                     $lookup: {
                         from: "lawyers",
-                        localField: "lawyerId",
+                        localField: "_id",
                         foreignField: "_id",
                         as: "lawyerId"
                     }
                 },
                 { $unwind: "$lawyerId" },
+                {
+                    $lookup: {
+                        from: "bookings",
+                        localField: "bookingId",
+                        foreignField: "_id",
+                        as: "bookingDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$bookingDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
                 { $sort: { "lastMessage.createdAt": -1, updatedAt: -1 } }
             ]);
 
             return docs.map((doc) => ({
-                id: doc._id.toString(),
+                id: doc.roomId.toString(),
                 userId: doc.userId.toString(),
                 lawyerId: {
                     _id: doc.lawyerId._id,
@@ -225,6 +299,12 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 lastMessage: doc.lastMessage ? {
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
+                } : undefined,
+                bookingDetails: doc.bookingDetails ? {
+                    bookingId: doc.bookingDetails.bookingId,
+                    startTime: doc.bookingDetails.startTime,
+                    description: doc.bookingDetails.description,
+                    date: doc.bookingDetails.date
                 } : undefined
             }));
         } catch (error: unknown) {
@@ -259,6 +339,94 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
             await ChatRoomModel.findByIdAndUpdate(roomId, { updatedAt: new Date() });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    async findAllByUserAndLawyer(userId: string, lawyerId: string): Promise<PopulatedChatRoom[]> {
+        try {
+            const docs = await ChatRoomModel.aggregate([
+                {
+                    $match: {
+                        userId: new Types.ObjectId(userId),
+                        lawyerId: new Types.ObjectId(lawyerId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "messageschemas",
+                        let: { roomId: "$_id" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
+                            { $sort: { createdAt: -1 } },
+                            { $limit: 1 }
+                        ],
+                        as: "lastMessage"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$lastMessage",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "userId"
+                    }
+                },
+                { $unwind: "$userId" },
+                {
+                    $lookup: {
+                        from: "lawyers",
+                        localField: "lawyerId",
+                        foreignField: "_id",
+                        as: "lawyerId"
+                    }
+                },
+                { $unwind: "$lawyerId" },
+                {
+                    $lookup: {
+                        from: "bookings",
+                        localField: "bookingId",
+                        foreignField: "_id",
+                        as: "bookingDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$bookingDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                { $sort: { createdAt: -1 } }
+            ]);
+
+            return docs.map((doc) => ({
+                id: doc._id.toString(),
+                userId: doc.userId as unknown as PopulatedUser,
+                lawyerId: {
+                    _id: doc.lawyerId._id,
+                    name: doc.lawyerId.name,
+                    profileImage: doc.lawyerId.profileImage || doc.lawyerId.Profileimageurl
+                } as unknown as PopulatedLawyer,
+                bookingId: doc.bookingId.toString(),
+                createdAt: doc.createdAt,
+                lastMessage: doc.lastMessage ? {
+                    content: doc.lastMessage.content,
+                    createdAt: doc.lastMessage.createdAt
+                } : undefined,
+                bookingDetails: doc.bookingDetails ? {
+                    bookingId: doc.bookingDetails.bookingId,
+                    startTime: doc.bookingDetails.startTime,
+                    description: doc.bookingDetails.description,
+                    date: doc.bookingDetails.date
+                } : undefined
+            }));
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
 

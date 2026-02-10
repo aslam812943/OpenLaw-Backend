@@ -11,6 +11,8 @@ import { ISubscriptionRepository } from "../../../../domain/repositories/admin/I
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 import { ISendNotificationUseCase } from "../../../interface/use-cases/common/notification/ISendNotificationUseCase";
+import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
+import { ChatRoom } from "../../../../domain/entities/ChatRoom";
 
 export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
     constructor(
@@ -20,7 +22,8 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         private _lawyerRepository: ILawyerRepository,
         private _paymentRepository: IPaymentRepository,
         private _subscriptionRepository: ISubscriptionRepository,
-        private _sendNotificationUseCase: ISendNotificationUseCase
+        private _sendNotificationUseCase: ISendNotificationUseCase,
+        private _chatRoomRepository: IChatRoomRepository
     ) { }
 
     async execute(sessionId: string): Promise<ResponseBookingDetilsDTO> {
@@ -105,6 +108,13 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         );
 
         await this._paymentRepository.create(payment);
+
+        await this._chatRoomRepository.save(new ChatRoom(
+            '',
+            metadata.userId,
+            metadata.lawyerId,
+            data.id
+        ));
 
         // Notify Lawyer
         await this._sendNotificationUseCase.execute(

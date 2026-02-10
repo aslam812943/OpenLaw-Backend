@@ -6,4 +6,5 @@ export interface IGetChatRoomUseCase {
     getById(roomId: string): Promise<PopulatedChatRoomDTO>;
     getByUser(userId: string): Promise<PopulatedChatRoomDTO[]>;
     getByLawyer(lawyerId: string): Promise<PopulatedChatRoomDTO[]>;
+    getLawyerSpecificRooms(userId: string, lawyerId: string): Promise<PopulatedChatRoomDTO[]>;
 }

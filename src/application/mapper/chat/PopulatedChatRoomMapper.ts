@@ -29,7 +29,8 @@ export class PopulatedChatRoomMapper {
                 },
             chatRoom.bookingId,
             chatRoom.createdAt,
-            chatRoom.lastMessage
+            chatRoom.lastMessage,
+            chatRoom.bookingDetails
         );
     }
 
@@ -57,7 +58,8 @@ export class PopulatedChatRoomMapper {
                 },
             doc.bookingId.toString(),
             doc.createdAt,
-            chatRoom.lastMessage
+            chatRoom.lastMessage,
+            chatRoom.bookingDetails
         );
     }
 }

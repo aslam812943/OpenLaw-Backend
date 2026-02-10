@@ -34,6 +34,12 @@ export interface PopulatedChatRoom {
     userId: string | PopulatedUser;
     lawyerId: string | PopulatedLawyer;
     bookingId: string;
+    bookingDetails?: {
+        bookingId: string;
+        startTime: string;
+        description: string;
+        date: string;
+    };
     createdAt: Date;
     lastMessage?: {
         content: string;
@@ -44,7 +50,7 @@ export interface PopulatedChatRoom {
 export interface IChatRoomRepository {
     save(chatRoom: ChatRoom): Promise<ChatRoom>;
     findById(id: string): Promise<ChatRoom | null>;
-    findByUserAndLawyer(userId: string, lawyerId: string): Promise<ChatRoom | null>;
+    findByUserAndLawyer(userId: string, lawyerId: string, bookingId?: string): Promise<ChatRoom | null>;
     findByLawyerId(lawyerId: string): Promise<PopulatedChatRoom[]>;
     findByUserId(userId: string): Promise<PopulatedChatRoom[]>;
     updateBookingId(roomId: string, bookingId: string): Promise<void>;
@@ -52,4 +58,5 @@ export interface IChatRoomRepository {
     updateLastMessage(roomId: string): Promise<void>;
     findByIdPopulated(id: string): Promise<PopulatedChatRoom | null>;
     findByBookingId(bookingId: string): Promise<ChatRoom | null>;
+    findAllByUserAndLawyer(userId: string, lawyerId: string): Promise<PopulatedChatRoom[]>;
 }

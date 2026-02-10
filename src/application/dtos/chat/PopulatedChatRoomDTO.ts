@@ -16,6 +16,12 @@ export class PopulatedChatRoomDTO {
         public lastMessage?: {
             content: string;
             createdAt: Date;
+        },
+        public bookingDetails?: {
+            bookingId: string;
+            startTime: string;
+            description: string;
+            date: string;
         }
     ) { }
 }
