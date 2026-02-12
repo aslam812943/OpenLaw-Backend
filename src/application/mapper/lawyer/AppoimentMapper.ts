@@ -14,8 +14,15 @@ export class AppoimentMapper {
                 b.paymentStatus,
                 b.description ?? '',
                 b.userName ?? '',
-                b.lawyerFeedback
+                b.lawyerId,
+                b.lawyerFeedback,
+                b.bookingId,
+                b.followUpType,
+                b.followUpDate,
+                b.followUpTime,
+                b.followUpStatus
             );
         });
     }
 }
+

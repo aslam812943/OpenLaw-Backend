@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetAppoimentsUseCase } from "../../../application/interface/use-cases/lawyer/IGetAppoimentsUseCase";
 import { IUpdateAppointmentStatusUseCase } from "../../../application/interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
+import { ISetFollowUpUseCase } from "../../../application/interface/use-cases/lawyer/ISetFollowUpUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
@@ -8,7 +9,8 @@ import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
 export class AppointmentsController {
     constructor(
         private readonly _getAppointmentsUseCase: IGetAppoimentsUseCase,
-        private readonly _updateStatusUseCase: IUpdateAppointmentStatusUseCase
+        private readonly _updateStatusUseCase: IUpdateAppointmentStatusUseCase,
+        private readonly _setFollowUpUseCase: ISetFollowUpUseCase
     ) { }
 
     async getAppointments(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -37,6 +39,19 @@ export class AppointmentsController {
             const { status, feedback } = req.body;
 
             await this._updateStatusUseCase.execute(id, status, feedback);
+
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS);
+        } catch (error: unknown) {
+            next(error);
+        }
+    }
+
+    async setFollowUp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { id } = req.params;
+            const { followUpType, followUpDate, followUpTime, feedback } = req.body;
+
+            await this._setFollowUpUseCase.execute(id, followUpType, followUpDate, followUpTime, feedback);
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.COMMON.SUCCESS);
         } catch (error: unknown) {

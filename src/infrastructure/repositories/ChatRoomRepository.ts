@@ -152,19 +152,9 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 { $match: { lawyerId: new Types.ObjectId(lawyerId) } },
                 { $sort: { updatedAt: -1 } },
                 {
-                    $group: {
-                        _id: "$userId",
-                        roomId: { $first: "$_id" },
-                        lawyerId: { $first: "$lawyerId" },
-                        bookingId: { $first: "$bookingId" },
-                        createdAt: { $first: "$createdAt" },
-                        updatedAt: { $first: "$updatedAt" }
-                    }
-                },
-                {
                     $lookup: {
                         from: "messageschemas",
-                        let: { roomId: "$roomId" },
+                        let: { roomId: "$_id" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
                             { $sort: { createdAt: -1 } },
@@ -182,7 +172,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 {
                     $lookup: {
                         from: "users",
-                        localField: "_id",
+                        localField: "userId",
                         foreignField: "_id",
                         as: "userId"
                     }
@@ -206,7 +196,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
             ]);
 
             return docs.map((doc) => ({
-                id: doc.roomId.toString(),
+                id: doc._id.toString(),
                 userId: doc.userId as unknown as PopulatedUser,
                 lawyerId: doc.lawyerId.toString(),
                 bookingId: doc.bookingId.toString(),
@@ -233,19 +223,9 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 { $match: { userId: new Types.ObjectId(userId) } },
                 { $sort: { updatedAt: -1 } },
                 {
-                    $group: {
-                        _id: "$lawyerId",
-                        roomId: { $first: "$_id" },
-                        userId: { $first: "$userId" },
-                        bookingId: { $first: "$bookingId" },
-                        createdAt: { $first: "$createdAt" },
-                        updatedAt: { $first: "$updatedAt" }
-                    }
-                },
-                {
                     $lookup: {
                         from: "messageschemas",
-                        let: { roomId: "$roomId" },
+                        let: { roomId: "$_id" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$roomId", "$$roomId"] } } },
                             { $sort: { createdAt: -1 } },
@@ -263,7 +243,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                 {
                     $lookup: {
                         from: "lawyers",
-                        localField: "_id",
+                        localField: "lawyerId",
                         foreignField: "_id",
                         as: "lawyerId"
                     }
@@ -287,7 +267,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
             ]);
 
             return docs.map((doc) => ({
-                id: doc.roomId.toString(),
+                id: doc._id.toString(),
                 userId: doc.userId.toString(),
                 lawyerId: {
                     _id: doc.lawyerId._id,
@@ -427,6 +407,14 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
             }));
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+        }
+    }
+
+    async deleteByBookingId(bookingId: string): Promise<void> {
+        try {
+            await ChatRoomModel.deleteOne({ bookingId: new Types.ObjectId(bookingId) });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.DELETE_ERROR);
         }
     }
 

@@ -7,7 +7,7 @@ interface IBookingWithPopulatedLawyer {
     startTime: string;
     endTime: string;
     consultationFee: number;
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected';
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'follow-up';
     description?: string;
     lawyerName?: string;
     cancellationReason?: string;
@@ -16,7 +16,13 @@ interface IBookingWithPopulatedLawyer {
     lawyerFeedback?: string;
     paymentId?: string;
     bookingId?: string;
+    followUpType?: 'none' | 'specific' | 'deadline';
+    followUpDate?: string;
+    followUpTime?: string;
+    followUpStatus?: 'none' | 'pending' | 'booked';
+    parentBookingId?: string;
 }
+
 
 export class UserAppointmentsMapper {
     static mapToDto(data: IBookingWithPopulatedLawyer[]): ResponseGetAppointmentsDTO[] {
@@ -36,8 +42,14 @@ export class UserAppointmentsMapper {
                 booking.refundStatus,
                 booking.lawyerFeedback,
                 booking.bookingId,
-                booking.paymentId
+                booking.paymentId,
+                booking.followUpType,
+                booking.followUpDate,
+                booking.followUpTime,
+                booking.followUpStatus,
+                booking.parentBookingId
             );
         });
     }
 }
+

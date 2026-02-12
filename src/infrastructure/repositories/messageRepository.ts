@@ -73,4 +73,12 @@ export class MessageRepository extends BaseRepository<IMessageDocument> implemen
       throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
     }
   }
+
+  async deleteByRoomId(roomId: string): Promise<void> {
+    try {
+      await MessageModel.deleteMany({ roomId: roomId });
+    } catch (error: unknown) {
+      throw new InternalServerError(MessageConstants.REPOSITORY.DELETE_ERROR);
+    }
+  }
 }

@@ -13,6 +13,7 @@ import {
   upload
 } from "../../../di/userContainer";
 import { notificationController } from "../../../di/container";
+import { commonAuthMiddleware } from "../../middlewares/CommonAuthMiddleware";
 
 const router = express.Router();
 
@@ -35,7 +36,8 @@ router.get('/wallet', authMiddleware.execute, (req, res, next) => walletControll
 // Lawyer Routes
 router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next));
 router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getLawyer(req, res, next));
-router.get(`/lawyers/slots/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
+router.get(`/lawyers/slots/:id`, commonAuthMiddleware, (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
+
 
 // Chat Routes
 router.get("/chat/access/:lawyerId", authMiddleware.execute, (req, res, next) => chatController.checkAccess(req, res, next));

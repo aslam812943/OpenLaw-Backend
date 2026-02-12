@@ -64,6 +64,7 @@ import { ApprovePayoutUseCase } from "../application/useCases/Admin/ApprovePayou
 import { GetLawyerDashboardStatsUseCase } from "../application/useCases/lawyer/GetLawyerDashboardStatsUseCase";
 import { SpecializationController } from "../interface/controllers/lawyer/SpecializationController";
 import { GetActiveSpecializationsUseCase } from "../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
+import { SetFollowUpUseCase } from "../application/useCases/lawyer/SetFollowUpUseCase";
 import { SpecializationRepository } from "../infrastructure/repositories/admin/SpecializationRepository";
 
 
@@ -108,8 +109,12 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     stripeService,
     lawyerRepository,
     walletRepository,
-    sendNotificationUseCase
+    sendNotificationUseCase,
+    chatRoomRepository,
+    messageRepository
 );
+
+const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase);
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
 const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
@@ -142,7 +147,7 @@ export const availabilityController = new AvailabilityController(
     deleteAvailableRuleUseCase
 );
 export const getProfileController = new LawyerProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
-export const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase);
+export const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase, setFollowUpUseCase);
 export const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 export const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 export const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);

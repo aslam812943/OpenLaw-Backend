@@ -56,6 +56,7 @@ import { CreateBookingPaymentUseCase } from "../application/useCases/user/bookin
 import { ConfirmBookingUseCase } from "../application/useCases/user/booking/ConfirmBookingUseCase";
 import { GetUserAppointmentsUseCase } from "../application/useCases/user/GetUserAppointmentsUseCase";
 import { CancelAppointmentUseCase } from "../application/useCases/user/CancelAppointmentUseCase";
+import { GetBookingDetailsUseCase } from "../application/useCases/user/booking/GetBookingDetailsUseCase";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
 
@@ -144,7 +145,17 @@ const confirmBookingUseCase = new ConfirmBookingUseCase(
     chatRoomRepository
 );
 const getUserAppointmentsUseCase = new GetUserAppointmentsUseCase(bookingRepository);
-const cancelAppointmentUseCase = new CancelAppointmentUseCase(bookingRepository, availabilityRuleRepository, stripeService, lawyerRepository, walletRepository, sendNotificationUseCase);
+const getBookingDetailsUseCase = new GetBookingDetailsUseCase(bookingRepository);
+const cancelAppointmentUseCase = new CancelAppointmentUseCase(
+    bookingRepository,
+    availabilityRuleRepository,
+    stripeService,
+    lawyerRepository,
+    walletRepository,
+    sendNotificationUseCase,
+    chatRoomRepository,
+    messageRepository
+);
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
 export const walletController = new WalletController(getWalletUseCase);
 
@@ -152,7 +163,8 @@ export const bookingController = new BookingController(
     createBookingPaymentUseCase,
     confirmBookingUseCase,
     getUserAppointmentsUseCase,
-    cancelAppointmentUseCase
+    cancelAppointmentUseCase,
+    getBookingDetailsUseCase
 );
 
 // Webhook

@@ -3,6 +3,8 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
+import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
+import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
@@ -15,7 +17,9 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _paymentService: IPaymentService,
         private readonly _lawyerRepository: ILawyerRepository,
         private readonly _walletRepository: IWalletRepository,
-        private readonly _sendNotificationUseCase: ISendNotificationUseCase
+        private readonly _sendNotificationUseCase: ISendNotificationUseCase,
+        private readonly _chatRoomRepository: IChatRoomRepository,
+        private readonly _messageRepository: IMessageRepository
     ) { }
 
     async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
@@ -76,6 +80,16 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
             );
 
             await this._repository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
+
+            try {
+                const chatRoom = await this._chatRoomRepository.findByBookingId(appointmentId);
+                if (chatRoom && chatRoom.id) {
+                    await this._messageRepository.deleteByRoomId(chatRoom.id);
+                    await this._chatRoomRepository.deleteByBookingId(appointmentId);
+                }
+            } catch (error) {
+                console.error("Error deleting chat room during rejection:", error);
+            }
         } else if (status === 'completed') {
             const currentStatus = booking.status;
             if (currentStatus !== 'confirmed') {

@@ -61,6 +61,8 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             }
         }
 
+        const parentBookingId = metadata.parentBookingId && metadata.parentBookingId !== '' ? metadata.parentBookingId : undefined;
+
         const booking = new Booking(
             '',
             metadata.userId,
@@ -81,12 +83,28 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             undefined,
             undefined,
             undefined,
-            commissionPercent
+            commissionPercent,
+            undefined,
+            undefined,
+            undefined,
+            'none',
+            undefined,
+            undefined,
+            'none',
+            parentBookingId
         );
 
 
         const data = await this._bookingRepository.create(booking);
-        await this._slotRepository.bookSlot(metadata.slotId);
+        if (metadata.slotId && metadata.slotId !== '') {
+            await this._slotRepository.bookSlot(metadata.slotId);
+        }
+
+
+        if (parentBookingId) {
+            await this._bookingRepository.updateFollowUpStatus(parentBookingId, 'booked');
+        }
+
 
 
 
@@ -109,12 +127,12 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
 
         await this._paymentRepository.create(payment);
 
-        await this._chatRoomRepository.save(new ChatRoom(
-            '',
-            metadata.userId,
-            metadata.lawyerId,
-            data.id
-        ));
+        if (!parentBookingId) {
+            const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(metadata.userId, metadata.lawyerId, data.id);
+            if (!existingRoom) {
+                await this._chatRoomRepository.save(new ChatRoom('', metadata.userId, metadata.lawyerId, data.id));
+            }
+        }
 
         // Notify Lawyer
         await this._sendNotificationUseCase.execute(

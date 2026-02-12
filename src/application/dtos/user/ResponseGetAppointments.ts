@@ -14,6 +14,12 @@ export class ResponseGetAppointmentsDTO {
         public refundStatus?: string,
         public lawyerFeedback?: string,
         public bookingId?: string,
-        public paymentId?: string
+        public paymentId?: string,
+        public followUpType?: string,
+        public followUpDate?: string,
+        public followUpTime?: string,
+        public followUpStatus?: string,
+        public parentBookingId?: string
     ) { }
 }
+

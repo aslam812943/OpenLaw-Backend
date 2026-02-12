@@ -20,6 +20,11 @@ export interface IBookingDocument extends Document {
     commissionPercent: number;
     lawyerFeedback?: string;
     bookingId?: string;
+    followUpType: 'none' | 'specific' | 'deadline';
+    followUpDate?: string;
+    followUpTime?: string;
+    followUpStatus: 'none' | 'pending' | 'booked';
+    parentBookingId?: string;
 }
 
 const BookingSchema: Schema = new Schema({
@@ -30,7 +35,7 @@ const BookingSchema: Schema = new Schema({
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
     consultationFee: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'confirmed', 'cancelled', 'completed', 'rejected'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'confirmed', 'cancelled', 'completed', 'rejected', 'follow-up'], default: 'pending' },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     paymentId: { type: String },
     stripeSessionId: { type: String, unique: true },
@@ -43,6 +48,11 @@ const BookingSchema: Schema = new Schema({
     commissionPercent: { type: Number, default: 0 },
     lawyerFeedback: { type: String },
     bookingId: { type: String, unique: true, sparse: true },
+    followUpType: { type: String, enum: ['none', 'specific', 'deadline'], default: 'none' },
+    followUpDate: { type: String },
+    followUpTime: { type: String },
+    followUpStatus: { type: String, enum: ['none', 'pending', 'booked'], default: 'none' },
+    parentBookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);

@@ -59,4 +59,5 @@ export interface IChatRoomRepository {
     findByIdPopulated(id: string): Promise<PopulatedChatRoom | null>;
     findByBookingId(bookingId: string): Promise<ChatRoom | null>;
     findAllByUserAndLawyer(userId: string, lawyerId: string): Promise<PopulatedChatRoom[]>;
+    deleteByBookingId(bookingId: string): Promise<void>;
 }

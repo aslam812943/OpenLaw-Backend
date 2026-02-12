@@ -44,7 +44,12 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.commissionPercent || 0,
             doc.lawyerFeedback,
             doc.bookingId,
-            docObj.createdAt
+            docObj.createdAt,
+            doc.followUpType as 'none' | 'specific' | 'deadline',
+            doc.followUpDate,
+            doc.followUpTime,
+            doc.followUpStatus as 'none' | 'pending' | 'booked',
+            doc.parentBookingId?.toString()
         );
     }
 
@@ -101,6 +106,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const l = Number(limit) || 10;
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = { userId: new Types.ObjectId(userId) };
+
+        
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
@@ -203,6 +210,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = { lawyerId: new Types.ObjectId(lawyerId) };
 
+           
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
                 query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
@@ -212,8 +220,12 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
 
             if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
-                const users = await UserModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id');
-                query.userId = { $in: users.map(u => u._id) };
+                const searchStr = search.trim();
+                const users = await UserModel.find({ name: { $regex: searchStr, $options: 'i' } }).select('_id');
+                query.$or = [
+                    { userId: { $in: users.map(u => u._id) } },
+                    { bookingId: { $regex: searchStr, $options: 'i' } }
+                ];
             }
 
             const [bookings, total] = await Promise.all([
@@ -253,6 +265,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = {};
 
+         
+
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
                 query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
@@ -262,13 +276,15 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
 
             if (search && typeof search === 'string' && search.trim() !== "" && search !== "undefined" && search !== "null") {
+                const searchStr = search.trim();
                 const [userIds, lawyerIds] = await Promise.all([
-                    UserModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id'),
-                    LawyerModel.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id')
+                    UserModel.find({ name: { $regex: searchStr, $options: 'i' } }).select('_id'),
+                    LawyerModel.find({ name: { $regex: searchStr, $options: 'i' } }).select('_id')
                 ]);
                 query.$or = [
                     { userId: { $in: userIds.map(u => u._id) } },
-                    { lawyerId: { $in: lawyerIds.map(l => l._id) } }
+                    { lawyerId: { $in: lawyerIds.map(l => l._id) } },
+                    { bookingId: { $regex: searchStr, $options: 'i' } }
                 ];
             }
 
@@ -335,6 +351,39 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             };
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.EARNINGS_STATS_ERROR);
+        }
+    }
+
+    async setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string): Promise<void> {
+        try {
+            await BookingModel.findByIdAndUpdate(id, {
+                followUpType,
+                followUpDate,
+                followUpTime,
+                followUpStatus: 'pending',
+                status: 'follow-up',
+                lawyerFeedback
+            });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    async findFollowUpByParentId(parentId: string): Promise<Booking | null> {
+        try {
+            const booking = await BookingModel.findOne({ parentBookingId: new Types.ObjectId(parentId) });
+            if (!booking) return null;
+            return this.mapToEntity(booking);
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
+        }
+    }
+
+    async updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked'): Promise<void> {
+        try {
+            await BookingModel.findByIdAndUpdate(id, { followUpStatus: status });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 }

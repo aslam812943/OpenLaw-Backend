@@ -4,6 +4,7 @@ import { BookingDTO } from "../../../application/dtos/user/BookingDetailsDTO";
 import { IConfirmBookingUseCase } from "../../../application/interface/use-cases/user/IConfirmBookingUseCase";
 import { IGetUserAppointmentsUseCase } from "../../../application/interface/use-cases/user/IGetUserAppointmentsUseCase";
 import { ICancelAppointmentUseCase } from "../../../application/interface/use-cases/user/ICancelAppointmentUseCase";
+import { IGetBookingDetailsUseCase } from "../../../application/interface/use-cases/user/IGetBookingDetailsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
@@ -13,7 +14,8 @@ export class BookingController {
         private readonly _createBookingPaymentUseCase: ICreateBookingPaymentUseCase,
         private readonly _confirmBookingUseCase: IConfirmBookingUseCase,
         private readonly _getUserAppointmentsUseCase: IGetUserAppointmentsUseCase,
-        private readonly _cancelAppointmentUseCase: ICancelAppointmentUseCase
+        private readonly _cancelAppointmentUseCase: ICancelAppointmentUseCase,
+        private readonly _getBookingDetailsUseCase: IGetBookingDetailsUseCase
     ) { }
 
     async initiatePayment(req: Request, res: Response, next: NextFunction) {
@@ -76,6 +78,16 @@ export class BookingController {
             await this._cancelAppointmentUseCase.execute(id, reason);
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.CANCEL_SUCCESS);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getBookingDetails(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const booking = await this._getBookingDetailsUseCase.execute(id);
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.FETCH_SUCCESS, booking);
         } catch (error) {
             next(error);
         }
