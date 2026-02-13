@@ -19,7 +19,7 @@ interface IBookingWithPopulatedLawyer {
     followUpType?: 'none' | 'specific' | 'deadline';
     followUpDate?: string;
     followUpTime?: string;
-    followUpStatus?: 'none' | 'pending' | 'booked';
+    followUpStatus?: 'none' | 'pending' | 'booked' | 'cancelled';
     parentBookingId?: string;
 }
 
