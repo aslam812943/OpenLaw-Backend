@@ -1,5 +1,5 @@
 import { GetLawyerEarningsDTO } from "../../../dtos/lawyer/GetLawyerEarningsDTO";
 
 export interface IGetLawyerEarningsUseCase {
-    execute(lawyerId: string): Promise<GetLawyerEarningsDTO>;
+    execute(lawyerId: string, page?: number, limit?: number): Promise<GetLawyerEarningsDTO>;
 }

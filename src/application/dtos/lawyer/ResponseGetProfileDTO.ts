@@ -1,5 +1,4 @@
 
-
 export class ResponseGetProfileDTO {
     constructor(
         public id: string,
@@ -16,7 +15,9 @@ export class ResponseGetProfileDTO {
         public profileImage?: string,
         public bio?: string,
         public isPassword?: boolean,
-        public paymentVerify?:boolean,
-        public consultationFee?:number
+        public paymentVerify?: boolean,
+        public consultationFee?: number,
+        public hasSubmittedVerification?: boolean,
+        public verificationStatus?: string
     ) { }
 }

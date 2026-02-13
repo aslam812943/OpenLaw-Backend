@@ -49,7 +49,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.followUpDate,
             doc.followUpTime,
             doc.followUpStatus as 'none' | 'pending' | 'booked',
-            doc.parentBookingId?.toString()
+            doc.parentBookingId?.toString(),
+            doc.followUpSlotId?.toString()
         );
     }
 
@@ -317,7 +318,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
                         totalGross: {
                             $sum: {
                                 $cond: [
-                                    { $in: ["$status", ["confirmed", "completed"]] },
+                                    { $in: ["$status", ["confirmed", "completed", "follow-up"]] },
                                     "$consultationFee",
                                     0
                                 ]
@@ -354,7 +355,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         }
     }
 
-    async setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string): Promise<void> {
+    async setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string, followUpSlotId?: string): Promise<void> {
         try {
             await BookingModel.findByIdAndUpdate(id, {
                 followUpType,
@@ -362,7 +363,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
                 followUpTime,
                 followUpStatus: 'pending',
                 status: 'follow-up',
-                lawyerFeedback
+                lawyerFeedback,
+                followUpSlotId
             });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);

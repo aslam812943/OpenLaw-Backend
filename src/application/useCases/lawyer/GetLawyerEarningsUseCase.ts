@@ -11,9 +11,9 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
         private _lawyerRepository: ILawyerRepository,
     ) { }
 
-    async execute(lawyerId: string): Promise<GetLawyerEarningsDTO> {
+    async execute(lawyerId: string, page: number = 1, limit: number = 10): Promise<GetLawyerEarningsDTO> {
         const [result, lawyer, stats] = await Promise.all([
-            this._bookingRepository.findByLawyerId(lawyerId, 1, 10, 'confirmed,completed'),
+            this._bookingRepository.findByLawyerId(lawyerId, page, limit, 'confirmed,completed,follow-up'),
             this._lawyerRepository.findById(lawyerId),
             this._bookingRepository.getEarningsStats(lawyerId)
         ]);
@@ -26,7 +26,8 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
             result.bookings,
             lawyer.walletBalance || 0,
             stats.totalGross,
-            stats.pendingNet
+            stats.pendingNet,
+            result.total
         );
     }
 

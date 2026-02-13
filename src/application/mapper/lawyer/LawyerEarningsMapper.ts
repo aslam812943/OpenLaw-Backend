@@ -2,7 +2,7 @@ import { Booking } from "../../../domain/entities/Booking";
 import { GetLawyerEarningsDTO, TransactionDTO } from "../../dtos/lawyer/GetLawyerEarningsDTO";
 
 export class LawyerEarningsMapper {
-    static toDTO(bookings: Booking[], walletBalance: number, totalGross: number, pendingNet: number): GetLawyerEarningsDTO {
+    static toDTO(bookings: Booking[], walletBalance: number, totalGross: number, pendingNet: number, totalTransactions: number): GetLawyerEarningsDTO {
         const transactions = bookings.map(b => {
             const commissionAmount = b.consultationFee * ((b.commissionPercent || 0) / 100);
             const netAmount = b.consultationFee - commissionAmount;
@@ -19,8 +19,8 @@ export class LawyerEarningsMapper {
             );
         });
 
-        const relevantTransactions = transactions.filter(t => t.paymentStatus === 'paid' && (t.status === 'confirmed' || t.status === 'completed'));
+        const relevantTransactions = transactions.filter(t => t.paymentStatus === 'paid' && (t.status === 'confirmed' || t.status === 'completed' || t.status === 'follow-up'));
 
-        return new GetLawyerEarningsDTO(totalGross, relevantTransactions, walletBalance, pendingNet);
+        return new GetLawyerEarningsDTO(totalGross, relevantTransactions, walletBalance, pendingNet, totalTransactions);
     }
 }

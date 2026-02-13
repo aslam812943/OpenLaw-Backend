@@ -28,7 +28,9 @@ export class PayoutController {
     async getLawyerWithdrawals(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const lawyerId = req.user?.id;
-            const data = await this._withdrawalRepository.findByLawyerId(lawyerId!);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const data = await this._withdrawalRepository.findByLawyerId(lawyerId!, page, limit);
             return ApiResponse.success(res, HttpStatusCode.OK, "Withdrawals retrieved successfully", data);
         } catch (error: unknown) {
             next(error);

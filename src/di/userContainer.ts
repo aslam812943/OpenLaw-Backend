@@ -58,6 +58,7 @@ import { GetUserAppointmentsUseCase } from "../application/useCases/user/GetUser
 import { CancelAppointmentUseCase } from "../application/useCases/user/CancelAppointmentUseCase";
 import { CancelFollowUpUseCase } from "../application/useCases/user/CancelFollowUpUseCase";
 import { GetBookingDetailsUseCase } from "../application/useCases/user/booking/GetBookingDetailsUseCase";
+import { BookWithWalletUseCase } from "../application/useCases/user/booking/BookWithWalletUseCase";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
 
@@ -134,7 +135,7 @@ const getActiveSpecializationsUseCase = new GetActiveSpecializationsUseCase(spec
 export const specializationController = new SpecializationController(getActiveSpecializationsUseCase);
 
 // Booking
-const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService, lawyerRepository);
+const createBookingPaymentUseCase = new CreateBookingPaymentUseCase(stripeService, lawyerRepository, availabilityRuleRepository);
 const confirmBookingUseCase = new ConfirmBookingUseCase(
     bookingRepository,
     stripeService,
@@ -158,7 +159,17 @@ const cancelAppointmentUseCase = new CancelAppointmentUseCase(
     messageRepository
 );
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
-const cancelFollowUpUseCase = new CancelFollowUpUseCase(bookingRepository);
+const cancelFollowUpUseCase = new CancelFollowUpUseCase(bookingRepository, availabilityRuleRepository);
+const bookWithWalletUseCase = new BookWithWalletUseCase(
+    bookingRepository,
+    availabilityRuleRepository,
+    lawyerRepository,
+    paymentRepository,
+    subscriptionRepository,
+    walletRepository,
+    sendNotificationUseCase,
+    chatRoomRepository
+);
 export const walletController = new WalletController(getWalletUseCase);
 
 export const bookingController = new BookingController(
@@ -167,7 +178,8 @@ export const bookingController = new BookingController(
     getUserAppointmentsUseCase,
     cancelAppointmentUseCase,
     cancelFollowUpUseCase,
-    getBookingDetailsUseCase
+    getBookingDetailsUseCase,
+    bookWithWalletUseCase
 );
 
 // Webhook

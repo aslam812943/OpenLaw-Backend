@@ -3,11 +3,15 @@ import { ISetFollowUpUseCase } from "../../interface/use-cases/lawyer/ISetFollow
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
+import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
 
 export class SetFollowUpUseCase implements ISetFollowUpUseCase {
     constructor(
         private _bookingRepository: IBookingRepository,
-        private _sendNotificationUseCase: ISendNotificationUseCase
+        private _sendNotificationUseCase: ISendNotificationUseCase,
+        private _availabilityRuleRepository: IAvailabilityRuleRepository,
+        private _lawyerRepository: ILawyerRepository
     ) { }
 
     async execute(appointmentId: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, feedback?: string): Promise<void> {
@@ -33,7 +37,27 @@ export class SetFollowUpUseCase implements ISetFollowUpUseCase {
             throw new BadRequestError("Deadline date is required.");
         }
 
-        await this._bookingRepository.setFollowUpDetails(appointmentId, followUpType, followUpDate, followUpTime, feedback);
+        let followUpSlotId: string | undefined;
+        if (followUpType === 'specific') {
+            const slotId = await this._availabilityRuleRepository.findSlotIdByDateTime(booking.lawyerId, followUpDate!, followUpTime!);
+            if (!slotId) {
+                throw new BadRequestError("The requested follow-up slot does not exist.");
+            }
+
+            const reserved = await this._availabilityRuleRepository.reserveSlot(slotId, booking.userId);
+            if (!reserved) {
+                throw new BadRequestError("The requested follow-up slot is no longer available.");
+            }
+            followUpSlotId = slotId;
+        }
+
+        await this._bookingRepository.setFollowUpDetails(appointmentId, followUpType, followUpDate, followUpTime, feedback, followUpSlotId);
+
+        const commissionPercent = booking.commissionPercent || 0;
+        const commissionAmount = booking.consultationFee * (commissionPercent / 100);
+        const netAmount = booking.consultationFee - commissionAmount;
+
+        await this._lawyerRepository.updateWalletBalance(booking.lawyerId, netAmount);
 
         // Notify User
         let message = "";

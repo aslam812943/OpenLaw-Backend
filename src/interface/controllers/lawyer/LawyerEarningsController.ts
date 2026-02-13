@@ -10,8 +10,10 @@ export class LawyerEarningsController {
     async getEarnings(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const lawyerId = req.user?.id;
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
 
-            const earnings = await this._getLawyerEarningsUseCase.execute(lawyerId!);
+            const earnings = await this._getLawyerEarningsUseCase.execute(lawyerId!, page, limit);
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.EARNINGS_FETCH_SUCCESS, earnings);
         } catch (error: unknown) {
