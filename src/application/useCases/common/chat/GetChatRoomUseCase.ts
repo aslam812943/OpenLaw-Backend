@@ -25,6 +25,13 @@ export class GetChatRoomUseCase implements IGetChatRoomUseCase {
             targetBookingId = activeBooking.id;
         }
 
+       
+        let currentBooking = await this._bookingRepository.findById(targetBookingId);
+        while (currentBooking && currentBooking.parentBookingId) {
+            targetBookingId = currentBooking.parentBookingId;
+            currentBooking = await this._bookingRepository.findById(targetBookingId);
+        }
+
         const room = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, targetBookingId);
 
         if (room) {

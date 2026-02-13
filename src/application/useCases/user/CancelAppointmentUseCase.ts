@@ -4,6 +4,8 @@ import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRe
 import { ICancelAppointmentUseCase } from "../../interface/use-cases/user/ICancelAppointmentUseCase";
 import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
+import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
+import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
@@ -15,7 +17,9 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private _paymentService: IPaymentService,
         private _lawyerRepository: ILawyerRepository,
         private _walletRepository: IWalletRepository,
-        private _sendNotificationUseCase: ISendNotificationUseCase
+        private _sendNotificationUseCase: ISendNotificationUseCase,
+        private _chatRoomRepository: IChatRoomRepository,
+        private _messageRepository: IMessageRepository
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -109,6 +113,13 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
 
         await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
-
+        try {
+            const chatRoom = await this._chatRoomRepository.findByBookingId(bookingId);
+            if (chatRoom && chatRoom.id) {
+                await this._messageRepository.deleteByRoomId(chatRoom.id);
+                await this._chatRoomRepository.deleteByBookingId(bookingId);
+            }
+        } catch (error) {
+        }
     }
 }

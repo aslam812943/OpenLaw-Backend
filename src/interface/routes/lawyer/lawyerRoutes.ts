@@ -58,8 +58,11 @@ router.put('/profile/update', lawyerAuthMiddleware.execute, upload.single('profi
 router.put('/profile/password', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next));
 
 router.get('/appoiments', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.getAppointments(req, res, next));
+router.get('/appoiments/:id', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.getAppointmentDetails(req, res, next));
 
 router.patch('/appoiments/:id/status', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.updateStatus(req, res, next));
+router.post('/appoiments/:id/follow-up', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.setFollowUp(req, res, next));
+
 
 // Chat Routes
 router.get("/chat/messages/:roomId", lawyerAuthMiddleware.execute, (req, res, next) => chatController.getMessages(req, res, next));

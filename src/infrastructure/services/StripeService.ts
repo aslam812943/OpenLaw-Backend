@@ -25,7 +25,6 @@ export class StripeService implements IPaymentService {
                 }
             }
 
-            logger.info(`Stripe Checkout Session - Using Success URL base: ${clientUrl}`);
 
 
             const session = await this.stripe.checkout.sessions.create({
@@ -53,9 +52,12 @@ export class StripeService implements IPaymentService {
                     startTime: bookingDetails.startTime,
                     endTime: bookingDetails.endTime,
                     description: bookingDetails.description,
-                    slotId: bookingDetails.slotId
+                    slotId: bookingDetails.slotId || '',
+                    parentBookingId: bookingDetails.parentBookingId || ''
                 },
             });
+
+
 
             if (!session.url) {
                 throw new Error("Failed to create Stripe session URL");

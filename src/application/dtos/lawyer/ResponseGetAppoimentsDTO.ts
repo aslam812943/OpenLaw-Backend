@@ -10,6 +10,13 @@ export class ResponseGetAppoimnetsDTO {
         public paymentStatus: string,
         public desctiption: string,
         public userName: string,
-        public lawyerFeedback?: string
+        public lawyerId?: string,
+        public lawyerFeedback?: string,
+        public bookingId?: string,
+        public followUpType?: string,
+        public followUpDate?: string,
+        public followUpTime?: string,
+        public followUpStatus?: string,
+        public parentBookingId?: string
     ) { }
 }

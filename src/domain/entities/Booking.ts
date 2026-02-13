@@ -7,7 +7,7 @@ export class Booking {
         public startTime: string,
         public endTime: string,
         public consultationFee: number,
-        public status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected',
+        public status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'follow-up',
         public paymentStatus: 'pending' | 'paid' | 'failed',
         public paymentId?: string,
         public stripeSessionId?: string,
@@ -22,6 +22,11 @@ export class Booking {
         public commissionPercent: number = 0,
         public lawyerFeedback?: string,
         public bookingId?: string,
-        public createdAt?: Date
+        public createdAt?: Date,
+        public followUpType: 'none' | 'specific' | 'deadline' = 'none',
+        public followUpDate?: string,
+        public followUpTime?: string,
+        public followUpStatus: 'cancelled' | 'pending' | 'booked'| 'none' = 'none',
+        public parentBookingId?: string
     ) { }
 }

@@ -7,7 +7,9 @@ export class BookingDTO {
   endTime: string;
   consultationFee: number;
   description: string;
-  slotId:string
+  slotId?: string;
+  parentBookingId?: string;
+
   constructor(data: {
     userId: string;
     lawyerId: string;
@@ -17,7 +19,8 @@ export class BookingDTO {
     endTime: string;
     consultationFee: number;
     description: string;
-    slotId:string;
+    slotId?: string;
+    parentBookingId?: string;
   }) {
     this.userId = data.userId;
     this.lawyerId = data.lawyerId;
@@ -27,6 +30,8 @@ export class BookingDTO {
     this.endTime = data.endTime;
     this.consultationFee = data.consultationFee;
     this.description = data.description;
-    this.slotId = data.slotId
+    this.slotId = data.slotId;
+    this.parentBookingId = data.parentBookingId;
   }
 }
+
