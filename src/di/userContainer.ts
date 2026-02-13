@@ -56,6 +56,7 @@ import { CreateBookingPaymentUseCase } from "../application/useCases/user/bookin
 import { ConfirmBookingUseCase } from "../application/useCases/user/booking/ConfirmBookingUseCase";
 import { GetUserAppointmentsUseCase } from "../application/useCases/user/GetUserAppointmentsUseCase";
 import { CancelAppointmentUseCase } from "../application/useCases/user/CancelAppointmentUseCase";
+import { CancelFollowUpUseCase } from "../application/useCases/user/CancelFollowUpUseCase";
 import { GetBookingDetailsUseCase } from "../application/useCases/user/booking/GetBookingDetailsUseCase";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
@@ -157,6 +158,7 @@ const cancelAppointmentUseCase = new CancelAppointmentUseCase(
     messageRepository
 );
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
+const cancelFollowUpUseCase = new CancelFollowUpUseCase(bookingRepository);
 export const walletController = new WalletController(getWalletUseCase);
 
 export const bookingController = new BookingController(
@@ -164,6 +166,7 @@ export const bookingController = new BookingController(
     confirmBookingUseCase,
     getUserAppointmentsUseCase,
     cancelAppointmentUseCase,
+    cancelFollowUpUseCase,
     getBookingDetailsUseCase
 );
 

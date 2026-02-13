@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { IGetAppoimentsUseCase } from "../../../application/interface/use-cases/lawyer/IGetAppoimentsUseCase";
 import { IUpdateAppointmentStatusUseCase } from "../../../application/interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
 import { ISetFollowUpUseCase } from "../../../application/interface/use-cases/lawyer/ISetFollowUpUseCase";
+import { IGetAppointmentDetailsUseCase } from "../../../application/interface/use-cases/lawyer/IGetAppointmentDetailsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
@@ -10,7 +11,8 @@ export class AppointmentsController {
     constructor(
         private readonly _getAppointmentsUseCase: IGetAppoimentsUseCase,
         private readonly _updateStatusUseCase: IUpdateAppointmentStatusUseCase,
-        private readonly _setFollowUpUseCase: ISetFollowUpUseCase
+        private readonly _setFollowUpUseCase: ISetFollowUpUseCase,
+        private readonly _getAppointmentDetailsUseCase: IGetAppointmentDetailsUseCase
     ) { }
 
     async getAppointments(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -28,6 +30,17 @@ export class AppointmentsController {
                 appointments: result.appointments,
                 total: result.total
             });
+        } catch (error: unknown) {
+            next(error);
+        }
+    }
+
+    async getAppointmentDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { id } = req.params;
+            const result = await this._getAppointmentDetailsUseCase.execute(id);
+
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.LAWYER.APPOINTMENTS_FETCH_SUCCESS, result);
         } catch (error: unknown) {
             next(error);
         }

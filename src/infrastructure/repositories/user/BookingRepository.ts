@@ -107,7 +107,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = { userId: new Types.ObjectId(userId) };
 
-        
+
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
@@ -210,7 +210,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = { lawyerId: new Types.ObjectId(lawyerId) };
 
-           
+
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
                 query.status = statuses.length > 1 ? { $in: statuses } : statuses[0];
@@ -265,7 +265,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const skip = (p - 1) * l;
             const query: mongoose.FilterQuery<IBookingDocument> = {};
 
-         
+
 
             if (status && typeof status === 'string' && status.trim() !== "" && status !== "undefined" && status !== "null") {
                 const statuses = status.split(",").map(s => s.trim());
@@ -379,7 +379,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         }
     }
 
-    async updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked'): Promise<void> {
+    async updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked' | 'cancelled'): Promise<void> {
         try {
             await BookingModel.findByIdAndUpdate(id, { followUpStatus: status });
         } catch (error: unknown) {

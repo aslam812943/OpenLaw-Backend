@@ -16,6 +16,7 @@ export class ResponseGetAppoimnetsDTO {
         public followUpType?: string,
         public followUpDate?: string,
         public followUpTime?: string,
-        public followUpStatus?: string
+        public followUpStatus?: string,
+        public parentBookingId?: string
     ) { }
 }

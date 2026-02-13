@@ -47,6 +47,7 @@ import { UpdateProfileUseCase } from "../application/useCases/lawyer/UpdateProfi
 import { ChangePasswordUseCase } from "../application/useCases/lawyer/ChangePasswordUseCase";
 import { CheckLawyerStatusUseCase } from "../application/useCases/lawyer/CheckLawyerStatusUseCase";
 import { GetAppoimentsUseCase } from "../application/useCases/lawyer/GetAppoimentsUseCase";
+import { GetAppointmentDetailsUseCase } from "../application/useCases/lawyer/GetAppointmentDetailsUseCase";
 import { UpdateAppointmentStatusUseCase } from "../application/useCases/lawyer/UpdateAppointmentStatusUseCase";
 import { GetSubscriptionPlansUseCase } from "../application/useCases/lawyer/GetSubscriptionPlansUseCase";
 import { GetCurrentSubscriptionUseCase } from "../application/useCases/lawyer/GetCurrentSubscriptionUseCase";
@@ -103,6 +104,7 @@ const updateProfileUseCase = new UpdateProfileUseCase(lawyerRepository);
 const changePasswordUseCase = new ChangePasswordUseCase(lawyerRepository);
 const checkLawyerStatusUseCase = new CheckLawyerStatusUseCase(lawyerRepository);
 const getAppoimentsUseCase = new GetAppoimentsUseCase(bookingRepository);
+const getAppointmentDetailsUseCase = new GetAppointmentDetailsUseCase(bookingRepository);
 const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     availabilityRuleRepository,
     bookingRepository,
@@ -147,7 +149,7 @@ export const availabilityController = new AvailabilityController(
     deleteAvailableRuleUseCase
 );
 export const getProfileController = new LawyerProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
-export const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase, setFollowUpUseCase);
+export const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase, setFollowUpUseCase, getAppointmentDetailsUseCase);
 export const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 export const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 export const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);

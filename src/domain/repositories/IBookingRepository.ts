@@ -14,5 +14,5 @@ export interface IBookingRepository {
     getEarningsStats(lawyerId: string): Promise<{ totalGross: number, pendingNet: number }>;
     setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string): Promise<void>;
     findFollowUpByParentId(parentId: string): Promise<Booking | null>;
-    updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked'): Promise<void>;
+    updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked' | 'cancelled'): Promise<void>;
 }

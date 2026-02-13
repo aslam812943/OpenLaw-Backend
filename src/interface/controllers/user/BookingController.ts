@@ -4,6 +4,7 @@ import { BookingDTO } from "../../../application/dtos/user/BookingDetailsDTO";
 import { IConfirmBookingUseCase } from "../../../application/interface/use-cases/user/IConfirmBookingUseCase";
 import { IGetUserAppointmentsUseCase } from "../../../application/interface/use-cases/user/IGetUserAppointmentsUseCase";
 import { ICancelAppointmentUseCase } from "../../../application/interface/use-cases/user/ICancelAppointmentUseCase";
+import { ICancelFollowUpUseCase } from "../../../application/interface/use-cases/user/ICancelFollowUpUseCase";
 import { IGetBookingDetailsUseCase } from "../../../application/interface/use-cases/user/IGetBookingDetailsUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
@@ -15,6 +16,7 @@ export class BookingController {
         private readonly _confirmBookingUseCase: IConfirmBookingUseCase,
         private readonly _getUserAppointmentsUseCase: IGetUserAppointmentsUseCase,
         private readonly _cancelAppointmentUseCase: ICancelAppointmentUseCase,
+        private readonly _cancelFollowUpUseCase: ICancelFollowUpUseCase,
         private readonly _getBookingDetailsUseCase: IGetBookingDetailsUseCase
     ) { }
 
@@ -78,6 +80,16 @@ export class BookingController {
             await this._cancelAppointmentUseCase.execute(id, reason);
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.CANCEL_SUCCESS);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async cancelFollowUp(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await this._cancelFollowUpUseCase.execute(id);
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.FOLLOW_UP_CANCEL_SUCCESS);
         } catch (error) {
             next(error);
         }

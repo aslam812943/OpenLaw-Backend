@@ -20,7 +20,8 @@ export class AppoimentMapper {
                 b.followUpType,
                 b.followUpDate,
                 b.followUpTime,
-                b.followUpStatus
+                b.followUpStatus,
+                b.parentBookingId
             );
         });
     }
