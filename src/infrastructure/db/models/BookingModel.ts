@@ -25,6 +25,7 @@ export interface IBookingDocument extends Document {
     followUpTime?: string;
     followUpStatus: 'none' | 'pending' | 'booked';
     parentBookingId?: string;
+    followUpSlotId?: string;
 }
 
 const BookingSchema: Schema = new Schema({
@@ -53,6 +54,7 @@ const BookingSchema: Schema = new Schema({
     followUpTime: { type: String },
     followUpStatus: { type: String, enum: ['none', 'pending', 'booked'], default: 'none' },
     parentBookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
+    followUpSlotId: { type: Schema.Types.ObjectId, ref: 'Slot' },
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);

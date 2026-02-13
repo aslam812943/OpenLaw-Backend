@@ -8,7 +8,10 @@ export interface ISlotModel extends Document {
   endTime: string,
   sessionType: string,
   maxBookings: number,
-  isBooked: boolean
+  isBooked: boolean,
+  isReserved?: boolean,
+  reservedUntil?: Date,
+  reservedBy?: string
 }
 
 
@@ -20,7 +23,10 @@ const SlotSchema = new Schema<ISlotModel>({
   endTime: String,
   sessionType: String,
   maxBookings: Number,
-  isBooked: { type: Boolean, default: false }
+  isBooked: { type: Boolean, default: false },
+  isReserved: { type: Boolean, default: false },
+  reservedUntil: { type: Date },
+  reservedBy: { type: String }
 }, { timestamps: true })
 
 

@@ -59,6 +59,7 @@ export const MessageConstants = {
         FETCH_SUCCESS: "User appointments fetched successfully.",
         CANCEL_SUCCESS: "Appointment cancelled successfully.",
         FOLLOW_UP_CANCEL_SUCCESS: "Follow-up request cancelled successfully.",
+        SLOT_ALREADY_TAKEN: "This slot is already reserved or booked by someone else. Please choose another slot.",
     },
     REPOSITORY: {
         CREATE_ERROR: "Database error while creating document.",

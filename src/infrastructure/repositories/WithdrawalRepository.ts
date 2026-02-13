@@ -48,10 +48,23 @@ export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> im
         }
     }
 
-    async findByLawyerId(lawyerId: string): Promise<Withdrawal[]> {
+    async findByLawyerId(lawyerId: string, page: number = 1, limit: number = 10): Promise<{ withdrawals: Withdrawal[], total: number }> {
         try {
-            const docs = await WithdrawalModel.find({ lawyerId: new mongoose.Types.ObjectId(lawyerId) }).sort({ createdAt: -1 });
-            return docs.map(doc => this.mapToDomain(doc));
+            const skip = (page - 1) * limit;
+            const query = { lawyerId: new mongoose.Types.ObjectId(lawyerId) };
+
+            const [docs, total] = await Promise.all([
+                WithdrawalModel.find(query)
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit),
+                WithdrawalModel.countDocuments(query)
+            ]);
+
+            return {
+                withdrawals: docs.map(doc => this.mapToDomain(doc)),
+                total
+            };
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }

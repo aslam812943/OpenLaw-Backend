@@ -16,6 +16,7 @@ export class GetLawyerEarningsDTO {
         public totalEarnings: number,
         public transactions: TransactionDTO[],
         public walletBalance: number,
-        public pendingBalance: number
+        public pendingBalance: number,
+        public totalTransactions: number
     ) { }
 }

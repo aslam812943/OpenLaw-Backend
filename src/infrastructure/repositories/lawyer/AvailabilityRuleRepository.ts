@@ -199,8 +199,46 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   }
 
 
-  async bookSlot(id: string): Promise<void> {
-    await SlotModel.findByIdAndUpdate(id, { isBooked: true })
+  async reserveSlot(id: string, userId: string): Promise<boolean> {
+    const reservationWindow = 15;
+    const expiryDate = new Date();
+    expiryDate.setMinutes(expiryDate.getMinutes() + reservationWindow);
+
+    const now = new Date();
+
+    const result = await SlotModel.findOneAndUpdate(
+      {
+        _id: id,
+        isBooked: false,
+        $or: [
+          { isReserved: false },
+          { isReserved: { $exists: false } },
+          { reservedUntil: { $lt: now } }
+        ]
+      },
+      {
+        $set: {
+          isReserved: true,
+          reservedUntil: expiryDate,
+          reservedBy: userId
+        }
+      },
+      { new: true }
+    );
+
+    return !!result;
+  }
+
+
+  async bookSlot(id: string, userId?: string): Promise<void> {
+    const updateQuery: mongoose.UpdateQuery<ISlotDoc> = { isBooked: true, isReserved: false };
+
+    const filter: mongoose.FilterQuery<ISlotDoc> = { _id: id };
+    if (userId) {
+      filter.reservedBy = userId;
+    }
+
+    await SlotModel.findOneAndUpdate(filter, { $set: updateQuery });
   }
 
 
@@ -213,13 +251,25 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         date,
         isBooked: true
       },
-      { isBooked: false },
+      { isBooked: false, isReserved: false, reservedBy: undefined, reservedUntil: undefined },
       { new: true }
     );
 
     if (!result) {
       throw new Error("Slot not found or already cancelled");
     }
+  }
+
+  async findSlotIdByDateTime(lawyerId: string, date: string, startTime: string): Promise<string | null> {
+    const slot = await SlotModel.findOne({ userId: lawyerId, date, startTime });
+    return slot ? (slot._id as mongoose.Types.ObjectId).toString() : null;
+  }
+
+  async releaseSlot(id: string): Promise<void> {
+    await SlotModel.findByIdAndUpdate(id, {
+      $set: { isReserved: false },
+      $unset: { reservedBy: "", reservedUntil: "" }
+    });
   }
 
   async getAppoiments(lawyerId: string): Promise<Booking[]> {

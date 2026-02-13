@@ -116,7 +116,7 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     messageRepository
 );
 
-const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase);
+const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase, availabilityRuleRepository, lawyerRepository);
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
 const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);

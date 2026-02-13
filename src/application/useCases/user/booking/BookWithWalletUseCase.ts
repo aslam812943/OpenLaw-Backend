@@ -1,81 +1,71 @@
 import { IBookingRepository } from "../../../../domain/repositories/IBookingRepository";
 import { IPaymentRepository } from "../../../../domain/repositories/IPaymentRepository";
-import { IPaymentService } from "../../../interface/services/IPaymentService";
 import { Booking } from "../../../../domain/entities/Booking";
 import { Payment } from "../../../../domain/entities/Payment";
-import { IConfirmBookingUseCase } from "../../../interface/use-cases/user/IConfirmBookingUseCase";
+import { IBookWithWalletUseCase } from "../../../interface/use-cases/user/IBookWithWalletUseCase";
+import { BookingDTO } from "../../../dtos/user/BookingDetailsDTO";
 import { ResponseBookingDetilsDTO } from "../../../dtos/user/ResponseBookingDetilsDTO";
 import { IAvailabilityRuleRepository } from '../../../../domain/repositories/lawyer/IAvailabilityRuleRepository';
 import { ILawyerRepository } from '../../../../domain/repositories/lawyer/ILawyerRepository';
 import { ISubscriptionRepository } from "../../../../domain/repositories/admin/ISubscriptionRepository";
+import { IWalletRepository } from "../../../../domain/repositories/IWalletRepository";
 import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
 import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
 import { ISendNotificationUseCase } from "../../../interface/use-cases/common/notification/ISendNotificationUseCase";
 import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
 import { ChatRoom } from "../../../../domain/entities/ChatRoom";
+import { WalletTransaction } from "../../../../domain/entities/Wallet";
 
-export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
+export class BookWithWalletUseCase implements IBookWithWalletUseCase {
     constructor(
         private _bookingRepository: IBookingRepository,
-        private _paymentService: IPaymentService,
         private _slotRepository: IAvailabilityRuleRepository,
         private _lawyerRepository: ILawyerRepository,
         private _paymentRepository: IPaymentRepository,
         private _subscriptionRepository: ISubscriptionRepository,
+        private _walletRepository: IWalletRepository,
         private _sendNotificationUseCase: ISendNotificationUseCase,
         private _chatRoomRepository: IChatRoomRepository
     ) { }
 
-    async execute(sessionId: string): Promise<ResponseBookingDetilsDTO> {
+    async execute(bookingDetails: BookingDTO): Promise<ResponseBookingDetilsDTO> {
+        const { userId, lawyerId, consultationFee, slotId, parentBookingId } = bookingDetails;
 
-        const session = await this._paymentService.retrieveSession(sessionId);
-
-        if (session.payment_status !== 'paid') {
-            throw new BadRequestError("Payment not completed");
-        }
-
-        const metadata = session.metadata;
-
-        if (!metadata) {
-            throw new BadRequestError("Invalid session metadata");
-        }
-
-        if (!metadata.userId || !metadata.lawyerId || !metadata.date || !metadata.startTime || !metadata.endTime) {
-            throw new BadRequestError("Missing required booking details in session metadata");
-        }
-
-
-        const lawyer = await this._lawyerRepository.findById(metadata.lawyerId);
-
+        
+        const lawyer = await this._lawyerRepository.findById(lawyerId);
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found");
         }
 
+    
+        const wallet = await this._walletRepository.findByUserId(userId);
+        if (!wallet || wallet.balance < consultationFee) {
+            throw new BadRequestError("Insufficient wallet balance");
+        }
 
-
+        
         let commissionPercent = 0;
-        if (lawyer && lawyer.subscriptionId) {
+        if (lawyer.subscriptionId) {
             const subscription = await this._subscriptionRepository.findById(lawyer.subscriptionId.toString());
             if (subscription) {
                 commissionPercent = subscription.commissionPercent;
             }
         }
 
-        const parentBookingId = metadata.parentBookingId && metadata.parentBookingId !== '' ? metadata.parentBookingId : undefined;
-
+    
         const booking = new Booking(
             '',
-            metadata.userId,
-            metadata.lawyerId,
-            metadata.date,
-            metadata.startTime,
-            metadata.endTime,
-            session.amount_total ? session.amount_total / 100 : 0,
-            'pending',
+            userId,
+            lawyerId,
+            bookingDetails.date,
+            bookingDetails.startTime,
+            bookingDetails.endTime,
+            consultationFee,
+            'confirmed',
             'paid',
-            session.payment_intent as string,
-            session.id as string,
-            metadata.description,
+            'WALLET_PAYMENT', 
+            'WALLET',
+            bookingDetails.description,
             undefined,
             undefined,
             undefined,
@@ -94,54 +84,70 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             parentBookingId
         );
 
-
         const data = await this._bookingRepository.create(booking);
-        if (metadata.slotId && metadata.slotId !== '') {
-            await this._slotRepository.bookSlot(metadata.slotId, metadata.userId);
+
+    
+        const transaction: WalletTransaction = {
+            type: 'debit',
+            amount: consultationFee,
+            date: new Date(),
+            status: 'completed',
+            bookingId: data.id,
+            description: `Payment for consultation with ${lawyer.name}`,
+            metadata: {
+                lawyerName: lawyer.name,
+                lawyerId: lawyer.id,
+                date: bookingDetails.date,
+                time: bookingDetails.startTime,
+                displayId: data.bookingId
+            }
+        };
+
+        await this._walletRepository.addTransaction(userId, -consultationFee, transaction);
+
+    
+        if (slotId) {
+            await this._slotRepository.bookSlot(slotId, userId);
         }
 
-
+        
         if (parentBookingId) {
             await this._bookingRepository.updateFollowUpStatus(parentBookingId, 'booked');
         }
 
-
-
-
-
+    
         const payment = new Payment(
             '',
-            metadata.userId,
-            metadata.lawyerId,
-            session.amount_total ? Number(session.amount_total / 100) : 0,
-            session.currency?.toUpperCase() || 'INR',
+            userId,
+            lawyerId,
+            consultationFee,
+            'INR',
             'completed',
-            session.payment_intent as string,
-            session.payment_method_types?.[0] || 'card',
+            'WALLET_PAYMENT',
+            'wallet',
             new Date(),
             new Date(),
             data.id,
             undefined,
             'booking'
         );
-
         await this._paymentRepository.create(payment);
 
+        
         if (!parentBookingId) {
-            const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(metadata.userId, metadata.lawyerId, data.id);
+            const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, data.id);
             if (!existingRoom) {
-                await this._chatRoomRepository.save(new ChatRoom('', metadata.userId, metadata.lawyerId, data.id));
+                await this._chatRoomRepository.save(new ChatRoom('', userId, lawyerId, data.id));
             }
         }
 
-        // Notify Lawyer
+    
         await this._sendNotificationUseCase.execute(
-            metadata.lawyerId,
-            `You have a new booking from a client for ${metadata.date} at ${metadata.startTime}. Booking ID: ${data.bookingId}`,
+            lawyerId,
+            `You have a new booking (paid via Wallet) from a client for ${bookingDetails.date} at ${bookingDetails.startTime}. Booking ID: ${data.bookingId}`,
             'NEW_BOOKING',
             { appointmentId: data.id }
         );
-
 
         return new ResponseBookingDetilsDTO(
             data.id,
@@ -151,8 +157,8 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             data.consultationFee,
             lawyer.name,
             lawyer.profileImage,
-            data.paymentId,
-            data.stripeSessionId,
+            'WALLET_PAYMENT',
+            'WALLET',
             data.description
         );
     }
