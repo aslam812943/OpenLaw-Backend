@@ -32,7 +32,10 @@ export class GetProfileMapper {
       data.paymentVerify ?? false,
       Number(data.consultationFee) ?? 0,
       data.hasSubmittedVerification ?? false,
-      data.verificationStatus
+      data.verificationStatus,
+      data.isBlock ?? false,
+      data.isVerified ?? false,
+      data.isAdminVerified ?? false
     );
 
     return response;
