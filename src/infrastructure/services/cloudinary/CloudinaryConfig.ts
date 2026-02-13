@@ -24,6 +24,11 @@ const storage = new CloudinaryStorage({
   } as unknown as Record<string, unknown>,
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 7 * 1024 * 1024, 
+  },
+});
 
 export { cloudinary, upload };
