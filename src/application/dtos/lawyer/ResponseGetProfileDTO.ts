@@ -18,6 +18,9 @@ export class ResponseGetProfileDTO {
         public paymentVerify?: boolean,
         public consultationFee?: number,
         public hasSubmittedVerification?: boolean,
-        public verificationStatus?: string
+        public verificationStatus?: string,
+        public isBlock?: boolean,
+        public isVerified?: boolean,
+        public isAdminVerified?: boolean
     ) { }
 }
