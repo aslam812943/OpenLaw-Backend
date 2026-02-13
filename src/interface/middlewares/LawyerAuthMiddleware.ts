@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusCode";
 import { ICheckLawyerStatusUseCase } from "../../application/interface/use-cases/lawyer/ICheckLawyerStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
+import { MessageConstants } from "../../infrastructure/constants/MessageConstants";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
 import { JwtPayload } from "../../types/express/index";
@@ -20,54 +21,74 @@ export class LawyerAuthMiddleware {
                 req.cookies?.accessToken ||
                 req.headers.authorization?.split(" ")[1];
 
-            if (!token) {
-                res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "No token provided." });
-                return;
-            }
-
-            // Decode JWT
             let decoded: JwtPayload;
 
-            try {
-                decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+            if (!token) {
+                const refreshToken = req.cookies?.refreshToken;
+                if (!refreshToken) {
+                    res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.TOKEN_MISSING });
+                    return;
+                }
 
-            } catch (error: unknown) {
-
-                if (error instanceof Error && error.name === "TokenExpiredError") {
-
-                    const refreshToken = req.cookies?.refreshToken;
-
-                    if (!refreshToken) {
-                        res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "Session expired. Please login again." });
+                try {
+                    const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
+                    if (refreshDecoded.role !== UserRole.LAWYER) {
+                        res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_ROLE });
                         return;
                     }
 
-                    try {
+                    const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
-                        const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
+                    res.cookie("accessToken", newAccessToken, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === "production",
+                        sameSite: "lax",
+                        maxAge: 15 * 60 * 1000
+                    });
 
-                        if (refreshDecoded.role !== UserRole.LAWYER) {
-                            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role." });
+                    decoded = refreshDecoded;
+                } catch (refreshError) {
+                    res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.SESSION_EXPIRED });
+                    return;
+                }
+            } else {
+                // Decode JWT
+                try {
+                    decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+                } catch (error: unknown) {
+                    if (error instanceof Error && error.name === "TokenExpiredError") {
+                        const refreshToken = req.cookies?.refreshToken;
+
+                        if (!refreshToken) {
+                            res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.SESSION_EXPIRED });
                             return;
                         }
 
-                        const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
+                        try {
+                            const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
 
-                        res.cookie("accessToken", newAccessToken, {
-                            httpOnly: true,
-                            secure: process.env.NODE_ENV === "production",
-                            sameSite: "lax",
-                            maxAge: 15 * 60 * 1000
-                        });
+                            if (refreshDecoded.role !== UserRole.LAWYER) {
+                                res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_ROLE });
+                                return;
+                            }
 
-                        decoded = refreshDecoded;
-                    } catch (refreshError) {
+                            const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
-                        res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid refresh token." });
-                        return;
+                            res.cookie("accessToken", newAccessToken, {
+                                httpOnly: true,
+                                secure: process.env.NODE_ENV === "production",
+                                sameSite: "lax",
+                                maxAge: 15 * 60 * 1000
+                            });
+
+                            decoded = refreshDecoded;
+                        } catch (refreshError) {
+                            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_REFRESH_TOKEN });
+                            return;
+                        }
+                    } else {
+                        throw error;
                     }
-                } else {
-                    throw error;
                 }
             }
 
@@ -75,7 +96,7 @@ export class LawyerAuthMiddleware {
 
 
             if (decoded.role !== UserRole.LAWYER) {
-                res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Access denied. Lawyers only." });
+                res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.ACCESS_DENIED });
                 return;
             }
 
@@ -102,7 +123,7 @@ export class LawyerAuthMiddleware {
                 res.status(HttpStatusCode.FORBIDDEN).json({
 
                     success: false,
-                    message: "Your account has been blocked or disabled.",
+                    message: MessageConstants.AUTH.ACCOUNT_BLOCKED,
                 });
 
                 return;
@@ -111,7 +132,7 @@ export class LawyerAuthMiddleware {
             next();
         } catch (error) {
 
-            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid or expired token." });
+            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_TOKEN });
         }
     };
 }

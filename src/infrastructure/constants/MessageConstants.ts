@@ -92,6 +92,15 @@ export const MessageConstants = {
         WITHDRAWAL_CREATE_ERROR: "Database error while creating withdrawal request.",
         INTERNAL_SERVER_ERROR: "Internal server error occurred.",
     },
+    AUTH: {
+        TOKEN_MISSING: "No token provided.",
+        SESSION_EXPIRED: "Session expired. Please login again.",
+        INVALID_REFRESH_TOKEN: "Invalid refresh token.",
+        INVALID_ROLE: "Invalid role for this middleware.",
+        ACCESS_DENIED: "Access denied.",
+        ACCOUNT_BLOCKED: "Your account has been blocked or disabled.",
+        INVALID_TOKEN: "Invalid or expired token.",
+    },
     COMMON: {
         UNAUTHORIZED: "Unauthorized access.",
         BAD_REQUEST: "Invalid request.",

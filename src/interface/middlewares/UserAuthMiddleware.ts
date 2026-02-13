@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusCode";
 import { ICheckUserStatusUseCase } from "../../application/interface/use-cases/user/ICheckUserStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
+import { MessageConstants } from "../../infrastructure/constants/MessageConstants";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
 import { JwtPayload } from "../../types/express/index";
@@ -20,62 +21,79 @@ export class UserAuthMiddleware {
         req.cookies?.accessToken ||
         req.headers.authorization?.split(" ")[1];
 
-      if (!token) {
-
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "No token provided." });
-        return;
-      }
-
-      // Decode JWT
       let decoded: JwtPayload;
 
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+      if (!token) {
+        const refreshToken = req.cookies?.refreshToken;
+        if (!refreshToken) {
+          res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.TOKEN_MISSING });
+          return;
+        }
 
-      } catch (error: unknown) {
-
-        if (error instanceof Error && error.name === "TokenExpiredError") {
-
-          const refreshToken = req.cookies?.refreshToken;
-
-          if (!refreshToken) {
-            res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: "Session expired. Please login again." });
+        try {
+          const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
+          if (refreshDecoded.role !== UserRole.USER) {
+            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_ROLE });
             return;
           }
 
-          try {
+          const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
+          const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
-            const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
+          res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.COOKIE_SECURE === 'true',
+            sameSite: cookieSameSite,
+            path: '/',
+            maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
+          });
 
+          decoded = refreshDecoded;
+        } catch (refreshError) {
+          res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.SESSION_EXPIRED });
+          return;
+        }
+      } else {
+        // Decode JWT
+        try {
+          decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+        } catch (error: unknown) {
+          if (error instanceof Error && error.name === "TokenExpiredError") {
+            const refreshToken = req.cookies?.refreshToken;
 
-            const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
-
-            if (refreshDecoded.role === UserRole.USER) {
-
-              const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-              res.cookie("accessToken", newAccessToken, {
-                httpOnly: true,
-                secure: process.env.COOKIE_SECURE === 'true',
-                sameSite: cookieSameSite,
-                path: '/',
-                maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-              });
-            } else {
-
-              res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid role for this middleware." });
+            if (!refreshToken) {
+              res.status(HttpStatusCode.UNAUTHORIZED).json({ success: false, message: MessageConstants.AUTH.SESSION_EXPIRED });
               return;
             }
 
+            try {
+              const refreshDecoded = this._tokenService.verifyToken(refreshToken, true);
 
-            decoded = refreshDecoded;
-          } catch (refreshError) {
+              const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
-            res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid refresh token." });
-            return;
+              if (refreshDecoded.role === UserRole.USER) {
+                const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
+                res.cookie("accessToken", newAccessToken, {
+                  httpOnly: true,
+                  secure: process.env.COOKIE_SECURE === 'true',
+                  sameSite: cookieSameSite,
+                  path: '/',
+                  maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
+                });
+              } else {
+                res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_ROLE });
+                return;
+              }
+
+              decoded = refreshDecoded;
+            } catch (refreshError) {
+              res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_REFRESH_TOKEN });
+              return;
+            }
+          } else {
+            throw error;
           }
-        } else {
-          throw error;
         }
       }
 
@@ -109,7 +127,7 @@ export class UserAuthMiddleware {
         res.status(HttpStatusCode.FORBIDDEN).json({
 
           success: false,
-          message: "Your account has been blocked or disabled.",
+          message: MessageConstants.AUTH.ACCOUNT_BLOCKED,
         });
 
         return;
@@ -118,7 +136,7 @@ export class UserAuthMiddleware {
       next();
     } catch (error) {
 
-      res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: "Invalid or expired token." });
+      res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_TOKEN });
     }
   };
 }
