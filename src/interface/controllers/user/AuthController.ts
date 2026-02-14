@@ -202,4 +202,31 @@ export class AuthController {
       next(error);
     }
   }
+
+  async refreshToken(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        return ApiResponse.error(res, HttpStatusCode.UNAUTHORIZED, MessageConstants.AUTH.TOKEN_MISSING);
+      }
+
+      const decoded = this._tokenService.verifyToken(refreshToken, true);
+      const newAccessToken = this._tokenService.generateAccessToken(decoded.id, decoded.role, decoded.isBlock);
+
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: cookieSameSite,
+        domain: process.env.COOKIE_DOMAIN,
+        path: '/',
+        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
+      });
+
+      return ApiResponse.success(res, HttpStatusCode.OK, "Token refreshed successfully", { token: newAccessToken });
+    } catch (error: unknown) {
+      return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.AUTH.INVALID_REFRESH_TOKEN);
+    }
+  }
 }
