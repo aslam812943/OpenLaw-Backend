@@ -39,11 +39,14 @@ export class LawyerAuthMiddleware {
 
                     const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
+                    const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
                     res.cookie("accessToken", newAccessToken, {
                         httpOnly: true,
-                        secure: process.env.NODE_ENV === "production",
-                        sameSite: "lax",
-                        maxAge: 15 * 60 * 1000
+                        secure: process.env.COOKIE_SECURE === 'true',
+                        sameSite: cookieSameSite,
+                        path: '/',
+                        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
                     });
 
                     decoded = refreshDecoded;
@@ -74,11 +77,14 @@ export class LawyerAuthMiddleware {
 
                             const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
+                            const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
                             res.cookie("accessToken", newAccessToken, {
                                 httpOnly: true,
-                                secure: process.env.NODE_ENV === "production",
-                                sameSite: "lax",
-                                maxAge: 15 * 60 * 1000
+                                secure: process.env.COOKIE_SECURE === 'true',
+                                sameSite: cookieSameSite,
+                                path: '/',
+                                maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
                             });
 
                             decoded = refreshDecoded;
@@ -105,17 +111,19 @@ export class LawyerAuthMiddleware {
 
             if (!status.isActive) {
 
+                const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+
                 res.clearCookie("accessToken", {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: "lax",
+                    secure: process.env.COOKIE_SECURE === 'true',
+                    sameSite: cookieSameSite,
                     path: '/'
                 });
 
                 res.clearCookie("refreshToken", {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: "lax",
+                    secure: process.env.COOKIE_SECURE === 'true',
+                    sameSite: cookieSameSite,
                     path: '/'
                 });
 

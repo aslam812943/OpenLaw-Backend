@@ -26,6 +26,7 @@ router.post("/resend-otp", (req, res, next) => authController.resendOtp(req, res
 router.post("/forget-password", (req, res, next) => authController.requestForgetPassword(req, res, next));
 router.post("/reset-password", (req, res, next) => authController.verifyResetPassword(req, res, next));
 router.post('/logout', (req, res, next) => authController.logoutUser(req, res, next));
+router.post("/refresh", (req, res) => authController.refreshToken(req, res));
 
 // Profile Routes
 router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getProfileDetails(req, res, next) });
