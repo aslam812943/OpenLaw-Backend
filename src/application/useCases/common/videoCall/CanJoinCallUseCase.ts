@@ -21,7 +21,7 @@ export class CanJoinCallUseCase implements ICanJoinCallUseCase {
         }
 
         
-        if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
+        if (booking.status !== 'confirmed'&& booking.status!=='follow-up' || booking.paymentStatus !== 'paid') {
             return { canJoin: false, message: "Valid confirmed booking required" };
         }
 

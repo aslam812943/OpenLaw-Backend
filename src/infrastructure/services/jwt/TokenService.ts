@@ -1,16 +1,20 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import { ITokenService, TokenPayload } from '../../../application/interface/services/TokenServiceInterface';
 import { UserRole } from '../../interface/enums/UserRole';
 
-dotenv.config();
-
 export class TokenService implements ITokenService {
-  private _accessSecret = process.env.JWT_SECRET!;
-  private _refreshSecret = process.env.JWT_REFRESH_SECRET!;
+  private get _accessSecret(): string {
+    return process.env.JWT_SECRET!;
+  }
+  private get _refreshSecret(): string {
+    return process.env.JWT_REFRESH_SECRET!;
+  }
 
   generateAccessToken(id: string, role: UserRole, isBlock: boolean): string {
-    return jwt.sign({ id, role, isBlock }, this._accessSecret, { expiresIn: '15m' });
+    const expiresIn = process.env.ACCESS_TOKEN_MAX_AGE
+      ? Math.floor(Number(process.env.ACCESS_TOKEN_MAX_AGE) / 1000)
+      : '15m';
+    return jwt.sign({ id, role, isBlock }, this._accessSecret, { expiresIn });
   }
 
   // generateToken(id: string, role: string): string {
@@ -18,7 +22,10 @@ export class TokenService implements ITokenService {
   // }
 
   generateRefreshToken(id: string, role: UserRole, isBlock: boolean): string {
-    return jwt.sign({ id, role, isBlock }, this._refreshSecret, { expiresIn: '7d' });
+    const expiresIn = process.env.REFRESH_TOKEN_MAX_AGE
+      ? Math.floor(Number(process.env.REFRESH_TOKEN_MAX_AGE) / 1000)
+      : '7d';
+    return jwt.sign({ id, role, isBlock }, this._refreshSecret, { expiresIn });
   }
 
   verifyToken(token: string, isRefresh: boolean = false): TokenPayload {

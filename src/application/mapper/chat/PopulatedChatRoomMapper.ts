@@ -7,6 +7,17 @@ interface IChatRoomDoc {
     lawyerId: string | PopulatedLawyer;
     bookingId: string;
     createdAt: Date;
+    lastMessage?: {
+        content: string;
+        createdAt: Date;
+        type?: string;
+    };
+    bookingDetails?: {
+        bookingId: string;
+        startTime: string;
+        description: string;
+        date: string;
+    };
 }
 
 export class PopulatedChatRoomMapper {
@@ -30,7 +41,8 @@ export class PopulatedChatRoomMapper {
             chatRoom.bookingId,
             chatRoom.createdAt,
             chatRoom.lastMessage,
-            chatRoom.bookingDetails
+            chatRoom.bookingDetails,
+            chatRoom.type
         );
     }
 
@@ -54,12 +66,13 @@ export class PopulatedChatRoomMapper {
                 : {
                     _id: doc.lawyerId._id.toString(),
                     name: doc.lawyerId.name,
-                    profileImage: (doc.lawyerId as any).profileImage || (doc.lawyerId as any).Profileimageurl,
+                    profileImage: doc.lawyerId.profileImage || doc.lawyerId.Profileimageurl,
                 },
             doc.bookingId.toString(),
             doc.createdAt,
             chatRoom.lastMessage,
-            chatRoom.bookingDetails
+            chatRoom.bookingDetails,
+            doc.lastMessage?.type || 'text'
         );
     }
 }

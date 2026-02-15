@@ -45,6 +45,7 @@ export interface PopulatedChatRoom {
         content: string;
         createdAt: Date;
     };
+    type:string
 }
 
 export interface IChatRoomRepository {
