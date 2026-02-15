@@ -112,6 +112,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
                 } : undefined,
+                type: doc.lastMessage?.type || 'text',
                 bookingDetails: doc.bookingDetails ? {
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
@@ -205,6 +206,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
                 } : undefined,
+                type: doc.lastMessage?.type || 'text',
                 bookingDetails: doc.bookingDetails ? {
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
@@ -280,6 +282,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
                 } : undefined,
+                type: doc.lastMessage?.type || 'text',
                 bookingDetails: doc.bookingDetails ? {
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
@@ -398,6 +401,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     content: doc.lastMessage.content,
                     createdAt: doc.lastMessage.createdAt
                 } : undefined,
+                type: doc.lastMessage?.type || 'text',
                 bookingDetails: doc.bookingDetails ? {
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
