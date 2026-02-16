@@ -44,7 +44,7 @@ export class SetFollowUpUseCase implements ISetFollowUpUseCase {
                 throw new BadRequestError("The requested follow-up slot does not exist.");
             }
 
-            const reserved = await this._availabilityRuleRepository.reserveSlot(slotId, booking.userId);
+            const reserved = await this._availabilityRuleRepository.reserveSlot(slotId, booking.userId, 2880); 
             if (!reserved) {
                 throw new BadRequestError("The requested follow-up slot is no longer available.");
             }

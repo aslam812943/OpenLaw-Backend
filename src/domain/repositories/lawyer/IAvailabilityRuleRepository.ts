@@ -16,7 +16,7 @@ export interface IAvailabilityRuleRepository {
     getAllRules(id: string): Promise<AvailabilityRule[]>;
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>
-    reserveSlot(id: string, userId: string): Promise<boolean>
+    reserveSlot(id: string, userId: string, durationMinutes?: number): Promise<boolean>
     bookSlot(id: string, userId?: string): Promise<void>;
     findSlotIdByDateTime(lawyerId: string, date: string, startTime: string): Promise<string | null>;
     releaseSlot(id: string): Promise<void>;

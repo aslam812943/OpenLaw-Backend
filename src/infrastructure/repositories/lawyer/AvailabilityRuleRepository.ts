@@ -199,10 +199,9 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   }
 
 
-  async reserveSlot(id: string, userId: string): Promise<boolean> {
-    const reservationWindow = 15;
+  async reserveSlot(id: string, userId: string, durationMinutes: number = 15): Promise<boolean> {
     const expiryDate = new Date();
-    expiryDate.setMinutes(expiryDate.getMinutes() + reservationWindow);
+    expiryDate.setMinutes(expiryDate.getMinutes() + durationMinutes);
 
     const now = new Date();
 
@@ -213,7 +212,8 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         $or: [
           { isReserved: false },
           { isReserved: { $exists: false } },
-          { reservedUntil: { $lt: now } }
+          { reservedUntil: { $lt: now } },
+          { reservedBy: userId } // Allow same user to re-reserve/confirm
         ]
       },
       {
