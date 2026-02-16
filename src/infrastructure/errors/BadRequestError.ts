@@ -1,5 +1,5 @@
 import { AppError } from "./AppError";
-
+import { HttpStatusCode } from "../interface/enums/HttpStatusCode";
 export class BadRequestError extends AppError {
-    statusCode = 400;
+    statusCode = HttpStatusCode.BAD_REQUEST;
 }

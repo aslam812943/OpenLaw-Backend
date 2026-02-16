@@ -1,5 +1,6 @@
 import { AppError } from "./AppError";
+import { HttpStatusCode } from "../interface/enums/HttpStatusCode";
 
 export class NotFoundError extends AppError {
-    statusCode = 404;
+    statusCode = HttpStatusCode.NOT_FOUND;
 }
