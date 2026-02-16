@@ -15,19 +15,24 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "Lawyers_Documents",
-    allowed_formats: ["jpg", "jpeg", "png", "pdf"],
-    resource_type: "auto",
-    public_id: (_req: Request, file: Express.Multer.File) =>
-      Date.now() + "-" + file.originalname,
-  } as unknown as Record<string, unknown>,
+  params: async (_req: Request, file: Express.Multer.File) => {
+    const sanitizedName = file.originalname
+      .split('.')[0]
+      .replace(/\s+/g, '_')
+      .replace(/[^\w-]/g, '');
+
+    return {
+      folder: "Lawyers_Documents",
+      resource_type: "auto",
+      public_id: `${Date.now()}-${sanitizedName}`,
+    };
+  },
 });
 
 const upload = multer({
   storage,
   limits: {
-    fileSize: 7 * 1024 * 1024, 
+    fileSize: 7 * 1024 * 1024,
   },
 });
 
