@@ -31,19 +31,26 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
     async execute(bookingDetails: BookingDTO): Promise<ResponseBookingDetilsDTO> {
         const { userId, lawyerId, consultationFee, slotId, parentBookingId } = bookingDetails;
 
-        
+
         const lawyer = await this._lawyerRepository.findById(lawyerId);
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found");
         }
 
-    
+
+        if (slotId) {
+            const slot = await this._slotRepository.getSlotById(slotId);
+            if (slot && slot.restrictedTo && slot.restrictedTo !== userId) {
+                throw new BadRequestError("This slot is reserved for a specific follow-up appointment.");
+            }
+        }
+
         const wallet = await this._walletRepository.findByUserId(userId);
         if (!wallet || wallet.balance < consultationFee) {
             throw new BadRequestError("Insufficient wallet balance");
         }
 
-        
+
         let commissionPercent = 0;
         if (lawyer.subscriptionId) {
             const subscription = await this._subscriptionRepository.findById(lawyer.subscriptionId.toString());
@@ -52,7 +59,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             }
         }
 
-    
+
         const booking = new Booking(
             '',
             userId,
@@ -63,7 +70,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             consultationFee,
             'confirmed',
             'paid',
-            'WALLET_PAYMENT', 
+            'WALLET_PAYMENT',
             'WALLET',
             bookingDetails.description,
             undefined,
@@ -86,7 +93,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
 
         const data = await this._bookingRepository.create(booking);
 
-    
+
         const transaction: WalletTransaction = {
             type: 'debit',
             amount: consultationFee,
@@ -105,17 +112,17 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
 
         await this._walletRepository.addTransaction(userId, -consultationFee, transaction);
 
-    
+
         if (slotId) {
             await this._slotRepository.bookSlot(slotId, userId);
         }
 
-        
+
         if (parentBookingId) {
             await this._bookingRepository.updateFollowUpStatus(parentBookingId, 'booked');
         }
 
-    
+
         const payment = new Payment(
             '',
             userId,
@@ -133,7 +140,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
         );
         await this._paymentRepository.create(payment);
 
-        
+
         if (!parentBookingId) {
             const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, data.id);
             if (!existingRoom) {
@@ -141,7 +148,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             }
         }
 
-    
+
         await this._sendNotificationUseCase.execute(
             lawyerId,
             `You have a new booking (paid via Wallet) from a client for ${bookingDetails.date} at ${bookingDetails.startTime}. Booking ID: ${data.bookingId}`,
