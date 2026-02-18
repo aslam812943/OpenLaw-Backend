@@ -11,7 +11,8 @@ export interface ISlotModel extends Document {
   isBooked: boolean,
   isReserved?: boolean,
   reservedUntil?: Date,
-  reservedBy?: string
+  reservedBy?: string,
+  restrictedTo?: string
 }
 
 
@@ -26,7 +27,8 @@ const SlotSchema = new Schema<ISlotModel>({
   isBooked: { type: Boolean, default: false },
   isReserved: { type: Boolean, default: false },
   reservedUntil: { type: Date },
-  reservedBy: { type: String }
+  reservedBy: { type: String },
+  restrictedTo: { type: String }
 }, { timestamps: true })
 
 

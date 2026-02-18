@@ -11,6 +11,7 @@ export class Slot {
     public sessionType: string,
     public isBooked: boolean,
     public bookingId?: string | null,
-    public maxBookings: number = 1
+    public maxBookings: number = 1,
+    public restrictedTo?: string | null
   ) { }
 }

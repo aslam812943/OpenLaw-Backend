@@ -40,6 +40,7 @@ interface ISlotDoc {
   bookingId?: string | null;
   maxBookings: number;
   consultationFee: number;
+  restrictedTo?: string;
 }
 
 interface IBookingDoc {
@@ -209,11 +210,23 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       {
         _id: id,
         isBooked: false,
-        $or: [
-          { isReserved: false },
-          { isReserved: { $exists: false } },
-          { reservedUntil: { $lt: now } },
-          { reservedBy: userId } // Allow same user to re-reserve/confirm
+        $and: [
+          {
+            $or: [
+              { restrictedTo: { $exists: false } },
+              { restrictedTo: null },
+              { restrictedTo: "" },
+              { restrictedTo: userId }
+            ]
+          },
+          {
+            $or: [
+              { isReserved: false },
+              { isReserved: { $exists: false } },
+              { reservedUntil: { $lt: now } },
+              { reservedBy: userId }
+            ]
+          }
         ]
       },
       {
@@ -235,7 +248,10 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
     const filter: mongoose.FilterQuery<ISlotDoc> = { _id: id };
     if (userId) {
-      filter.reservedBy = userId;
+      filter.$and = [
+        { $or: [{ reservedBy: userId }, { reservedBy: { $exists: false } }, { reservedBy: null }] },
+        { $or: [{ restrictedTo: userId }, { restrictedTo: { $exists: false } }, { restrictedTo: null }, { restrictedTo: "" }] }
+      ];
     }
 
     await SlotModel.findOneAndUpdate(filter, { $set: updateQuery });
@@ -268,8 +284,19 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async releaseSlot(id: string): Promise<void> {
     await SlotModel.findByIdAndUpdate(id, {
       $set: { isReserved: false },
-      $unset: { reservedBy: "", reservedUntil: "" }
+      $unset: { reservedBy: "", reservedUntil: "", restrictedTo: "" }
     });
+  }
+
+  async restrictSlot(id: string, userId: string): Promise<void> {
+    await SlotModel.findByIdAndUpdate(id, {
+      $set: { restrictedTo: userId }
+    });
+  }
+
+  async getSlotById(id: string): Promise<Slot | null> {
+    const doc = await SlotModel.findById(id).lean();
+    return doc ? this.mapToSlot(doc as unknown as ISlotDoc) : null;
   }
 
   async getAppoiments(lawyerId: string): Promise<Booking[]> {
@@ -359,7 +386,8 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       d.sessionType,
       d.isBooked,
       d.bookingId ?? null,
-      d.maxBookings
+      d.maxBookings,
+      d.restrictedTo ?? null
     );
   }
 }

@@ -15,6 +15,11 @@ export class CreateBookingPaymentUseCase implements ICreateBookingPaymentUseCase
 
     async execute(bookingDetails: BookingDTO): Promise<string> {
         if (bookingDetails.slotId) {
+            const slot = await this._slotRepository.getSlotById(bookingDetails.slotId);
+            if (slot && slot.restrictedTo && slot.restrictedTo !== bookingDetails.userId) {
+                throw new BadRequestError("This slot is reserved for a specific follow-up appointment.");
+            }
+
             const reserved = await this._slotRepository.reserveSlot(bookingDetails.slotId, bookingDetails.userId);
             if (!reserved) {
                 throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
