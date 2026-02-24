@@ -21,6 +21,7 @@ interface IBookingWithPopulatedLawyer {
     followUpTime?: string;
     followUpStatus?: 'none' | 'pending' | 'booked' | 'cancelled';
     parentBookingId?: string;
+    rescheduleCount: number;
 }
 
 
@@ -47,7 +48,8 @@ export class UserAppointmentsMapper {
                 booking.followUpDate,
                 booking.followUpTime,
                 booking.followUpStatus,
-                booking.parentBookingId
+                booking.parentBookingId,
+                booking.rescheduleCount
             );
         });
     }

@@ -59,6 +59,7 @@ import { CancelAppointmentUseCase } from "../application/useCases/user/CancelApp
 import { CancelFollowUpUseCase } from "../application/useCases/user/CancelFollowUpUseCase";
 import { GetBookingDetailsUseCase } from "../application/useCases/user/booking/GetBookingDetailsUseCase";
 import { BookWithWalletUseCase } from "../application/useCases/user/booking/BookWithWalletUseCase";
+import { RescheduleBookingUseCase } from "../application/useCases/user/booking/RescheduleBookingUseCase";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
 
@@ -170,6 +171,11 @@ const bookWithWalletUseCase = new BookWithWalletUseCase(
     sendNotificationUseCase,
     chatRoomRepository
 );
+const rescheduleBookingUseCase = new RescheduleBookingUseCase(
+    bookingRepository,
+    availabilityRuleRepository,
+    sendNotificationUseCase
+);
 export const walletController = new WalletController(getWalletUseCase);
 
 export const bookingController = new BookingController(
@@ -179,7 +185,8 @@ export const bookingController = new BookingController(
     cancelAppointmentUseCase,
     cancelFollowUpUseCase,
     getBookingDetailsUseCase,
-    bookWithWalletUseCase
+    bookWithWalletUseCase,
+    rescheduleBookingUseCase
 );
 
 // Webhook

@@ -15,4 +15,5 @@ export interface IBookingRepository {
     setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string, followUpSlotId?: string): Promise<void>;
     findFollowUpByParentId(parentId: string): Promise<Booking | null>;
     updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked' | 'cancelled'): Promise<void>;
+    rescheduleBooking(id: string, date: string, startTime: string, endTime: string, slotId: string): Promise<void>;
 }

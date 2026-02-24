@@ -114,7 +114,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
 
 
         if (slotId) {
-            await this._slotRepository.bookSlot(slotId, userId);
+            await this._slotRepository.bookSlot(slotId, userId, data.id);
         }
 
 

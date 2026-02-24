@@ -21,7 +21,8 @@ export class AppoimentMapper {
                 b.followUpDate,
                 b.followUpTime,
                 b.followUpStatus,
-                b.parentBookingId
+                b.parentBookingId,
+                b.rescheduleCount
             );
         });
     }
