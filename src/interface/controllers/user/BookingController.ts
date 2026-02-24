@@ -7,6 +7,7 @@ import { ICancelAppointmentUseCase } from "../../../application/interface/use-ca
 import { ICancelFollowUpUseCase } from "../../../application/interface/use-cases/user/ICancelFollowUpUseCase";
 import { IGetBookingDetailsUseCase } from "../../../application/interface/use-cases/user/IGetBookingDetailsUseCase";
 import { IBookWithWalletUseCase } from "../../../application/interface/use-cases/user/IBookWithWalletUseCase";
+import { IRescheduleBookingUseCase } from "../../../application/interface/use-cases/user/IRescheduleBookingUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
@@ -19,8 +20,30 @@ export class BookingController {
         private readonly _cancelAppointmentUseCase: ICancelAppointmentUseCase,
         private readonly _cancelFollowUpUseCase: ICancelFollowUpUseCase,
         private readonly _getBookingDetailsUseCase: IGetBookingDetailsUseCase,
-        private readonly _bookWithWalletUseCase: IBookWithWalletUseCase
+        private readonly _bookWithWalletUseCase: IBookWithWalletUseCase,
+        private readonly _rescheduleBookingUseCase: IRescheduleBookingUseCase
     ) { }
+
+    async reschedule(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
+            }
+            const { id } = req.params;
+            const { newSlotId } = req.body;
+
+            if (!newSlotId) {
+                return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, MessageConstants.COMMON.BAD_REQUEST);
+            }
+
+            await this._rescheduleBookingUseCase.execute(userId, { bookingId: id, newSlotId });
+
+            return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.RESCHEDULE_SUCCESS);
+        } catch (error) {
+            next(error);
+        }
+    }
 
     async initiatePayment(req: Request, res: Response, next: NextFunction) {
         try {

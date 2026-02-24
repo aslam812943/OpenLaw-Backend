@@ -1,4 +1,3 @@
-import { CreateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/CreateAvailabilityRuleDTO";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { AvailabilityRule } from "../../entities/AvailabilityRule";
 import { Slot } from "../../entities/Slot";
@@ -17,7 +16,7 @@ export interface IAvailabilityRuleRepository {
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>
     reserveSlot(id: string, userId: string, durationMinutes?: number): Promise<boolean>
-    bookSlot(id: string, userId?: string): Promise<void>;
+    bookSlot(id: string, userId?: string, bookingId?: string): Promise<void>;
     findSlotIdByDateTime(lawyerId: string, date: string, startTime: string): Promise<string | null>;
     releaseSlot(id: string): Promise<void>;
     cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void>
@@ -25,4 +24,5 @@ export interface IAvailabilityRuleRepository {
     updateAppointmentStatus(id: string, status: string): Promise<void>;
     restrictSlot(id: string, userId: string): Promise<void>;
     getSlotById(id: string): Promise<Slot | null>;
+    releaseSlotByBookingId(bookingId: string): Promise<void>;
 }

@@ -9,6 +9,7 @@ router.get("/appointments", (req, res, next) => authMiddleware.execute(req, res,
 router.get("/appointments/:id", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.getBookingDetails(req, res, next));
 router.patch("/appointments/:id/cancel", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.cancelAppointment(req, res, next));
 router.patch("/appointments/:id/cancel-follow-up", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.cancelFollowUp(req, res, next));
+router.patch("/appointments/:id/reschedule", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.reschedule(req, res, next));
 router.post("/wallet-booking", (req, res, next) => authMiddleware.execute(req, res, next), (req, res, next) => bookingController.bookWithWallet(req, res, next));
 
 export default router;

@@ -19,7 +19,8 @@ export class ResponseGetAppointmentsDTO {
         public followUpDate?: string,
         public followUpTime?: string,
         public followUpStatus?: string,
-        public parentBookingId?: string
+        public parentBookingId?: string,
+        public rescheduleCount: number = 0
     ) { }
 }
 

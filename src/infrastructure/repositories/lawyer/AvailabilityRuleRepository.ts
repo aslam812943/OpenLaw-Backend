@@ -243,8 +243,11 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   }
 
 
-  async bookSlot(id: string, userId?: string): Promise<void> {
+  async bookSlot(id: string, userId?: string, bookingId?: string): Promise<void> {
     const updateQuery: mongoose.UpdateQuery<ISlotDoc> = { isBooked: true, isReserved: false };
+    if (bookingId) {
+      updateQuery.bookingId = bookingId;
+    }
 
     const filter: mongoose.FilterQuery<ISlotDoc> = { _id: id };
     if (userId) {
@@ -388,6 +391,16 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       d.bookingId ?? null,
       d.maxBookings,
       d.restrictedTo ?? null
+    );
+  }
+
+  async releaseSlotByBookingId(bookingId: string): Promise<void> {
+    await SlotModel.findOneAndUpdate(
+      { bookingId },
+      {
+        $set: { isBooked: false, isReserved: false, bookingId: null },
+        $unset: { reservedBy: "", reservedUntil: "", restrictedTo: "" }
+      }
     );
   }
 }

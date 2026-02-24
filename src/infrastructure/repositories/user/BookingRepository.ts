@@ -50,7 +50,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.followUpTime,
             doc.followUpStatus as 'none' | 'pending' | 'booked',
             doc.parentBookingId?.toString(),
-            doc.followUpSlotId?.toString()
+            doc.followUpSlotId?.toString(),
+            doc.rescheduleCount || 0
         );
     }
 
@@ -384,6 +385,17 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
     async updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked' | 'cancelled'): Promise<void> {
         try {
             await BookingModel.findByIdAndUpdate(id, { followUpStatus: status });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    async rescheduleBooking(id: string, date: string, startTime: string, endTime: string, slotId: string): Promise<void> {
+        try {
+            await BookingModel.findByIdAndUpdate(id, {
+                $set: { date, startTime, endTime, followUpSlotId: slotId },
+                $inc: { rescheduleCount: 1 }
+            });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }

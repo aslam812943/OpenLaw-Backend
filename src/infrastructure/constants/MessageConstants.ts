@@ -60,6 +60,8 @@ export const MessageConstants = {
         CANCEL_SUCCESS: "Appointment cancelled successfully.",
         FOLLOW_UP_CANCEL_SUCCESS: "Follow-up request cancelled successfully.",
         SLOT_ALREADY_TAKEN: "This slot is already reserved or booked by someone else. Please choose another slot.",
+        RESCHEDULE_SUCCESS: "Appointment rescheduled successfully.",
+        RESCHEDULE_WINDOW_EXPIRED: "Appointments can only be rescheduled up to 24 hours before the scheduled time.",
     },
     REPOSITORY: {
         CREATE_ERROR: "Database error while creating document.",
