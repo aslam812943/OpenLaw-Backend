@@ -40,8 +40,20 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             throw new BadRequestError("Invalid session metadata");
         }
 
-        if (!metadata.userId || !metadata.lawyerId || !metadata.date || !metadata.startTime || !metadata.endTime) {
-            throw new BadRequestError("Missing required booking details in session metadata");
+        if (!metadata.userId) {
+            throw new BadRequestError("Missing userId in session metadata");
+        }
+        if (!metadata.lawyerId) {
+            throw new BadRequestError("Missing lawyerId in session metadata");
+        }
+        if (!metadata.date) {
+            throw new BadRequestError("Missing date in session metadata");
+        }
+        if (!metadata.startTime) {
+            throw new BadRequestError("Missing startTime in session metadata");
+        }
+        if (!metadata.endTime) {
+            throw new BadRequestError("Missing endTime in session metadata");
         }
 
 
@@ -97,7 +109,7 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
 
         const data = await this._bookingRepository.create(booking);
         if (metadata.slotId && metadata.slotId !== '') {
-            await this._slotRepository.bookSlot(metadata.slotId, metadata.userId);
+            await this._slotRepository.bookSlot(metadata.slotId, metadata.userId, data.id);
         }
 
 

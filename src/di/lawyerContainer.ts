@@ -66,6 +66,7 @@ import { GetLawyerDashboardStatsUseCase } from "../application/useCases/lawyer/G
 import { SpecializationController } from "../interface/controllers/lawyer/SpecializationController";
 import { GetActiveSpecializationsUseCase } from "../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
 import { SetFollowUpUseCase } from "../application/useCases/lawyer/SetFollowUpUseCase";
+import { LawyerRescheduleBookingUseCase } from "../application/useCases/lawyer/LawyerRescheduleBookingUseCase";
 import { SpecializationRepository } from "../infrastructure/repositories/admin/SpecializationRepository";
 
 
@@ -117,6 +118,7 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
 );
 
 const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase, availabilityRuleRepository, lawyerRepository);
+const lawyerRescheduleUseCase = new LawyerRescheduleBookingUseCase(bookingRepository, availabilityRuleRepository, sendNotificationUseCase);
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
 const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
@@ -149,7 +151,13 @@ export const availabilityController = new AvailabilityController(
     deleteAvailableRuleUseCase
 );
 export const getProfileController = new LawyerProfileController(getProfileUseCase, updateProfileUseCase, changePasswordUseCase);
-export const appoimentsController = new AppointmentsController(getAppoimentsUseCase, updateAppointmentStatusUseCase, setFollowUpUseCase, getAppointmentDetailsUseCase);
+export const appoimentsController = new AppointmentsController(
+    getAppoimentsUseCase,
+    updateAppointmentStatusUseCase,
+    setFollowUpUseCase,
+    getAppointmentDetailsUseCase,
+    lawyerRescheduleUseCase
+);
 export const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 export const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);
 export const chatController = new ChatController(checkChatAccessUseCase, getChatRoomUseCase, getMessagesUseCase);

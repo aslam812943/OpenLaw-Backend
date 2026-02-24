@@ -394,13 +394,30 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     );
   }
 
-  async releaseSlotByBookingId(bookingId: string): Promise<void> {
-    await SlotModel.findOneAndUpdate(
-      { bookingId },
+  async releaseSlotByBookingId(bookingId: string, lawyerId?: string, date?: string, startTime?: string): Promise<void> {
+    const filter: any = { bookingId };
+
+    let result = await SlotModel.findOneAndUpdate(
+      filter,
       {
         $set: { isBooked: false, isReserved: false, bookingId: null },
         $unset: { reservedBy: "", reservedUntil: "", restrictedTo: "" }
       }
     );
+
+    if (!result && lawyerId && date && startTime) {
+      await SlotModel.findOneAndUpdate(
+        {
+          userId: lawyerId,
+          date,
+          startTime,
+          isBooked: true
+        },
+        {
+          $set: { isBooked: false, isReserved: false, bookingId: null },
+          $unset: { reservedBy: "", reservedUntil: "", restrictedTo: "" }
+        }
+      );
+    }
   }
 }

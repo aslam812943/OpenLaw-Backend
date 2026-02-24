@@ -24,5 +24,5 @@ export interface IAvailabilityRuleRepository {
     updateAppointmentStatus(id: string, status: string): Promise<void>;
     restrictSlot(id: string, userId: string): Promise<void>;
     getSlotById(id: string): Promise<Slot | null>;
-    releaseSlotByBookingId(bookingId: string): Promise<void>;
+    releaseSlotByBookingId(bookingId: string, lawyerId?: string, date?: string, startTime?: string): Promise<void>;
 }

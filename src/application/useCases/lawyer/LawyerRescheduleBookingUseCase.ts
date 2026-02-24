@@ -1,21 +1,20 @@
-import { IBookingRepository } from "../../../../domain/repositories/IBookingRepository";
-import { IAvailabilityRuleRepository } from "../../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
-import { ISendNotificationUseCase } from "../../../interface/use-cases/common/notification/ISendNotificationUseCase";
-import { IRescheduleBookingUseCase } from "../../../interface/use-cases/user/IRescheduleBookingUseCase";
-import { RescheduleBookingDTO } from "../../../dtos/user/RescheduleBookingDTO";
-import { BadRequestError } from "../../../../infrastructure/errors/BadRequestError";
-import { NotFoundError } from "../../../../infrastructure/errors/NotFoundError";
-import { MessageConstants } from "../../../../infrastructure/constants/MessageConstants";
+import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
+import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
+import { ILawyerRescheduleBookingUseCase, LawyerRescheduleDTO } from "../../interface/use-cases/lawyer/ILawyerRescheduleBookingUseCase";
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
+import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 
-export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
+export class LawyerRescheduleBookingUseCase implements ILawyerRescheduleBookingUseCase {
     constructor(
         private readonly _bookingRepository: IBookingRepository,
         private readonly _slotRepository: IAvailabilityRuleRepository,
         private readonly _sendNotificationUseCase: ISendNotificationUseCase
     ) { }
 
-    async execute(userId: string, dto: RescheduleBookingDTO): Promise<void> {
-        const { bookingId, newSlotId } = dto;
+    async execute(lawyerId: string, data: LawyerRescheduleDTO): Promise<void> {
+        const { bookingId, newSlotId } = data;
 
         const booking = await this._bookingRepository.findById(bookingId);
 
@@ -23,7 +22,7 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
             throw new NotFoundError("Booking not found");
         }
 
-        if (booking.userId.toString() !== userId) {
+        if (booking.lawyerId.toString() !== lawyerId) {
             throw new BadRequestError("You are not authorized to reschedule this booking.");
         }
 
@@ -35,23 +34,19 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
             throw new BadRequestError("This appointment has already been rescheduled once. You can only reschedule an appointment one time.");
         }
 
-
-   
-
         const newSlot = await this._slotRepository.getSlotById(newSlotId);
 
         if (!newSlot) {
             throw new NotFoundError("New slot not found");
         }
 
-        if (newSlot.userId.toString() !== booking.lawyerId.toString()) {
-            throw new BadRequestError("The new slot does not belong to the same lawyer.");
+        if (newSlot.userId.toString() !== lawyerId) {
+            throw new BadRequestError("The new slot does not belong to you.");
         }
 
         if (newSlot.isBooked) {
             throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
         }
-
 
         await this._slotRepository.releaseSlotByBookingId(
             bookingId,
@@ -60,7 +55,7 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
             booking.startTime
         );
 
-        await this._slotRepository.bookSlot(newSlotId, userId, bookingId);
+        await this._slotRepository.bookSlot(newSlotId, booking.userId.toString(), bookingId);
 
         await this._bookingRepository.rescheduleBooking(
             bookingId,
@@ -70,11 +65,10 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
             newSlotId
         );
 
-
-        // Notify Lawyer
+        // 4. Notify the user about the change
         await this._sendNotificationUseCase.execute(
-            booking.lawyerId.toString(),
-            `Appointment ${booking.bookingId} has been rescheduled to ${newSlot.date} at ${newSlot.startTime}.`,
+            booking.userId.toString(),
+            `Your appointment with your lawyer has been rescheduled by the lawyer to ${newSlot.date} at ${newSlot.startTime}.`,
             'BOOKING_RESCHEDULED',
             { bookingId }
         );
