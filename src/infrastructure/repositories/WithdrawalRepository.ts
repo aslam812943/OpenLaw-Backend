@@ -3,7 +3,7 @@ import { Withdrawal } from "../../domain/entities/Withdrawal";
 import { WithdrawalModel, IWithdrawalDocument } from "../db/models/admin/WithdrawalModel";
 import { InternalServerError } from "../errors/InternalServerError";
 import { MessageConstants } from "../constants/MessageConstants";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 import { BaseRepository } from "./BaseRepository";
 
@@ -13,8 +13,8 @@ export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> im
     }
     async create(withdrawal: Withdrawal): Promise<Withdrawal> {
         try {
-            const doc = await WithdrawalModel.create({
-                lawyerId: new mongoose.Types.ObjectId(withdrawal.lawyerId),
+            const doc = await this.baseCreate({
+                lawyerId: new Types.ObjectId(withdrawal.lawyerId) as unknown as Types.ObjectId,
                 amount: withdrawal.amount,
                 status: withdrawal.status,
                 requestDate: withdrawal.requestDate
@@ -27,7 +27,7 @@ export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> im
 
     async findById(id: string): Promise<Withdrawal | null> {
         try {
-            const doc = await WithdrawalModel.findById(id);
+            const doc = await this.baseFindById(id);
             return doc ? this.mapToDomain(doc) : null;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
@@ -42,7 +42,7 @@ export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> im
                 updateData.finalAmount = details.finalAmount;
                 updateData.processedDate = details.processedDate;
             }
-            await WithdrawalModel.findByIdAndUpdate(id, updateData);
+            await this.baseUpdate(id, updateData);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -54,11 +54,12 @@ export class WithdrawalRepository extends BaseRepository<IWithdrawalDocument> im
             const query = { lawyerId: new mongoose.Types.ObjectId(lawyerId) };
 
             const [docs, total] = await Promise.all([
-                WithdrawalModel.find(query)
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(limit),
-                WithdrawalModel.countDocuments(query)
+                this.baseFindAll(query, {
+                    sort: { createdAt: -1 },
+                    skip,
+                    limit
+                }),
+                this.baseCountDocuments(query)
             ]);
 
             return {

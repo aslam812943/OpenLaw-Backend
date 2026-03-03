@@ -165,7 +165,7 @@ export class SocketServerService implements ISocketServer {
     }
   }
 
-  public sendMessageToRoom(roomId: string, event: string, data: any): void {
+  public sendMessageToRoom(roomId: string, event: string, data: unknown): void {
     if (this.io) {
       this.io.to(roomId).emit(event, data);
     }

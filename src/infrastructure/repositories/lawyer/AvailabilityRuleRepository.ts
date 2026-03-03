@@ -4,75 +4,29 @@ import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer
 import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { ConflictError } from "../../errors/ConflictError";
-import AvailabilityRuleModel from "../../db/models/AvailabilityRuleModel";
-import SlotModel from "../../db/models/SlotModel";
+import AvailabilityRuleModel, { IAvailabilityRule } from "../../db/models/AvailabilityRuleModel";
+import SlotModel, { ISlotModel } from "../../db/models/SlotModel";
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { Slot } from "../../../domain/entities/Slot";
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { Booking } from "../../../domain/entities/Booking";
-import { BookingModel } from "../../db/models/BookingModel";
+import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { IGeneratedSlot } from "../../../application/interface/services/ISlotGeneratorService";
-interface IRuleDoc {
-  _id: mongoose.Types.ObjectId;
-  title: string;
-  startTime: string;
-  endTime: string;
-  startDate: string;
-  endDate: string;
-  availableDays: string[];
-  bufferTime: number;
-  slotDuration: number;
-  maxBookings: number;
-  sessionType: 'online' | 'offline';
-  exceptionDays: string[];
-  lawyerId: mongoose.Types.ObjectId;
-}
+import { BaseRepository } from "../BaseRepository";
 
-interface ISlotDoc {
-  _id: mongoose.Types.ObjectId;
-  ruleId: string;
-  userId: string;
-  startTime: string;
-  endTime: string;
-  date: string;
-  sessionType: 'online' | 'offline';
-  isBooked: boolean;
-  bookingId?: string | null;
-  maxBookings: number;
-  consultationFee: number;
-  restrictedTo?: string;
-}
-
-interface IBookingDoc {
-  _id: mongoose.Types.ObjectId;
-  userId: { _id: mongoose.Types.ObjectId; name: string };
-  lawyerId: mongoose.Types.ObjectId;
-  date: string;
-  startTime: string;
-  endTime: string;
-  consultationFee: number;
-  status: string;
-  paymentStatus: string;
-  paymentId: string;
-  stripeSessionId: string;
-  description: string;
-  cancellationReason: string;
-  refundAmount: number;
-  refundStatus: string;
-  isCallActive: boolean;
-  lawyerJoined: boolean;
-  commissionPercent: number;
-  lawyerFeedback: string;
-  createdAt: Date;
-}
-
-export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
-
+export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule> implements IAvailabilityRuleRepository {
+  constructor() {
+    super(AvailabilityRuleModel);
+  }
 
   async createRule(rule: CreateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      const doc = await AvailabilityRuleModel.create(rule);
-      return this.mapToRule(doc as unknown as IRuleDoc);
+      const createData: any = {
+        ...rule,
+        lawyerId: new mongoose.Types.ObjectId(rule.lawyerId)
+      };
+      const doc = await this.baseCreate(createData as Partial<IAvailabilityRule>);
+      return this.mapToRule(doc);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
         throw new ConflictError("Availability rule already exists.");
@@ -87,7 +41,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       const formatted = slots.map(s => ({ ...s, ruleId, userId: lawyerId }));
 
       const docs = await SlotModel.insertMany(formatted);
-      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotDoc));
+      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotModel));
     } catch (error: unknown) {
       throw new InternalServerError("Database error while saving slots.");
     }
@@ -96,13 +50,13 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      const doc = await AvailabilityRuleModel.findByIdAndUpdate(ruleId, updated, { new: true });
+      const doc = await this.baseUpdate(ruleId, updated as any);
 
       if (!doc) {
         throw new NotFoundError("Rule not found for update");
       }
 
-      return this.mapToRule(doc as unknown as IRuleDoc);
+      return this.mapToRule(doc);
     } catch (error: unknown) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -131,7 +85,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   async getBookedSlotsByRuleId(ruleId: string): Promise<Slot[]> {
     try {
       const docs = await SlotModel.find({ ruleId, isBooked: true }).lean();
-      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotDoc));
+      return docs.map(doc => this.mapToSlot(doc as unknown as ISlotModel));
     } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching booked slots.");
     }
@@ -140,13 +94,13 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async getRuleById(ruleId: string): Promise<AvailabilityRule> {
     try {
-      const doc = await AvailabilityRuleModel.findById(ruleId);
+      const doc = await this.baseFindById(ruleId);
 
       if (!doc) {
         throw new NotFoundError("Rule not found");
       }
 
-      return this.mapToRule(doc as unknown as IRuleDoc);
+      return this.mapToRule(doc as unknown as IAvailabilityRule);
     } catch (error: unknown) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -158,11 +112,11 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async getAllRules(id: string): Promise<AvailabilityRule[]> {
     try {
-      const docs = await AvailabilityRuleModel.find({
+      const docs = await this.baseFindAll({
         lawyerId: new mongoose.Types.ObjectId(id)
       });
 
-      return docs.map((doc: mongoose.Document) => this.mapToRule(doc as unknown as IRuleDoc));
+      return docs.map((doc: IAvailabilityRule) => this.mapToRule(doc));
     } catch (error: unknown) {
       throw new InternalServerError("Database error while fetching availability rules.");
     }
@@ -171,7 +125,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async deleteRuleById(ruleId: string): Promise<void> {
     try {
-      const deleted = await AvailabilityRuleModel.findByIdAndDelete(ruleId);
+      const deleted = await this.baseDelete(ruleId);
 
       if (!deleted) {
         throw new Error("Rule not found to delete");
@@ -190,7 +144,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       const response = await SlotModel.find({ userId: lawyerId });
 
 
-      const slots = response.map((slot: mongoose.Document) => this.mapToSlot(slot as unknown as ISlotDoc));
+      const slots = response.map((slot: mongoose.Document) => this.mapToSlot(slot as unknown as ISlotModel));
 
       return slots;
     } catch (error: unknown) {
@@ -244,12 +198,12 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
 
   async bookSlot(id: string, userId?: string, bookingId?: string): Promise<void> {
-    const updateQuery: mongoose.UpdateQuery<ISlotDoc> = { isBooked: true, isReserved: false };
+    const updateQuery: mongoose.UpdateQuery<ISlotModel> = { isBooked: true, isReserved: false };
     if (bookingId) {
       updateQuery.bookingId = bookingId;
     }
 
-    const filter: mongoose.FilterQuery<ISlotDoc> = { _id: id };
+    const filter: mongoose.FilterQuery<ISlotModel> = { _id: id };
     if (userId) {
       filter.$and = [
         { $or: [{ reservedBy: userId }, { reservedBy: { $exists: false } }, { reservedBy: null }] },
@@ -299,7 +253,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
 
   async getSlotById(id: string): Promise<Slot | null> {
     const doc = await SlotModel.findById(id).lean();
-    return doc ? this.mapToSlot(doc as unknown as ISlotDoc) : null;
+    return doc ? this.mapToSlot(doc as unknown as ISlotModel) : null;
   }
 
   async getAppoiments(lawyerId: string): Promise<Booking[]> {
@@ -308,12 +262,11 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
         .populate("userId", "name")
         .lean();
 
-      return (docs as unknown[]).map((obj: unknown) => {
-        const o = obj as IBookingDoc;
+      return (docs as any[]).map((o: any) => {
         return new Booking(
-          o._id.toString(),
-          o.userId._id.toString(),
-          o.lawyerId.toString(),
+          String(o._id),
+          o.userId?._id ? String(o.userId._id) : String(o.userId),
+          String(o.lawyerId),
           o.date,
           o.startTime,
           o.endTime,
@@ -323,7 +276,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           o.paymentId,
           o.stripeSessionId,
           o.description,
-          o.userId.name,
+          o.userId?.name || "Unknown",
           o.cancellationReason,
           "",
           o.refundAmount,
@@ -332,7 +285,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
           o.lawyerJoined,
           o.commissionPercent,
           o.lawyerFeedback,
-          o.createdAt.toString()
+          String(o.createdAt)
         );
       });
 
@@ -360,9 +313,9 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
     }
   }
 
-  private mapToRule(d: IRuleDoc): AvailabilityRule {
+  private mapToRule(d: IAvailabilityRule): AvailabilityRule {
     return new AvailabilityRule(
-      d._id.toString(),
+      String(d._id),
       d.title,
       d.startTime,
       d.endTime,
@@ -374,15 +327,15 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
       d.maxBookings,
       d.sessionType,
       d.exceptionDays,
-      d.lawyerId.toString()
+      String(d.lawyerId)
     );
   }
 
-  private mapToSlot(d: ISlotDoc): Slot {
+  private mapToSlot(d: ISlotModel): Slot {
     return new Slot(
-      d._id.toString(),
-      d.ruleId,
-      d.userId,
+      String(d._id),
+      String(d.ruleId),
+      String(d.userId),
       d.startTime,
       d.endTime,
       d.date,
@@ -395,7 +348,7 @@ export class AvailabilityRuleRepository implements IAvailabilityRuleRepository {
   }
 
   async releaseSlotByBookingId(bookingId: string, lawyerId?: string, date?: string, startTime?: string): Promise<void> {
-    const filter: any = { bookingId };
+    const filter: mongoose.FilterQuery<ISlotModel> = { bookingId };
 
     let result = await SlotModel.findOneAndUpdate(
       filter,

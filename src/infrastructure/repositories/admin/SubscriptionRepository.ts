@@ -1,15 +1,19 @@
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
-import  { Types } from "mongoose";
+import { Types } from "mongoose";
 import { Subscription } from "../../../domain/entities/Subscription";
-import subscriptionModel from '../../../infrastructure/db/models/admin/subscriptionModel'
+import subscriptionModel, { ISubscriptionDocument } from '../../../infrastructure/db/models/admin/subscriptionModel'
 import { MessageConstants } from "../../constants/MessageConstants";
 import { InternalServerError } from "../../errors/InternalServerError";
+import { BaseRepository } from "../BaseRepository";
 
-export class SubscriptionRepository  implements ISubscriptionRepository {
+export class SubscriptionRepository extends BaseRepository<ISubscriptionDocument> implements ISubscriptionRepository {
+    constructor() {
+        super(subscriptionModel);
+    }
 
     async create(data: Subscription): Promise<void> {
         try {
-            await subscriptionModel.create(data);
+            await this.baseCreate(data as unknown as Partial<ISubscriptionDocument>);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
@@ -17,7 +21,7 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
 
     async findAll(): Promise<Subscription[]> {
         try {
-            const all = await subscriptionModel.find();
+            const all = await this.baseFindAll();
             return all.map((d: unknown) => this._mapToSubscription(d));
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
@@ -28,8 +32,8 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
         try {
             const skip = (page - 1) * limit;
             const [plans, total] = await Promise.all([
-                subscriptionModel.find().skip(skip).limit(limit).lean(),
-                subscriptionModel.countDocuments()
+                this.baseFindAll({}, { skip, limit, lean: true }),
+                this.baseCountDocuments()
             ]);
 
             return {
@@ -40,12 +44,13 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
         }
     }
+
     async findActive(page: number, limit: number): Promise<{ plans: Subscription[]; total: number; }> {
         try {
             const skip = (page - 1) * limit;
             const [plans, total] = await Promise.all([
-                subscriptionModel.find({ isActive: true }).skip(skip).limit(limit).lean(),
-                subscriptionModel.countDocuments({ isActive: true })
+                this.baseFindAll({ isActive: true }, { skip, limit, lean: true }),
+                this.baseCountDocuments({ isActive: true })
             ]);
 
             return {
@@ -59,7 +64,7 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
 
     async toggleStatus(id: string, status: boolean): Promise<void> {
         try {
-            await subscriptionModel.findByIdAndUpdate(id, { isActive: status });
+            await this.baseUpdate(id, { isActive: status });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -67,7 +72,7 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
 
     async update(id: string, data: Partial<Subscription>): Promise<void> {
         try {
-            await subscriptionModel.findByIdAndUpdate(id, data);
+            await this.baseUpdate(id, data as unknown as Partial<ISubscriptionDocument>);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -75,7 +80,7 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
 
     async findById(id: string): Promise<Subscription | null> {
         try {
-            const d = await subscriptionModel.findById(id).lean();
+            const d = await this.baseFindById(id);
             if (!d) return null;
             return this._mapToSubscription(d);
         } catch (error: unknown) {
@@ -85,7 +90,7 @@ export class SubscriptionRepository  implements ISubscriptionRepository {
 
     async findByName(name: string): Promise<Subscription | null> {
         try {
-            const d = await subscriptionModel.findOne({ planName: name }).lean();
+            const d = await this.baseFindOne({ planName: name });
             if (!d) return null;
             return this._mapToSubscription(d);
         } catch (error: unknown) {

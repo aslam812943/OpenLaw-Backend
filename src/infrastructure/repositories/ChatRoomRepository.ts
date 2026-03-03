@@ -5,6 +5,7 @@ import {
     PopulatedChatRoom
 } from "../../domain/repositories/IChatRoomRepository";
 import { ChatRoom } from "../../domain/entities/ChatRoom";
+import mongoose from "mongoose";
 import ChatRoomModel, { IChatRoomDocument } from "../db/models/ChatRoomModel";
 import { InternalServerError } from "../errors/InternalServerError";
 import { MessageConstants } from "../constants/MessageConstants";
@@ -127,7 +128,7 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
 
     async findByUserAndLawyer(userId: string, lawyerId: string, bookingId?: string): Promise<ChatRoom | null> {
         try {
-            const query: any = { userId, lawyerId };
+            const query: mongoose.FilterQuery<IChatRoomDocument> = { userId, lawyerId };
             if (bookingId) query.bookingId = bookingId;
             const doc = await ChatRoomModel.findOne(query);
             if (!doc) return null;

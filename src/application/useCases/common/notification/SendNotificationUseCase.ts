@@ -8,7 +8,7 @@ export class SendNotificationUseCase implements ISendNotificationUseCase {
         private readonly _socketServer: ISocketServer
     ) { }
 
-    async execute(userId: string, message: string, type: string, metadata?: Record<string, any>): Promise<void> {
+    async execute(userId: string, message: string, type: string, metadata?: Record<string, unknown>): Promise<void> {
         const notification = await this._notificationRepository.save({
             userId,
             message,

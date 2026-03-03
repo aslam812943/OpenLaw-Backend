@@ -27,19 +27,15 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
 
   async verifyUser(userId: string): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(userId, { isVerified: true });
+      await this.baseUpdate(userId, { isVerified: true });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.VERIFY_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  //  findByEmail()
-  // ------------------------------------------------------------
-
   async findByEmail(email: string): Promise<User | null> {
     try {
-      const userDoc = await UserModel.findOne({ email });
+      const userDoc = await this.baseFindOne({ email });
       if (!userDoc) return null;
 
       return {
@@ -59,14 +55,9 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
   }
 
-  // ------------------------------------------------------------
-  //  createUser()
-  // ------------------------------------------------------------
   async createUser(user: UserRegisterDTO): Promise<User> {
     try {
-      const userDoc = new UserModel(user);
-      await userDoc.save();
-
+      const userDoc = await this.baseCreate(user as unknown as Partial<IUserDocument>);
 
       return {
         id: String(userDoc._id),
@@ -88,9 +79,6 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
   }
 
-  // ------------------------------------------------------------
-  // updateUserPassword()
-  // ------------------------------------------------------------
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
     try {
       await this.baseUpdate(userId, { password: hashedPassword });
@@ -99,9 +87,6 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
   }
 
-  // ------------------------------------------------------------
-  // markVerificationSubmitted()
-  // ------------------------------------------------------------
   async markVerificationSubmitted(userId: string): Promise<void> {
     try {
       await this.baseUpdate(userId, { hasSubmittedVerification: true });
@@ -110,9 +95,6 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
   }
 
-  // ------------------------------------------------------------
-  // findAll()
-  // ------------------------------------------------------------
   async findAll(query: {
     page: number;
     limit: number;
@@ -149,7 +131,6 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
 
       const match = { $and: andConditions };
 
-      // Sort
       const sortOption: { [key: string]: mongoose.SortOrder } = {};
       switch (sort) {
         case "name-asc":
@@ -169,12 +150,12 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       }
 
       const [docs, total] = await Promise.all([
-        UserModel.find(match)
-          .sort(sortOption)
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .exec(),
-        UserModel.countDocuments(match),
+        this.baseFindAll(match, {
+          sort: sortOption,
+          skip: (page - 1) * limit,
+          limit: limit
+        }),
+        this.baseCountDocuments(match),
       ]);
 
       const users = docs.map((doc) => this.mapToDomain(doc));
@@ -184,28 +165,21 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
   }
 
-  // ------------------------------------------------------------
-  // blockUser()
-  // ------------------------------------------------------------
   async blockUser(id: string): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(id, { isBlock: true });
+      await this.baseUpdate(id, { isBlock: true });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.BLOCK_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  // unBlockUser()
-  // ------------------------------------------------------------
   async unBlockUser(id: string): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(id, { isBlock: false });
+      await this.baseUpdate(id, { isBlock: false });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.UNBLOCK_ERROR);
     }
   }
-
 
   private mapToDomain(doc: IUserDocument): User {
     return {
@@ -223,7 +197,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   async findById(id: string): Promise<User> {
-    const doc = await UserModel.findById(id);
+    const doc = await this.baseFindById(id);
     if (!doc) throw new NotFoundError('User document not found');
     return {
       id: String(doc._id),
@@ -242,7 +216,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
   }
 
   async changePassword(id: string, oldPass: string, newPass: string) {
-    const user = await UserModel.findById(id);
+    const user = await this.baseFindById(id);
     if (!user) throw new NotFoundError('User not found');
 
     const match = await bcrypt.compare(oldPass, String(user.password));
@@ -252,9 +226,8 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     await user.save();
   }
 
-
   async profileUpdate(id: string, name: string, phone: string, imgurl: string, address: string, city: string, state: string, pincode: string): Promise<void> {
-    const user = await UserModel.findById(id)
+    const user = await this.baseFindById(id)
     if (!user) throw new NotFoundError('user not found')
     user.name = name
     user.phone = Number(phone)
@@ -276,10 +249,8 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     await user.save()
   }
 
-
-
   async findByGoogleId(googleId: string): Promise<User | null> {
-    const userDoc = await UserModel.findOne({ googleId });
+    const userDoc = await this.baseFindOne({ googleId });
     if (!userDoc) return null;
     return this.mapToDomain(userDoc);
   }
@@ -300,7 +271,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       googleId: user.googleId
     };
 
-    const updatedDoc = await UserModel.findByIdAndUpdate(user.id, updateData, { new: true });
+    const updatedDoc = await this.baseUpdate(user.id, updateData);
     if (!updatedDoc) throw new NotFoundError("User not found for update");
 
     return this.mapToDomain(updatedDoc);

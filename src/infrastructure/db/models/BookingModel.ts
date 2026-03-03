@@ -1,8 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IBookingDocument extends Document {
-    userId: string;
-    lawyerId: string;
+    _id: any; 
+    userId: any; 
+    lawyerId: any;
     date: string;
     startTime: string;
     endTime: string;
@@ -24,9 +25,11 @@ export interface IBookingDocument extends Document {
     followUpDate?: string;
     followUpTime?: string;
     followUpStatus: 'none' | 'pending' | 'booked';
-    parentBookingId?: string;
-    followUpSlotId?: string;
+    parentBookingId?: any;
+    followUpSlotId?: any;
     rescheduleCount: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const BookingSchema: Schema = new Schema({

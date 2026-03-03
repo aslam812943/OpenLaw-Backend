@@ -13,15 +13,13 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
     }
     async addReview(review: Review): Promise<Review> {
         try {
-            const newReview = new ReviewModel({
-                userId: review.userId,
-                lawyerId: review.lawyerId,
+            const savedReview = await this.baseCreate({
+                userId: review.userId as unknown as Types.ObjectId,
+                lawyerId: review.lawyerId as unknown as Types.ObjectId,
                 rating: review.rating,
                 comment: review.comment,
                 createdAt: review.createdAt || new Date()
             });
-
-            const savedReview = await newReview.save();
 
             return this.mapToEntity(savedReview);
         } catch (error: unknown) {
@@ -32,7 +30,10 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
 
     async findAll(lawyerId: string): Promise<Review[]> {
         try {
-            const reviews = await ReviewModel.find({ lawyerId }).populate("userId", "name profileImage").sort({ createdAt: -1 })
+            const reviews = await this.baseFindAll({ lawyerId }, {
+                populate: { path: "userId", select: "name profileImage" },
+                sort: { createdAt: -1 }
+            });
 
             return reviews.map(review => {
                 const user = review.userId as unknown as { _id: Types.ObjectId; name: string; profileImage: string };
@@ -55,7 +56,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
 
     async findByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<Review | null> {
         try {
-            const doc = await ReviewModel.findOne({ userId, lawyerId });
+            const doc = await this.baseFindOne({ userId, lawyerId });
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {

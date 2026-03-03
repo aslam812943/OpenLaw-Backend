@@ -13,7 +13,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
     }
     async save(notification: Omit<Notification, "id" | "createdAt">): Promise<Notification> {
         try {
-            const created = await NotificationModel.create(notification);
+            const created = await this.baseCreate(notification as unknown as Partial<INotificationDocument>);
             return new Notification(
                 created.id,
                 created.userId,
@@ -29,7 +29,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
 
     async getNotificationsByUserId(userId: string): Promise<Notification[]> {
         try {
-            const list = await NotificationModel.find({ userId }).sort({ createdAt: -1 });
+            const list = await this.baseFindAll({ userId }, { sort: { createdAt: -1 } });
             return list.map(
                 (doc) =>
                     new Notification(
@@ -48,7 +48,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
 
     async markAsRead(notificationId: string): Promise<void> {
         try {
-            await NotificationModel.findByIdAndUpdate(notificationId, { isRead: true });
+            await this.baseUpdate(notificationId, { isRead: true });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -56,7 +56,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
 
     async markAllAsRead(userId: string): Promise<void> {
         try {
-            await NotificationModel.updateMany({ userId, isRead: false }, { isRead: true });
+            await this.model.updateMany({ userId, isRead: false }, { isRead: true });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -64,7 +64,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
 
     async delete(notificationId: string): Promise<void> {
         try {
-            await NotificationModel.findByIdAndDelete(notificationId);
+            await this.baseDelete(notificationId);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.DELETE_ERROR);
         }

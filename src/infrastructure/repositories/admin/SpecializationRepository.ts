@@ -12,12 +12,11 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async create(specialization: Specialization): Promise<Specialization> {
         try {
-            const newSpec = new SpecializationModel({
+            const saved = await this.baseCreate({
                 name: specialization.name,
                 description: specialization.description,
                 isActive: specialization.isActive
-            });
-            const saved = await newSpec.save();
+            } as ISpecializationDocument);
             return this.mapToEntity(saved);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
@@ -26,11 +25,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async update(id: string, specialization: Partial<Specialization>): Promise<Specialization | null> {
         try {
-            const updated = await SpecializationModel.findByIdAndUpdate(
-                id,
-                { $set: specialization },
-                { new: true }
-            );
+            const updated = await this.baseUpdate(id, { $set: specialization });
             if (!updated) return null;
             return this.mapToEntity(updated);
         } catch (error: unknown) {
@@ -40,7 +35,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async delete(id: string): Promise<boolean> {
         try {
-            const result = await SpecializationModel.findByIdAndDelete(id);
+            const result = await this.baseDelete(id);
             return !!result;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.DELETE_ERROR);
@@ -49,7 +44,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async findById(id: string): Promise<Specialization | null> {
         try {
-            const doc = await SpecializationModel.findById(id);
+            const doc = await this.baseFindById(id);
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {
@@ -59,7 +54,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async findAll(): Promise<Specialization[]> {
         try {
-            const docs = await SpecializationModel.find().sort({ createdAt: -1 });
+            const docs = await this.baseFindAll({}, { sort: { createdAt: -1 } });
             return docs.map(doc => this.mapToEntity(doc));
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
@@ -68,7 +63,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async findActive(): Promise<Specialization[]> {
         try {
-            const docs = await SpecializationModel.find({ isActive: true }).sort({ name: 1 });
+            const docs = await this.baseFindAll({ isActive: true }, { sort: { name: 1 } });
             return docs.map(doc => this.mapToEntity(doc));
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
@@ -77,7 +72,7 @@ export class SpecializationRepository extends BaseRepository<ISpecializationDocu
 
     async findByName(name: string): Promise<Specialization | null> {
         try {
-            const doc = await SpecializationModel.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+            const doc = await this.baseFindOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
             if (!doc) return null;
             return this.mapToEntity(doc);
         } catch (error: unknown) {

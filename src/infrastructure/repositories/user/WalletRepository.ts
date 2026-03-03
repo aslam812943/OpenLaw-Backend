@@ -13,12 +13,11 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
 
     async createWallet(wallet: Wallet): Promise<Wallet> {
         try {
-            const walletDoc = new WalletModel({
-                userId: wallet.userId,
+            const walletDoc = await this.baseCreate({
+                userId: new mongoose.Types.ObjectId(wallet.userId) as unknown as mongoose.Types.ObjectId,
                 balance: wallet.balance,
-                transactions: wallet.transactions
+                transactions: wallet.transactions as unknown as ITransactions[]
             });
-            await walletDoc.save();
             return this.mapToDomain(walletDoc);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
@@ -27,7 +26,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
 
     async findByUserId(userId: string): Promise<Wallet | null> {
         try {
-            const walletDoc = await WalletModel.findOne({ userId });
+            const walletDoc = await this.baseFindOne({ userId });
             if (!walletDoc) return null;
             return this.mapToDomain(walletDoc);
         } catch (error: unknown) {
@@ -39,7 +38,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         try {
             const session = await mongoose.startSession();
             await session.withTransaction(async () => {
-                const wallet = await WalletModel.findOne({ userId }).session(session);
+                const wallet = await this.model.findOne({ userId }).session(session);
                 if (!wallet) {
                     const newWallet = new WalletModel({
                         userId,
@@ -63,7 +62,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         try {
             const skip = (page - 1) * limit;
 
-            const result = await WalletModel.aggregate([
+            const result = await this.model.aggregate([
                 { $match: { userId: new mongoose.Types.ObjectId(userId) } },
                 {
                     $project: {
@@ -85,7 +84,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
             }
 
             const { transactions, totalTransactions, balance } = result[0] as {
-                transactions: any[];
+                transactions: ITransactions[];
                 totalTransactions: number;
                 balance: number;
             };

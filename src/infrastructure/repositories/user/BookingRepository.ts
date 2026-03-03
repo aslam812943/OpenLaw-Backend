@@ -63,8 +63,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
             bookingData.bookingId = `BK-${dateStr}-${randomStr}`;
 
-            const newBooking = new BookingModel(bookingData);
-            const savedBooking = await newBooking.save();
+            const savedBooking = await this.baseCreate(bookingData as unknown as Partial<IBookingDocument>);
 
             return this.mapToEntity(savedBooking);
         } catch (error: unknown) {
@@ -74,7 +73,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async findById(id: string): Promise<Booking | null> {
         try {
-            const booking = await BookingModel.findById(id);
+            const booking = await this.baseFindById(id);
             if (!booking) return null;
             return this.mapToEntity(booking);
         } catch (error: unknown) {
@@ -95,7 +94,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             if (lawyerFeedback) {
                 updateData.lawyerFeedback = lawyerFeedback;
             }
-            await BookingModel.findByIdAndUpdate(id, updateData);
+            await this.baseUpdate(id, updateData);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -130,12 +129,13 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
 
             const [bookings, total] = await Promise.all([
-                BookingModel.find(query)
-                    .populate('lawyerId', 'name')
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(l),
-                BookingModel.countDocuments(query)
+                this.baseFindAll(query, {
+                    populate: { path: 'lawyerId', select: 'name' },
+                    sort: { createdAt: -1 },
+                    skip,
+                    limit: l
+                }),
+                this.baseCountDocuments(query)
             ]);
 
             return {
@@ -149,13 +149,12 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async existsByUserIdAndLawyerId(userId: string, lawyerId: string): Promise<boolean> {
         try {
-            const count = await BookingModel.countDocuments({
+            return await this.baseExists({
                 userId,
                 lawyerId,
                 status: { $in: ['confirmed', 'pending'] },
                 paymentStatus: 'paid'
             });
-            return count > 0;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.EXISTS_ERROR);
         }
@@ -163,28 +162,28 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async findActiveBooking(userId: string, lawyerId: string): Promise<Booking | null> {
         try {
-            let booking = await BookingModel.findOne({
+            let booking = await this.baseFindOne({
                 userId,
                 lawyerId,
                 status: 'confirmed',
                 paymentStatus: 'paid'
-            }).sort({ createdAt: -1 });
+            }, { sort: { createdAt: -1 } });
 
             if (!booking) {
-                booking = await BookingModel.findOne({
+                booking = await this.baseFindOne({
                     userId,
                     lawyerId,
                     status: 'pending',
                     paymentStatus: 'paid'
-                }).sort({ createdAt: -1 });
+                }, { sort: { createdAt: -1 } });
             }
 
             if (!booking) {
-                booking = await BookingModel.findOne({
+                booking = await this.baseFindOne({
                     userId,
                     lawyerId,
                     status: 'completed'
-                }).sort({ createdAt: -1 });
+                }, { sort: { createdAt: -1 } });
             }
 
             if (!booking) return null;
@@ -197,7 +196,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async findByStripeSessionId(sessionId: string): Promise<Booking | null> {
         try {
-            const booking = await BookingModel.findOne({ stripeSessionId: sessionId });
+            const booking = await this.baseFindOne({ stripeSessionId: sessionId });
             if (!booking) return null;
 
             return this.mapToEntity(booking);
@@ -231,12 +230,13 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
 
             const [bookings, total] = await Promise.all([
-                BookingModel.find(query)
-                    .populate('userId', 'name')
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(l),
-                BookingModel.countDocuments(query)
+                this.baseFindAll(query, {
+                    populate: { path: 'userId', select: 'name' },
+                    sort: { createdAt: -1 },
+                    skip,
+                    limit: l
+                }),
+                this.baseCountDocuments(query)
             ]);
 
             return {
@@ -254,7 +254,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             if (isCallActive !== undefined) {
                 updateData.isCallActive = isCallActive;
             }
-            await BookingModel.findByIdAndUpdate(id, updateData);
+            await this.baseUpdate(id, updateData);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CALL_STATUS_UPDATE_ERROR);
         }
@@ -291,13 +291,16 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
 
             const [bookings, total] = await Promise.all([
-                BookingModel.find(query)
-                    .populate('userId', 'name')
-                    .populate('lawyerId', 'name')
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(l),
-                BookingModel.countDocuments(query)
+                this.baseFindAll(query, {
+                    populate: [
+                        { path: 'userId', select: 'name' },
+                        { path: 'lawyerId', select: 'name' }
+                    ],
+                    sort: { createdAt: -1 },
+                    skip,
+                    limit: l
+                }),
+                this.baseCountDocuments(query)
             ]);
 
             return {
@@ -311,7 +314,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async getEarningsStats(lawyerId: string): Promise<{ totalGross: number, pendingNet: number }> {
         try {
-            const stats = await BookingModel.aggregate([
+            const stats = await this.model.aggregate([
                 { $match: { lawyerId: new Types.ObjectId(lawyerId), paymentStatus: 'paid' } },
                 {
                     $group: {
@@ -358,7 +361,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async setFollowUpDetails(id: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, lawyerFeedback?: string, followUpSlotId?: string): Promise<void> {
         try {
-            await BookingModel.findByIdAndUpdate(id, {
+            await this.baseUpdate(id, {
                 followUpType,
                 followUpDate,
                 followUpTime,
@@ -374,7 +377,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async findFollowUpByParentId(parentId: string): Promise<Booking | null> {
         try {
-            const booking = await BookingModel.findOne({ parentBookingId: new Types.ObjectId(parentId) });
+            const booking = await this.baseFindOne({ parentBookingId: new Types.ObjectId(parentId) });
             if (!booking) return null;
             return this.mapToEntity(booking);
         } catch (error: unknown) {
@@ -384,7 +387,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async updateFollowUpStatus(id: string, status: 'none' | 'pending' | 'booked' | 'cancelled'): Promise<void> {
         try {
-            await BookingModel.findByIdAndUpdate(id, { followUpStatus: status });
+            await this.baseUpdate(id, { followUpStatus: status });
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
@@ -392,7 +395,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async rescheduleBooking(id: string, date: string, startTime: string, endTime: string, slotId: string): Promise<void> {
         try {
-            await BookingModel.findByIdAndUpdate(id, {
+            await this.baseUpdate(id, {
                 $set: { date, startTime, endTime, followUpSlotId: slotId },
                 $inc: { rescheduleCount: 1 }
             });

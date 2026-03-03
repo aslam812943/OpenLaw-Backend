@@ -2,18 +2,21 @@ import { Schema, model, Document, Types } from "mongoose";
 
 
 export interface IAvailabilityRule extends Document {
+   _id: Types.ObjectId;
    lawyerId: Types.ObjectId;
    title: string;
    startTime: string,
    endTime: string,
    startDate: string,
    endDate: string,
-   availableDays: [string],
+   availableDays: string[],
    bufferTime: number,
    slotDuration: number,
    maxBookings: number,
    sessionType: string,
-   exceptionDays: [string]
+   exceptionDays: string[],
+   createdAt: Date;
+   updatedAt: Date;
 }
 
 

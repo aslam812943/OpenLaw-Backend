@@ -23,13 +23,8 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
 
   async findByEmail(email: string): Promise<Admin | null> {
     try {
-
-      const adminDoc = await AdminModel.findOne({ email });
-
-
+      const adminDoc = await this.baseFindOne({ email });
       if (!adminDoc) return null;
-
-
       return new Admin(
         adminDoc.id,
         adminDoc.name,
@@ -37,23 +32,17 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
         adminDoc.password
       );
     } catch (error: unknown) {
-
       throw new InternalServerError(MessageConstants.REPOSITORY.EMAIL_FETCH_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  // createAdmin() 
-  // ------------------------------------------------------------
   async createAdmin(admin: Admin): Promise<Admin> {
     try {
-
-      const newAdmin = await AdminModel.create({
+      const newAdmin = await this.baseCreate({
         name: admin.name,
         email: admin.email,
         password: admin.password,
-      });
-
+      } as AdminDocument);
 
       return new Admin(
         newAdmin.id,
@@ -66,7 +55,6 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
       if (err.code === 11000) {
         throw new ConflictError("Admin with this email already exists.");
       }
-
       throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
     }
   }

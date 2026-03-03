@@ -1,6 +1,7 @@
 import { Schema, Document, Types, model } from "mongoose";
 
 export interface ISlotModel extends Document {
+  _id: Types.ObjectId;
   ruleId: Types.ObjectId,
   userId: Types.ObjectId,
   date: string,
@@ -13,7 +14,9 @@ export interface ISlotModel extends Document {
   reservedUntil?: Date,
   reservedBy?: string,
   restrictedTo?: string,
-  bookingId?: string | null
+  bookingId?: string | null,
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 

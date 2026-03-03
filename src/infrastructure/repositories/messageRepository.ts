@@ -1,6 +1,7 @@
 import MessageModel from "../db/models/MessageModel";
 import { IMessageRepository } from "../../domain/repositories/IMessageRepository";
 import { Message } from "../../domain/entities/Message";
+import mongoose from "mongoose";
 
 import { BaseRepository } from "./BaseRepository";
 import { IMessageDocument } from "../db/models/MessageModel";
@@ -14,9 +15,9 @@ export class MessageRepository extends BaseRepository<IMessageDocument> implemen
 
   async save(message: Message): Promise<void> {
     try {
-      await MessageModel.create({
-        roomId: message.roomId,
-        senderId: message.senderId,
+      await this.baseCreate({
+        roomId: new mongoose.Types.ObjectId(message.roomId),
+        senderId: new mongoose.Types.ObjectId(message.senderId),
         senderRole: message.senderRole,
         content: message.content,
         type: message.type,
@@ -33,9 +34,7 @@ export class MessageRepository extends BaseRepository<IMessageDocument> implemen
 
   async getByRoom(roomId: string): Promise<Message[]> {
     try {
-      const docs = await MessageModel
-        .find({ roomId })
-        .sort({ createdAt: 1 });
+      const docs = await this.baseFindAll({ roomId }, { sort: { createdAt: 1 } });
 
       return docs.map(doc =>
         new Message(
@@ -59,7 +58,7 @@ export class MessageRepository extends BaseRepository<IMessageDocument> implemen
 
   async markMessagesAsRead(roomId: string, userId: string): Promise<void> {
     try {
-      await MessageModel.updateMany(
+      await this.model.updateMany(
         {
           roomId,
           senderId: { $ne: userId },
@@ -76,7 +75,8 @@ export class MessageRepository extends BaseRepository<IMessageDocument> implemen
 
   async deleteByRoomId(roomId: string): Promise<void> {
     try {
-      await MessageModel.deleteMany({ roomId: roomId });
+      await this.baseDelete(roomId);
+      await this.model.deleteMany({ roomId: roomId });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.DELETE_ERROR);
     }

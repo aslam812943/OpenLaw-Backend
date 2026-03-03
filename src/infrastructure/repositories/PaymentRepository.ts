@@ -17,7 +17,7 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> implemen
     }
     async create(payment: Partial<Payment>): Promise<Payment> {
         try {
-            const newPayment = await PaymentModel.create(payment);
+            const newPayment = await this.baseCreate(payment as unknown as Partial<IPaymentDocument>);
             return this.mapToEntity(newPayment);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
@@ -26,7 +26,7 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> implemen
 
     async findById(id: string): Promise<Payment | null> {
         try {
-            const payment = await PaymentModel.findById(id);
+            const payment = await this.baseFindById(id);
             return payment ? this.mapToEntity(payment) : null;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
@@ -35,7 +35,7 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> implemen
 
     async findByBookingId(bookingId: string): Promise<Payment | null> {
         try {
-            const payment = await PaymentModel.findOne({ bookingId });
+            const payment = await this.baseFindOne({ bookingId });
             return payment ? this.mapToEntity(payment) : null;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
@@ -44,7 +44,7 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> implemen
 
     async findByTransactionId(transactionId: string): Promise<Payment | null> {
         try {
-            const payment = await PaymentModel.findOne({ transactionId });
+            const payment = await this.baseFindOne({ transactionId });
             return payment ? this.mapToEntity(payment) : null;
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
@@ -81,13 +81,16 @@ export class PaymentRepository extends BaseRepository<IPaymentDocument> implemen
 
         try {
             const [payments, total] = await Promise.all([
-                PaymentModel.find(query)
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(limit)
-                    .populate('lawyerId', 'name')
-                    .populate('userId', 'name'),
-                PaymentModel.countDocuments(query)
+                this.baseFindAll(query, {
+                    sort: { createdAt: -1 },
+                    skip: skip,
+                    limit: limit,
+                    populate: [
+                        { path: 'lawyerId', select: 'name' },
+                        { path: 'userId', select: 'name' }
+                    ]
+                }),
+                this.baseCountDocuments(query)
             ]);
 
             return {

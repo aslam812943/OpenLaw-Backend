@@ -17,9 +17,9 @@ export class BaseRepository<T extends Document> {
         }
     }
 
-    async baseFindOne(filter: FilterQuery<T>): Promise<T | null> {
+    async baseFindOne(filter: FilterQuery<T>, options: QueryOptions = {}): Promise<T | null> {
         try {
-            return await this.model.findOne(filter).exec();
+            return await this.model.findOne(filter, null, options).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
         }

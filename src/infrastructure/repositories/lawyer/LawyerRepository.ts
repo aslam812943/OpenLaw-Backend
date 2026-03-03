@@ -28,7 +28,7 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
   // ------------------------------------------------------------
   async create(lawyer: Partial<Lawyer>): Promise<Lawyer> {
     try {
-      const lawyerDoc = await LawyerModel.create(lawyer);
+      const lawyerDoc = await this.baseCreate(lawyer as Partial<ILawyerDocument>);
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
       const err = error as { code?: number };
@@ -39,28 +39,19 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-  // ------------------------------------------------------------
-  //  findByEmail()
-  // ------------------------------------------------------------
   async findByEmail(email: string): Promise<Lawyer | null> {
     try {
-      const lawyerDoc = await LawyerModel.findOne({ email });
-
+      const lawyerDoc = await this.baseFindOne({ email });
       if (!lawyerDoc) return null;
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
-
       throw new InternalServerError(MessageConstants.REPOSITORY.EMAIL_FETCH_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  //  addVerificationDetils() - For submitting verification details
-  // ------------------------------------------------------------
   async addVerificationDetils(lawyer: VerificationLawyerDTO): Promise<Lawyer> {
     try {
-
-      const lawyerDoc = await LawyerModel.findByIdAndUpdate(
+      const lawyerDoc = await this.baseUpdate(
         lawyer.userId,
         {
           barNumber: lawyer.barNumber,
@@ -72,21 +63,16 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
           hasSubmittedVerification: true,
           verificationStatus: 'pending',
           isAdminVerified: false
-        },
-        { new: true }
+        }
       );
 
       if (!lawyerDoc) throw new Error("Lawyer not found for verification submission.");
-
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.VERIFICATION_SUBMISSION_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  //  findAll()
-  // ------------------------------------------------------------
   async findAll(query?: {
     page?: number;
     limit?: number;
@@ -104,7 +90,6 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
 
       const andConditions: mongoose.FilterQuery<ILawyerDocument>[] = [];
 
-
       if (search) {
         andConditions.push({
           $or: [
@@ -116,7 +101,6 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
         });
       }
 
-
       if (filter) {
         const lowerFilter = filter.toLowerCase();
         if (query?.fromAdmin) {
@@ -125,7 +109,6 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
           } else if (lowerFilter === "active") {
             andConditions.push({ isBlock: false });
           } else if (["approved", "rejected", "pending"].includes(lowerFilter)) {
-
             andConditions.push({ verificationStatus: { $regex: `^${filter}$`, $options: "i" } });
           } else {
             andConditions.push({
@@ -139,7 +122,6 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
         }
       }
 
-
       if (!query?.fromAdmin) {
         andConditions.push(
           { isBlock: false },
@@ -152,8 +134,6 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
       }
 
       const match = andConditions.length ? { $and: andConditions } : {};
-
-
       const sortOption: { [key: string]: mongoose.SortOrder } = {};
       switch (sort) {
         case "experience-asc":
@@ -167,12 +147,12 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
       }
 
       const [lawyerDocs, total] = await Promise.all([
-        LawyerModel.find(match)
-          .sort(sortOption)
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .exec(),
-        LawyerModel.countDocuments(match),
+        this.baseFindAll(match, {
+          sort: sortOption,
+          skip: (page - 1) * limit,
+          limit: limit
+        }),
+        this.baseCountDocuments(match),
       ]);
 
       return {
@@ -184,35 +164,25 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-
-  // ------------------------------------------------------------
-  //  blockLawyer()
-  // ------------------------------------------------------------
   async blockLawyer(id: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, { isBlock: true });
+      await this.baseUpdate(id, { isBlock: true });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.BLOCK_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  //  unBlockLawyer()
-  // ------------------------------------------------------------
   async unBlockLawyer(id: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, { isBlock: false });
+      await this.baseUpdate(id, { isBlock: false });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.UNBLOCK_ERROR);
     }
   }
 
-  // ------------------------------------------------------------
-  //  approveLawyer()
-  // ------------------------------------------------------------
   async approveLawyer(id: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, {
+      await this.baseUpdate(id, {
         isAdminVerified: true,
         verificationStatus: "Approved"
       });
@@ -221,12 +191,9 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-  // ------------------------------------------------------------
-  //  rejectLawyer()
-  // ------------------------------------------------------------
   async rejectLawyer(id: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, {
+      await this.baseUpdate(id, {
         isAdminVerified: false,
         verificationStatus: "Rejected"
       });
@@ -235,13 +202,10 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-  // ------------------------------------------------------------
-  //  findById()
-  // ------------------------------------------------------------
   async findById(id: string): Promise<Lawyer> {
     try {
       if (!id) throw new Error("Invalid ID: ID not provided");
-      const doc = await LawyerModel.findById(id);
+      const doc = await this.baseFindById(id);
       if (!doc) throw new Error(`Lawyer with ID ${id} not found`);
       return this.mapToDomain(doc);
     } catch (error: unknown) {
@@ -250,14 +214,11 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-  // ------------------------------------------------------------
-  //  updateProfile()
-  // ------------------------------------------------------------
   async updateProfile(id: string, dto: UpdateLawyerProfileDTO): Promise<void> {
     try {
       if (!id) throw new Error("Invalid ID: ID not provided");
 
-      const data = await LawyerModel.findById(id);
+      const data = await this.baseFindById(id);
       if (!data) throw new Error(`Lawyer with ID ${id} not found`);
 
       if (!data.Address) {
@@ -283,11 +244,8 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
-  // ------------------------------------------------------------
-  //  changePassword()
-  // ------------------------------------------------------------
   async changePassword(id: string, oldPass: string, newPass: string): Promise<void> {
-    const lawyer = await LawyerModel.findById(id);
+    const lawyer = await this.baseFindById(id);
     if (!lawyer) throw new NotFoundError('Lawyer not found');
 
     const match = await bcrypt.compare(oldPass, String(lawyer.password));
@@ -297,22 +255,18 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     await lawyer.save();
   }
 
-
   async updateGoogleId(id: string, googleId: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, { googleId });
+      await this.baseUpdate(id, { googleId });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.GOOGLE_ID_UPDATE_ERROR);
     }
   }
 
-
-
   async forgotpassword(id: string, hashedpassword: string): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(id, { password: hashedpassword })
+      await this.baseUpdate(id, { password: hashedpassword })
     } catch (error) {
-
     }
   }
 
@@ -332,8 +286,8 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
         status: 'active'
       });
 
-      await LawyerModel.findByIdAndUpdate(id, {
-        subscriptionId: subscriptionId,
+      await this.baseUpdate(id, {
+        subscriptionId: new mongoose.Types.ObjectId(subscriptionId) as unknown as mongoose.Types.ObjectId,
         paymentVerify: paymentVerified,
         subscriptionStartDate: startDate,
         subscriptionExpiryDate: expiryDate
@@ -379,7 +333,7 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
 
   async updateWalletBalance(lawyerId: string, amount: number): Promise<void> {
     try {
-      await LawyerModel.findByIdAndUpdate(lawyerId, {
+      await this.baseUpdate(lawyerId, {
         $inc: { walletBalance: amount }
       });
     } catch (error: unknown) {
