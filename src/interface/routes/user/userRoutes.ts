@@ -35,9 +35,9 @@ router.put('/profile/password', authMiddleware.execute, (req, res, next) => getP
 router.get('/wallet', authMiddleware.execute, (req, res, next) => walletController.getWallet(req, res, next));
 
 // Lawyer Routes
-router.get('/lawyers', authMiddleware.execute, (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next));
-router.get(`/lawyers/:id`, authMiddleware.execute, (req, res, next) => getSingleLawyerController.getLawyer(req, res, next));
-router.get(`/lawyers/slots/:id`, commonAuthMiddleware, (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
+router.get('/lawyers', (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next));
+router.get(`/lawyers/:id`,  (req, res, next) => getSingleLawyerController.getLawyer(req, res, next));
+router.get(`/lawyers/slots/:id`,  (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
 
 
 // Chat Routes
@@ -51,10 +51,10 @@ router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req,
 
 // Review Routes
 router.post("/review", authMiddleware.execute, (req, res, next) => reviewController.addReview(req, res, next));
-router.get('/review/:id', authMiddleware.execute, (req, res, next) => reviewController.getAllReviews(req, res, next));
+router.get('/review/:id',  (req, res, next) => reviewController.getAllReviews(req, res, next));
 
 // Specialization Routes
-router.get('/specializations', authMiddleware.execute, (req, res, next) => specializationController.getSpecializations(req, res, next));
+router.get('/specializations', (req, res, next) => specializationController.getSpecializations(req, res, next));
 
 // Notification Routes
 router.get("/notifications/:userId", authMiddleware.execute, (req, res, next) => notificationController.getNotifications(req, res, next));
