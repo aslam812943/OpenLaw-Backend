@@ -1,7 +1,6 @@
 import { Subscription } from "../../entities/Subscription"
 export interface ISubscriptionRepository {
     create(data: Subscription): Promise<void>
-    // findAll(): Promise<any[]>
     findAllSubscription(page: number, limit: number): Promise<{ plans: Subscription[], total: number }>
     findActive(page: number, limit: number): Promise<{ plans: Subscription[], total: number }>
     toggleStatus(id: string, status: boolean): Promise<void>

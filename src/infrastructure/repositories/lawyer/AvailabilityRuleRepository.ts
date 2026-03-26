@@ -21,7 +21,7 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
 
   async createRule(rule: CreateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      const createData: any = {
+      const createData: Partial<IAvailabilityRule> = {
         ...rule,
         lawyerId: new mongoose.Types.ObjectId(rule.lawyerId)
       };
@@ -50,7 +50,7 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
 
   async updateRule(ruleId: string, updated: UpdateAvailabilityRuleDTO): Promise<AvailabilityRule> {
     try {
-      const doc = await this.baseUpdate(ruleId, updated as any);
+      const doc = await this.baseUpdate(ruleId, updated as Partial<IAvailabilityRule>);
 
       if (!doc) {
         throw new NotFoundError("Rule not found for update");
@@ -262,10 +262,39 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
         .populate("userId", "name")
         .lean();
 
-      return (docs as any[]).map((o: any) => {
+      return (docs as unknown as Array<{
+        _id: mongoose.Types.ObjectId;
+        userId: { _id: mongoose.Types.ObjectId; name: string } | mongoose.Types.ObjectId;
+        lawyerId: mongoose.Types.ObjectId;
+        date: string;
+        startTime: string;
+        endTime: string;
+        consultationFee: number;
+        status: string;
+        paymentStatus: string;
+        paymentId?: string;
+        stripeSessionId?: string;
+        description?: string;
+        cancellationReason?: string;
+        refundAmount?: number;
+        refundStatus?: string;
+        isCallActive?: boolean;
+        lawyerJoined?: boolean;
+        commissionPercent: number;
+        lawyerFeedback?: string;
+        createdAt: Date;
+      }>).map((o) => {
+        const userId = o.userId;
+        const userIdStr = (userId && typeof userId === 'object' && '_id' in userId)
+          ? String(userId._id)
+          : String(userId);
+        const userName = (userId && typeof userId === 'object' && 'name' in userId)
+          ? userId.name
+          : "Unknown";
+
         return new Booking(
           String(o._id),
-          o.userId?._id ? String(o.userId._id) : String(o.userId),
+          userIdStr,
           String(o.lawyerId),
           o.date,
           o.startTime,
@@ -276,7 +305,7 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
           o.paymentId,
           o.stripeSessionId,
           o.description,
-          o.userId?.name || "Unknown",
+          userName,
           o.cancellationReason,
           "",
           o.refundAmount,
