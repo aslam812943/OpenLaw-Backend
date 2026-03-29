@@ -44,6 +44,7 @@ export class UserAuthMiddleware {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === 'true',
             sameSite: cookieSameSite,
+            domain: process.env.COOKIE_DOMAIN,
             path: '/',
             maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
           });
@@ -78,6 +79,7 @@ export class UserAuthMiddleware {
                   httpOnly: true,
                   secure: process.env.COOKIE_SECURE === 'true',
                   sameSite: cookieSameSite,
+                  domain: process.env.COOKIE_DOMAIN,
                   path: '/',
                   maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
                 });
@@ -113,6 +115,7 @@ export class UserAuthMiddleware {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === 'true',
             sameSite: cookieSameSite,
+            domain: process.env.COOKIE_DOMAIN,
             path: '/'
           });
 
@@ -120,6 +123,7 @@ export class UserAuthMiddleware {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === 'true',
             sameSite: cookieSameSite,
+            domain: process.env.COOKIE_DOMAIN,
             path: '/'
           });
         }
