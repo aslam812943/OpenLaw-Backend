@@ -14,6 +14,7 @@ import { MessageConstants } from "../../../infrastructure/constants/MessageConst
 import { ITokenService } from "../../../application/interface/services/TokenServiceInterface";
 import { UserRole } from "../../../infrastructure/interface/enums/UserRole";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
+import { getCookieOptions } from "../../../infrastructure/utils/CookieOptions";
 
 export class AuthController {
   constructor(
@@ -86,25 +87,8 @@ export class AuthController {
       const dto = new LoginUserDTO(req.body);
       const { token, refreshToken, user } = await this._loginUserUseCase.execute(dto);
 
-      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-      res.cookie("accessToken", token, {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/',
-        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-      });
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/',
-        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000,
-      });
+      res.cookie("accessToken", token, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
+      res.cookie("refreshToken", refreshToken, getCookieOptions(Number(process.env.REFRESH_TOKEN_MAX_AGE) || 7 * 24 * 60 * 60 * 1000));
 
       const message = user.role === UserRole.LAWYER ? MessageConstants.LAWYER.LOGIN_SUCCESS : (user.role === UserRole.ADMIN ? MessageConstants.ADMIN.LOGIN_SUCCESS : MessageConstants.USER.LOGIN_SUCCESS);
       return ApiResponse.success(res, HttpStatusCode.OK, message, {
@@ -119,23 +103,8 @@ export class AuthController {
 
   async logoutUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-      res.clearCookie("accessToken", {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/'
-      });
-
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/'
-      });
+      res.clearCookie("accessToken", getCookieOptions());
+      res.clearCookie("refreshToken", getCookieOptions());
 
       const accessToken = req.cookies?.accessToken;
       let logoutMessage: string = MessageConstants.COMMON.SUCCESS;
@@ -172,25 +141,8 @@ export class AuthController {
         return;
       }
 
-      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-
-      res.cookie("accessToken", result.token, {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/',
-        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE)
-      });
-      res.cookie("refreshToken", result.refreshToken, {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/',
-        maxAge: Number(process.env.REFRESH_TOKEN_MAX_AGE)
-      });
+      res.cookie("accessToken", result.token, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE)));
+      res.cookie("refreshToken", result.refreshToken, getCookieOptions(Number(process.env.REFRESH_TOKEN_MAX_AGE)));
 
       return ApiResponse.success(res, HttpStatusCode.OK, "Google login successful.", {
         token: result.token,
@@ -213,16 +165,7 @@ export class AuthController {
       const decoded = this._tokenService.verifyToken(refreshToken, true);
       const newAccessToken = this._tokenService.generateAccessToken(decoded.id, decoded.role, decoded.isBlock);
 
-      const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-      res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.COOKIE_SECURE === 'true',
-        sameSite: cookieSameSite,
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/',
-        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-      });
+      res.cookie("accessToken", newAccessToken, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
 
       return ApiResponse.success(res, HttpStatusCode.OK, "Token refreshed successfully", { token: newAccessToken });
     } catch (error: unknown) {

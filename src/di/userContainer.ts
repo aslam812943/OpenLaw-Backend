@@ -30,7 +30,7 @@ import { AddReviewUseCase } from "../application/useCases/user/review/AddReviewU
 import { GetAllReviewsUseCase } from "../application/useCases/lawyer/review/GetAllReviewsUseCase";
 
 // Cloudinary Upload Service
-import { upload } from "../infrastructure/services/cloudinary/CloudinaryConfig";
+import { upload, imageUpload } from "../infrastructure/services/cloudinary/CloudinaryConfig";
 
 import { UserAuthMiddleware } from "../interface/middlewares/UserAuthMiddleware";
 
@@ -204,6 +204,6 @@ export const authController = new AuthController(
     tokenService
 );
 
-export { upload };
+export { upload, imageUpload };
 
 

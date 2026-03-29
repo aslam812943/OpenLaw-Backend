@@ -74,11 +74,17 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
         } as GoogleAuthResponseDTO;
       }
 
+      const allowedRoles = [UserRole.USER, UserRole.LAWYER];
+      if (role && !allowedRoles.includes(role)) {
+        throw new BadRequestError(`Invalid role. Allowed roles are: ${allowedRoles.join(", ")}`);
+      }
+      const assignedRole = role || UserRole.USER;
+
       const newUser = {
-        name: `${firstName} ${lastName}`,
+        name: [firstName, lastName].filter(Boolean).join(' '),
         email: email!,
         googleId,
-        role,
+        role: assignedRole,
         hasSubmittedVerification: false,
         isVerified: true,
         isBlock: false

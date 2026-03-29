@@ -4,6 +4,7 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { ICheckUserStatusUseCase } from "../../application/interface/use-cases/user/ICheckUserStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 import { MessageConstants } from "../../infrastructure/constants/MessageConstants";
+import { getCookieOptions } from "../../infrastructure/utils/CookieOptions";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
 import { JwtPayload } from "../../types/express/index";
@@ -38,16 +39,8 @@ export class UserAuthMiddleware {
           }
 
           const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
-          const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
 
-          res.cookie("accessToken", newAccessToken, {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: cookieSameSite,
-            domain: process.env.COOKIE_DOMAIN,
-            path: '/',
-            maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-          });
+          res.cookie("accessToken", newAccessToken, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
 
           decoded = refreshDecoded;
         } catch (refreshError) {
@@ -73,16 +66,7 @@ export class UserAuthMiddleware {
               const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
               if (refreshDecoded.role === UserRole.USER) {
-                const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-                res.cookie("accessToken", newAccessToken, {
-                  httpOnly: true,
-                  secure: process.env.COOKIE_SECURE === 'true',
-                  sameSite: cookieSameSite,
-                  domain: process.env.COOKIE_DOMAIN,
-                  path: '/',
-                  maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-                });
+                res.cookie("accessToken", newAccessToken, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
               } else {
                 res.status(HttpStatusCode.FORBIDDEN).json({ success: false, message: MessageConstants.AUTH.INVALID_ROLE });
                 return;
@@ -108,24 +92,9 @@ export class UserAuthMiddleware {
       const status = await this._checkUserStatusUseCase.check(decoded.id);
 
       if (!status.isActive) {
-        const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
         if (decoded.role == UserRole.USER) {
-          res.clearCookie("accessToken", {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: cookieSameSite,
-            domain: process.env.COOKIE_DOMAIN,
-            path: '/'
-          });
-
-          res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: cookieSameSite,
-            domain: process.env.COOKIE_DOMAIN,
-            path: '/'
-          });
+          res.clearCookie("accessToken", getCookieOptions());
+          res.clearCookie("refreshToken", getCookieOptions());
         }
 
         res.status(HttpStatusCode.FORBIDDEN).json({

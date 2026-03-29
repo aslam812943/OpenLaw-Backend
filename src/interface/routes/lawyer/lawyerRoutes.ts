@@ -17,7 +17,8 @@ import {
   lawyerDashboardController,
   specializationController,
   lawyerAuthMiddleware,
-  upload
+  upload,
+  imageUpload
 } from "../../../di/lawyerContainer";
 import { notificationController } from "../../../di/container";
 
@@ -53,7 +54,7 @@ router.delete("/schedule/delete/:ruleId", (req, res, next) =>
 
 router.get('/profile', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.getDetails(req, res, next));
 
-router.put('/profile/update', lawyerAuthMiddleware.execute, upload.single('profileImage'), (req, res, next) => getProfileController.updateProfile(req, res, next));
+router.put('/profile/update', lawyerAuthMiddleware.execute, imageUpload.single('profileImage'), (req, res, next) => getProfileController.updateProfile(req, res, next));
 
 router.put('/profile/password', lawyerAuthMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next));
 

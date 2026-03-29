@@ -24,12 +24,22 @@ export class UserRegisterDTO {
       throw new BadRequestError("A valid email address is required");
     }
 
+    if (!data.password || data.password.length < 6) {
+      throw new BadRequestError("Password must be at least 6 characters long");
+    }
+
     this.name = data.name;
     this.email = data.email;
     this.phone = Number(data.phone);
-    this.password = data.password ?? '';
+    this.password = data.password;
     this.isVerified = false;
+
+    const allowedRoles = ["user", "lawyer"];
+    if (data.role && !allowedRoles.includes(data.role)) {
+      throw new BadRequestError(`Invalid role. Allowed roles are: ${allowedRoles.join(", ")}`);
+    }
     this.role = data.role || "user";
-    this.isBlock = data.isBlock || false;
+
+    this.isBlock = false;
   }
 }

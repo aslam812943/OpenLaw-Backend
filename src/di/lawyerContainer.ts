@@ -30,7 +30,7 @@ import { ReviewRepository } from "../infrastructure/repositories/ReviewRepositor
 // Services
 import { TokenService } from "../infrastructure/services/jwt/TokenService";
 import { StripeService } from "../infrastructure/services/StripeService";
-import { upload } from "../infrastructure/services/cloudinary/CloudinaryConfig";
+import { upload, imageUpload } from "../infrastructure/services/cloudinary/CloudinaryConfig";
 import { SlotGeneratorService } from "../infrastructure/services/SlotGenerator/SlotGeneratorService";
 
 // Middlewares
@@ -173,4 +173,4 @@ export const specializationController = new SpecializationController(getActiveSp
 // ============================================================================
 export const lawyerAuthMiddleware = new LawyerAuthMiddleware(checkLawyerStatusUseCase, tokenService);
 
-export { upload };
+export { upload, imageUpload };

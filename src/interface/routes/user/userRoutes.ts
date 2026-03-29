@@ -10,7 +10,8 @@ import {
   reviewController,
   walletController,
   authMiddleware,
-  upload
+  upload,
+  imageUpload
 } from "../../../di/userContainer";
 import { notificationController } from "../../../di/container";
 import { commonAuthMiddleware } from "../../middlewares/CommonAuthMiddleware";
@@ -30,14 +31,14 @@ router.post("/refresh", (req, res) => authController.refreshToken(req, res));
 
 // Profile Routes
 router.get('/profile', authMiddleware.execute, (req, res, next) => { getProfileController.getProfileDetails(req, res, next) });
-router.put("/profile/update", authMiddleware.execute, upload.single("profileImage"), (req, res, next) => getProfileController.editProfile(req, res, next));
+router.put("/profile/update", authMiddleware.execute, imageUpload.single("profileImage"), (req, res, next) => getProfileController.editProfile(req, res, next));
 router.put('/profile/password', authMiddleware.execute, (req, res, next) => getProfileController.changePassword(req, res, next));
 router.get('/wallet', authMiddleware.execute, (req, res, next) => walletController.getWallet(req, res, next));
 
 // Lawyer Routes
 router.get('/lawyers', (req, res, next) => getAllLawyersController.getAllLawyers(req, res, next));
-router.get(`/lawyers/:id`,  (req, res, next) => getSingleLawyerController.getLawyer(req, res, next));
-router.get(`/lawyers/slots/:id`,  (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
+router.get(`/lawyers/:id`, (req, res, next) => getSingleLawyerController.getLawyer(req, res, next));
+router.get(`/lawyers/slots/:id`, (req, res, next) => getSingleLawyerController.getAllSlots(req, res, next));
 
 
 // Chat Routes
@@ -51,7 +52,7 @@ router.post("/chat/upload", authMiddleware.execute, upload.single("file"), (req,
 
 // Review Routes
 router.post("/review", authMiddleware.execute, (req, res, next) => reviewController.addReview(req, res, next));
-router.get('/review/:id',  (req, res, next) => reviewController.getAllReviews(req, res, next));
+router.get('/review/:id', (req, res, next) => reviewController.getAllReviews(req, res, next));
 
 // Specialization Routes
 router.get('/specializations', (req, res, next) => specializationController.getSpecializations(req, res, next));

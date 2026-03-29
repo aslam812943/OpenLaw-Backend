@@ -4,6 +4,7 @@ import { HttpStatusCode } from "../../infrastructure/interface/enums/HttpStatusC
 import { ICheckLawyerStatusUseCase } from "../../application/interface/use-cases/lawyer/ICheckLawyerStatusUseCase";
 import { ITokenService } from "../../application/interface/services/TokenServiceInterface";
 import { MessageConstants } from "../../infrastructure/constants/MessageConstants";
+import { getCookieOptions } from "../../infrastructure/utils/CookieOptions";
 
 import { UserRole } from "../../infrastructure/interface/enums/UserRole";
 import { JwtPayload } from "../../types/express/index";
@@ -39,16 +40,7 @@ export class LawyerAuthMiddleware {
 
                     const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
-                    const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-                    res.cookie("accessToken", newAccessToken, {
-                        httpOnly: true,
-                        secure: process.env.COOKIE_SECURE === 'true',
-                        sameSite: cookieSameSite,
-                        domain: process.env.COOKIE_DOMAIN,
-                        path: '/',
-                        maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-                    });
+                    res.cookie("accessToken", newAccessToken, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
 
                     decoded = refreshDecoded;
                 } catch (refreshError) {
@@ -78,16 +70,7 @@ export class LawyerAuthMiddleware {
 
                             const newAccessToken = this._tokenService.generateAccessToken(refreshDecoded.id, refreshDecoded.role, refreshDecoded.isBlock);
 
-                            const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-                            res.cookie("accessToken", newAccessToken, {
-                                httpOnly: true,
-                                secure: process.env.COOKIE_SECURE === 'true',
-                                sameSite: cookieSameSite,
-                                domain: process.env.COOKIE_DOMAIN,
-                                path: '/',
-                                maxAge: Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000,
-                            });
+                            res.cookie("accessToken", newAccessToken, getCookieOptions(Number(process.env.ACCESS_TOKEN_MAX_AGE) || 15 * 60 * 1000));
 
                             decoded = refreshDecoded;
                         } catch (refreshError) {
@@ -113,23 +96,8 @@ export class LawyerAuthMiddleware {
 
             if (!status.isActive) {
 
-                const cookieSameSite = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
-
-                res.clearCookie("accessToken", {
-                    httpOnly: true,
-                    secure: process.env.COOKIE_SECURE === 'true',
-                    sameSite: cookieSameSite,
-                    domain: process.env.COOKIE_DOMAIN,
-                    path: '/'
-                });
-
-                res.clearCookie("refreshToken", {
-                    httpOnly: true,
-                    secure: process.env.COOKIE_SECURE === 'true',
-                    sameSite: cookieSameSite,
-                    domain: process.env.COOKIE_DOMAIN,
-                    path: '/'
-                });
+                res.clearCookie("accessToken", getCookieOptions());
+                res.clearCookie("refreshToken", getCookieOptions());
 
 
                 res.status(HttpStatusCode.FORBIDDEN).json({
