@@ -8,7 +8,7 @@ export class ResponseGetProfileDTO {
         public practiceAreas: string[],
         public languages: string[],
         public documentUrls: string[],
-        public address: (string | number)[],
+        public Address: object,
         public name: string,
         public email: string,
         public phone: number,

@@ -5,14 +5,14 @@ export class GetProfileMapper {
   static toDTO(data: Lawyer): ResponseGetProfileDTO {
 
 
-    const addressArray = data.addresses
-      ? [
-        data.addresses.address,
-        data.addresses.city,
-        data.addresses.state,
-        data.addresses.pincode
-      ]
-      : [];
+    const addressObject = data.addresses
+      ? {
+        address: data.addresses.address,
+        city: data.addresses.city,
+        state: data.addresses.state,
+        pincode: data.addresses.pincode
+      }
+      : {};
 
     const response = new ResponseGetProfileDTO(
       data.id ?? "",
@@ -22,7 +22,7 @@ export class GetProfileMapper {
       data.practiceAreas ?? [],
       data.languages ?? [],
       data.documentUrls ?? [],
-      addressArray,
+      addressObject,
       data.name,
       data.email,
       data.phone ?? 0,
