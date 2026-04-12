@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   password?: string;
-  phone: number;
+  phone?: number;
   isVerified: boolean;
   role: UserRole;
   isBlock: boolean;

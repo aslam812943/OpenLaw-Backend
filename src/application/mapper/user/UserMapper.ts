@@ -8,7 +8,7 @@ export class UserMapper {
       name: dto.name,
       email: dto.email,
       password: String(dto.password),
-      phone: Number(dto.phone),
+      phone: dto.phone ? Number(dto.phone) : undefined,
       isVerified: dto.isVerified ?? false,
       role: (dto.role as UserRole) ?? UserRole.USER,
       isBlock: dto.isBlock,

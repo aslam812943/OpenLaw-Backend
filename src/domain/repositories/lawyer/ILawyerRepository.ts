@@ -5,6 +5,7 @@ export interface ILawyerRepository {
   addVerificationDetils(lawyer: VerificationLawyerDTO): Promise<Lawyer>;
   create(lawyer: Partial<Lawyer>): Promise<Lawyer>;
   findByEmail(email: string): Promise<Lawyer | null>;
+  findByBarNumber(barNumber: string): Promise<Lawyer | null>;
   findAll(query?: { page?: number; limit?: number; search?: string; fromAdmin?: boolean; sort?: string; filter?: string }): Promise<{ lawyers: Lawyer[]; total: number }>;
   blockLawyer(id: string): Promise<void>;
   unBlockLawyer(id: string): Promise<void>;

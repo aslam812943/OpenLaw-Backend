@@ -3,7 +3,7 @@ import { BadRequestError } from "../../../infrastructure/errors/BadRequestError"
 export class UserRegisterDTO {
   name: string;
   email: string;
-  phone: number;
+  phone?: number;
   password?: string;
   isVerified?: boolean;
   role: string;
@@ -14,9 +14,12 @@ export class UserRegisterDTO {
       throw new BadRequestError("Name must be between 3 and 25 characters");
     }
 
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!data.phone || !phoneRegex.test(data.phone.toString())) {
-      throw new BadRequestError("Phone number must contain exactly 10 digits");
+    if (data.phone) {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(data.phone.toString())) {
+        throw new BadRequestError("Phone number must contain exactly 10 digits");
+      }
+      this.phone = Number(data.phone);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

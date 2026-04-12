@@ -27,6 +27,7 @@ const router = Router();
 
 router.post(
   "/verifyDetils",
+  lawyerAuthMiddleware.execute,
   upload.array("documents"),
   (req, res, next) => lawyerController.registerLawyer(req, res, next)
 );

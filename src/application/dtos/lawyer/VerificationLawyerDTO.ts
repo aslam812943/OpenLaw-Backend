@@ -1,39 +1,53 @@
-export class VerificationLawyerDTO{
-     userId: string;
-    //  fullName:string;
-    //  email:string;
-    //  phone:string;
-    barNumber:string;
-    barAdmissionDate:string;
-    yearsOfPractice:number;
-    practiceAreas:string[];
-    languages:string[];
-    documentUrls:string[];
+export class VerificationLawyerDTO {
+  userId: string;
+  //  fullName:string;
+  //  email:string;
+  //  phone:string;
+  barNumber: string;
+  barAdmissionDate: string;
+  yearsOfPractice: number;
+  practiceAreas: string[];
+  languages: string[];
+  documentUrls: string[];
 
 
-    constructor(data:Partial<VerificationLawyerDTO>){
+  constructor(data: Partial<VerificationLawyerDTO>) {
 
-if(!data.userId){
-  throw new Error('User id required')
-}
-
-
+    if (!data.userId) {
+      throw new Error('User id required')
+    }
 
 
-         if(!data.barNumber||data.barNumber.trim().length<3){
-            throw new Error('Bar number is required and must be valid')
-         }
 
-         if(!data.barAdmissionDate||isNaN(Date.parse(data.barAdmissionDate))){
-            throw new Error('A valid bar admission date is required')
-         }
 
-           if (
+    if (!data.barNumber || data.barNumber.trim().length < 3) {
+      throw new Error('Bar number is required and must be valid')
+    }
+
+    if (!data.barAdmissionDate || isNaN(Date.parse(data.barAdmissionDate))) {
+      throw new Error('A valid bar admission date is required')
+    }
+
+    const admissionDate = new Date(data.barAdmissionDate);
+    const today = new Date();
+    if (admissionDate > today) {
+      throw new Error('Bar admission date cannot be in the future');
+    }
+
+    const currentYear = today.getFullYear();
+    const admissionYear = admissionDate.getFullYear();
+    const maxPossibleYears = currentYear - admissionYear;
+
+    if (
       data.yearsOfPractice === undefined ||
       data.yearsOfPractice < 0 ||
       !Number.isInteger(data.yearsOfPractice)
     ) {
       throw new Error("Years of practice must be a non-negative integer");
+    }
+
+    if (data.yearsOfPractice > maxPossibleYears) {
+      throw new Error(`Years of practice (${data.yearsOfPractice}) cannot be greater than years since bar admission (${maxPossibleYears})`);
     }
 
     if (!data.practiceAreas || !Array.isArray(data.practiceAreas) || data.practiceAreas.length === 0) {
@@ -48,7 +62,7 @@ if(!data.userId){
       throw new Error("At least one document URL is required for verification");
     }
 
-   this.userId = data.userId
+    this.userId = data.userId
     this.barNumber = data.barNumber;
     this.barAdmissionDate = data.barAdmissionDate;
     this.yearsOfPractice = data.yearsOfPractice;
@@ -58,5 +72,5 @@ if(!data.userId){
     // this.fullName = data.fullName;
     // this.email = data.email;
     // this.phone = data.phone
-    }
+  }
 }

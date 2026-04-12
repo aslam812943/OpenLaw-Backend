@@ -49,8 +49,24 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
+  async findByBarNumber(barNumber: string): Promise<Lawyer | null> {
+    try {
+      const lawyerDoc = await this.baseFindOne({ barNumber });
+      if (!lawyerDoc) return null;
+      return this.mapToDomain(lawyerDoc);
+    } catch (error: unknown) {
+      throw new InternalServerError("Error while fetching lawyer by bar number.");
+    }
+  }
+
   async addVerificationDetils(lawyer: VerificationLawyerDTO): Promise<Lawyer> {
     try {
+      // Check if bar number is already used by another account
+      const existingLawyer = await this.findByBarNumber(lawyer.barNumber);
+      if (existingLawyer && existingLawyer.id !== lawyer.userId) {
+        throw new ConflictError("This Bar Number is already registered with another account.");
+      }
+
       const lawyerDoc = await this.baseUpdate(
         lawyer.userId,
         {
@@ -69,6 +85,7 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
       if (!lawyerDoc) throw new Error("Lawyer not found for verification submission.");
       return this.mapToDomain(lawyerDoc);
     } catch (error: unknown) {
+      if (error instanceof ConflictError) throw error;
       throw new InternalServerError(MessageConstants.REPOSITORY.VERIFICATION_SUBMISSION_ERROR);
     }
   }
