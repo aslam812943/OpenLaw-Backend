@@ -23,6 +23,7 @@ import { WalletRepository } from "../infrastructure/repositories/user/WalletRepo
 import { ChatRoomRepository } from "../infrastructure/repositories/ChatRoomRepository";
 import { MessageRepository } from "../infrastructure/repositories/messageRepository";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
+import { AdminRepository } from "../infrastructure/repositories/admin/AdminRepository";
 import { PaymentRepository } from "../infrastructure/repositories/PaymentRepository";
 import { WithdrawalRepository } from "../infrastructure/repositories/WithdrawalRepository";
 import { ReviewRepository } from "../infrastructure/repositories/ReviewRepository";
@@ -114,7 +115,9 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     walletRepository,
     sendNotificationUseCase,
     chatRoomRepository,
-    messageRepository
+    messageRepository,
+    new AdminRepository(),
+    subscriptionRepository
 );
 
 const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase, availabilityRuleRepository, lawyerRepository);

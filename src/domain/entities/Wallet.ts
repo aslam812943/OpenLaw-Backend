@@ -12,6 +12,7 @@ export interface WalletTransaction {
         date?: string;
         time?: string;
         displayId?: string;
+        [key: string]: any;
     };
 }
 export class Wallet {

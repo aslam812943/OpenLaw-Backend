@@ -6,6 +6,7 @@ import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IWalletRepository } from "../../../domain/repositories/IWalletRepository";
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
+import { IAdminRepository } from "../../../domain/repositories/admin/IAdminRepository";
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
@@ -19,7 +20,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private _walletRepository: IWalletRepository,
         private _sendNotificationUseCase: ISendNotificationUseCase,
         private _chatRoomRepository: IChatRoomRepository,
-        private _messageRepository: IMessageRepository
+        private _messageRepository: IMessageRepository,
+        private _adminRepository: IAdminRepository
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -45,16 +47,16 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         const now = new Date();
         const createdAt = booking.createdAt || now;
         const timeSinceBooking = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-        const diffInHours = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         let refundAmount = 0;
         let refundStatus: 'full' | 'partial' = 'full';
 
-        if (diffInHours >= 24 || timeSinceBooking < 24) {
+   
+        if (timeSinceBooking <= 48) {
             refundAmount = booking.consultationFee;
             refundStatus = 'full';
         } else {
-            refundAmount = booking.consultationFee * 0.5;
+            refundAmount = booking.consultationFee * 0.7;
             refundStatus = 'partial';
         }
 
@@ -64,7 +66,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
 
             const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
 
-            // Credit user wallet
+           
             await this._walletRepository.addTransaction(booking.userId, refundAmount, {
                 type: 'credit',
                 amount: refundAmount,
@@ -82,6 +84,27 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
                 }
             });
 
+           
+            if (refundStatus === 'partial') {
+                const retainedAmount = booking.consultationFee - refundAmount;
+                const commissionPercent = booking.commissionPercent || 0;
+
+                const adminShare = retainedAmount * (commissionPercent / 100);
+                const lawyerShare = retainedAmount - adminShare;
+
+            
+                await this._lawyerRepository.updateWalletBalance(booking.lawyerId, lawyerShare);
+
+                
+                await this._adminRepository.updateWalletBalance(adminShare);
+
+                await this._sendNotificationUseCase.execute(
+                    booking.lawyerId,
+                    `You have received ₹${lawyerShare.toFixed(2)} as a cancellation fee share for appointment ${booking.bookingId}.`,
+                    'WALLET_CREDIT',
+                    { appointmentId: bookingId, amount: lawyerShare }
+                );
+            }
 
             if (booking.status === 'completed') {
                 await this._lawyerRepository.updateWalletBalance(booking.lawyerId, -refundAmount);
@@ -93,7 +116,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             status: refundStatus
         });
 
-        // Notify User about refund
+       
         if (refundAmount > 0) {
             await this._sendNotificationUseCase.execute(
                 booking.userId,
@@ -103,7 +126,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             );
         }
 
-        // Notify Lawyer about cancellation
+    
         await this._sendNotificationUseCase.execute(
             booking.lawyerId,
             `User cancelled appointment (${booking.bookingId}) for ${booking.date} at ${booking.startTime}. Reason: ${reason}`,

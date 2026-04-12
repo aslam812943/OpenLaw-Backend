@@ -13,13 +13,36 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     async execute(subscriptionData: CreateSubscriptionDTO): Promise<void> {
 
 
-        if (!subscriptionData.planName || !subscriptionData.duration || !subscriptionData.durationUnit || subscriptionData.price < 50 || subscriptionData.commissionPercent < 0 || subscriptionData.commissionPercent > 50) {
-            throw new BadRequestError("Invalid subscription data: Price must be at least 50 and Commission must be between 0 and 50.");
+        if (
+            !subscriptionData.planName ||
+            !subscriptionData.duration ||
+            !subscriptionData.durationUnit ||
+            subscriptionData.price < 50 ||
+            subscriptionData.commissionPercent === undefined ||
+            subscriptionData.commissionPercent === null ||
+            isNaN(subscriptionData.commissionPercent) ||
+            subscriptionData.commissionPercent < 0 ||
+            subscriptionData.commissionPercent > 50 ||
+            subscriptionData.lawyerCancellationPenaltyPercent === undefined ||
+            subscriptionData.lawyerCancellationPenaltyPercent === null ||
+            isNaN(subscriptionData.lawyerCancellationPenaltyPercent) ||
+            subscriptionData.lawyerCancellationPenaltyPercent < 0 ||
+            subscriptionData.lawyerCancellationPenaltyPercent > 10
+        ) {
+            throw new BadRequestError("Invalid subscription data: Price >= 50, Commission 0-50%, and Cancellation Penalty 0-10%.");
         }
 
 
         try {
-            const subscription = new Subscription('', subscriptionData.planName, Number(subscriptionData.duration), subscriptionData.durationUnit, Number(subscriptionData.price), Number(subscriptionData.commissionPercent))
+            const subscription = new Subscription(
+                '',
+                subscriptionData.planName,
+                Number(subscriptionData.duration),
+                subscriptionData.durationUnit,
+                Number(subscriptionData.price),
+                Number(subscriptionData.commissionPercent),
+                Number(subscriptionData.lawyerCancellationPenaltyPercent)
+            )
             await this._subscriptionRepository.create(subscription);
         } catch (error: unknown) {
             if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {

@@ -6,6 +6,7 @@ export class SubscriptionDTO {
         public durationUnit: string,
         public price: number,
         public commissionPercent: number,
+        public lawyerCancellationPenaltyPercent: number,
         public isActive: boolean,
         public expiryDate?: Date | string
     ) { }

@@ -324,7 +324,13 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
                                 $cond: [
                                     { $in: ["$status", ["confirmed", "completed", "follow-up"]] },
                                     "$consultationFee",
-                                    0
+                                    {
+                                        $cond: [
+                                            { $and: [{ $eq: ["$status", "cancelled"] }, { $eq: ["$refundStatus", "partial"] }] },
+                                            { $subtract: ["$consultationFee", "$refundAmount"] },
+                                            0
+                                        ]
+                                    }
                                 ]
                             }
                         },

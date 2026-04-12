@@ -10,6 +10,7 @@ export class SubscriptionMapper {
             subscription.durationUnit,
             subscription.price,
             subscription.commissionPercent,
+            subscription.lawyerCancellationPenaltyPercent,
             subscription.isActive,
             expiryDate
         );

@@ -19,7 +19,14 @@ export class AdminSubscriptionController {
 
     async createSubscription(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            const dto = new CreateSubscriptionDTO(req.body.planName, Number(req.body.duration), req.body.durationUnit, Number(req.body.price), Number(req.body.commissionPercent))
+            const dto = new CreateSubscriptionDTO(
+                req.body.planName,
+                Number(req.body.duration),
+                req.body.durationUnit,
+                Number(req.body.price),
+                Number(req.body.commissionPercent),
+                Number(req.body.lawyerCancellationPenaltyPercent)
+            )
             await this._createSubscriptionUseCase.execute(dto);
 
             return ApiResponse.success(res, HttpStatusCode.CREATED, MessageConstants.SUBSCRIPTION.CREATE_SUCCESS);
@@ -37,7 +44,8 @@ export class AdminSubscriptionController {
                 Number(req.body.duration),
                 req.body.durationUnit,
                 Number(req.body.price),
-                Number(req.body.commissionPercent)
+                Number(req.body.commissionPercent),
+                Number(req.body.lawyerCancellationPenaltyPercent)
             );
             await this._updateSubscriptionUseCase.execute(dto);
 

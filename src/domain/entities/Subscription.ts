@@ -6,6 +6,7 @@ export class Subscription {
         public durationUnit: string,
         public price: number,
         public commissionPercent: number,
+        public lawyerCancellationPenaltyPercent: number,
         public isActive: boolean = true
     ) { }
 }
