@@ -21,10 +21,13 @@ const storage = new CloudinaryStorage({
       .replace(/\s+/g, '_')
       .replace(/[^\w-]/g, '');
 
+    const publicId = `${Date.now()}-${sanitizedName}`;
+ 
+
     return {
       folder: "Lawyers_Documents",
       resource_type: "auto",
-      public_id: `${Date.now()}-${sanitizedName}`,
+      public_id: publicId,
     };
   },
 });
@@ -32,8 +35,16 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 7 * 1024 * 1024,
+    fileSize: 10 * 1024 * 1024, // 10MB to match frontend
   },
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF, JPG, and PNG files are allowed!'));
+    }
+  }
 });
 
 const imageUpload = multer({

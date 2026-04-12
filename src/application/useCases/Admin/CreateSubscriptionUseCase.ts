@@ -15,7 +15,7 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
 
         if (
             !subscriptionData.planName ||
-            !subscriptionData.duration ||
+            Number(subscriptionData.duration) <= 0 ||
             !subscriptionData.durationUnit ||
             subscriptionData.price < 50 ||
             subscriptionData.commissionPercent === undefined ||
@@ -29,7 +29,7 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
             subscriptionData.lawyerCancellationPenaltyPercent < 0 ||
             subscriptionData.lawyerCancellationPenaltyPercent > 10
         ) {
-            throw new BadRequestError("Invalid subscription data: Price >= 50, Commission 0-50%, and Cancellation Penalty 0-10%.");
+            throw new BadRequestError("Invalid subscription data: Duration must be > 0, Price >= 50, Commission 0-50%, and Cancellation Penalty 0-10%.");
         }
 
 

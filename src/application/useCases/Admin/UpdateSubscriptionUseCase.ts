@@ -11,7 +11,7 @@ export class UpdateSubscriptionUseCase implements IUpdateSubscriptionUseCase {
         if (
             !data.id ||
             !data.planName ||
-            !data.duration ||
+            Number(data.duration) <= 0 ||
             !data.durationUnit ||
             data.price < 50 ||
             data.commissionPercent === undefined ||
@@ -25,7 +25,7 @@ export class UpdateSubscriptionUseCase implements IUpdateSubscriptionUseCase {
             data.lawyerCancellationPenaltyPercent < 0 ||
             data.lawyerCancellationPenaltyPercent > 10
         ) {
-            throw new BadRequestError("Invalid subscription data: Price >= 50, Commission 0-50%, and Cancellation Penalty 0-10%.");
+            throw new BadRequestError("Invalid subscription data: Duration must be > 0, Price >= 50, Commission 0-50%, and Cancellation Penalty 0-10%.");
         }
 
         const existingPlan = await this._subscriptionRepository.findById(data.id);

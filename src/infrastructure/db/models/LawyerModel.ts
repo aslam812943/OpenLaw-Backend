@@ -64,7 +64,7 @@ const LawyerSchema = new Schema<ILawyerDocument>({
   languages: { type: [String], required: false },
   documentUrls: { type: [String], required: false },
   dateOfBirth: { type: String },
-  verificationStatus: { type: String, default: 'pending' },
+  verificationStatus: { type: String, default: 'not_submitted' },
   isAdminVerified: { type: Boolean, default: false },
   Address: { type: AddressSchema },
   Profileimageurl: { type: String },

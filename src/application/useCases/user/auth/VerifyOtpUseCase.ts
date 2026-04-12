@@ -49,11 +49,13 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
 
       const userEntity = UserMapper.toEntity(userData);
-
       let savedUser;
       if (userData.role === UserRole.LAWYER) {
-        savedUser = await this._lawyerRepository.create(userEntity);
-
+        const lawyerEntity = userEntity as unknown as Lawyer;
+        lawyerEntity.hasSubmittedVerification = false;
+        lawyerEntity.verificationStatus = 'not_submitted';
+        lawyerEntity.isAdminVerified = false;
+        savedUser = await this._lawyerRepository.create(lawyerEntity);
       } else {
         savedUser = await this._userRepository.createUser(userEntity);
       }

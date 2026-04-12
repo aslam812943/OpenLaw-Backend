@@ -8,6 +8,7 @@ import { GoogleAuthResponseDTO } from '../../dtos/user/GoogleAuthResponseDTO';
 import { BadRequestError } from '../../../infrastructure/errors/BadRequestError';
 import { UnauthorizedError } from '../../../infrastructure/errors/UnauthorizedError';
 import { ForbiddenError } from '../../../infrastructure/errors/ForbiddenError';
+import { UserRegisterDTO } from '../../dtos/user/RegisterUserDTO';
 import { IGoogleAuthUseCase } from '../../interface/use-cases/user/IGoogleAuthUseCase';
 import { UserRole } from '../../../infrastructure/interface/enums/UserRole';
 
@@ -87,6 +88,8 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
         role: assignedRole,
         hasSubmittedVerification: false,
         isVerified: true,
+        verificationStatus: 'not_submitted',
+        isAdminVerified: false,
         isBlock: false
       };
 
@@ -94,7 +97,7 @@ export class GoogleAuthUsecase implements IGoogleAuthUseCase {
       if (role === UserRole.LAWYER) {
         user = await this._lawyerRepository.create(newUser);
       } else {
-        user = await this._userRepository.createUser(newUser as User);
+        user = await this._userRepository.createUser(newUser as UserRegisterDTO);
       }
     }
 
