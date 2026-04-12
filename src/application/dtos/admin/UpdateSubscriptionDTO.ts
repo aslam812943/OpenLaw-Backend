@@ -5,6 +5,7 @@ export class UpdateSubscriptionDTO {
         public duration: number,
         public durationUnit: string,
         public price: number,
-        public commissionPercent: number
+        public commissionPercent: number,
+        public lawyerCancellationPenaltyPercent: number
     ) { }
 }

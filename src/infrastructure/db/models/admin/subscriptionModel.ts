@@ -6,6 +6,7 @@ export interface ISubscriptionDocument extends Document {
     durationUnit: string;
     price: number;
     commissionPercent: number;
+    lawyerCancellationPenaltyPercent: number;
     isActive: boolean;
 }
 
@@ -32,6 +33,13 @@ const SubscriptionSchema = new Schema<ISubscriptionDocument>({
     commissionPercent: {
         type: Number,
         required: true
+    },
+    lawyerCancellationPenaltyPercent: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: 0,
+        max: 10
     },
     isActive: {
         type: Boolean,

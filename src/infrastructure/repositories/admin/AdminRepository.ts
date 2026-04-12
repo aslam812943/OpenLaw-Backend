@@ -58,4 +58,27 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
       throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
     }
   }
+
+  async findOne(): Promise<Admin | null> {
+    try {
+      const adminDoc = await this.model.findOne();
+      if (!adminDoc) return null;
+      return new Admin(
+        adminDoc.id,
+        adminDoc.name,
+        adminDoc.email,
+        adminDoc.password
+      );
+    } catch (error: unknown) {
+      throw new InternalServerError(MessageConstants.REPOSITORY.FETCH_ERROR);
+    }
+  }
+
+  async updateWalletBalance(amount: number): Promise<void> {
+    try {
+      await this.model.findOneAndUpdate({}, { $inc: { walletBalance: amount } });
+    } catch (error: unknown) {
+      throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+    }
+  }
 }

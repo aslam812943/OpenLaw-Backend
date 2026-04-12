@@ -7,7 +7,9 @@ export class TransactionDTO {
         public commissionAmount: number,
         public netAmount: number,
         public status: string,
-        public paymentStatus: string
+        public paymentStatus: string,
+        public refundAmount?: number,
+        public refundStatus?: string
     ) { }
 }
 

@@ -62,6 +62,7 @@ import { BookWithWalletUseCase } from "../application/useCases/user/booking/Book
 import { RescheduleBookingUseCase } from "../application/useCases/user/booking/RescheduleBookingUseCase";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
+import { AdminRepository } from "../infrastructure/repositories/admin/AdminRepository";
 
 import { WebhookController } from "../interface/controllers/user/WebhookController";
 import { HandleWebhookUseCase } from "../application/useCases/user/booking/HandleWebhookUseCase";
@@ -96,6 +97,7 @@ const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
 const specializationRepository = new SpecializationRepository();
 const subscriptionRepository = new SubscriptionRepository();
+const adminRepository = new AdminRepository();
 export const stripeService = new StripeService();
 
 // use case instances 
@@ -157,7 +159,8 @@ const cancelAppointmentUseCase = new CancelAppointmentUseCase(
     walletRepository,
     sendNotificationUseCase,
     chatRoomRepository,
-    messageRepository
+    messageRepository,
+    adminRepository
 );
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
 const cancelFollowUpUseCase = new CancelFollowUpUseCase(bookingRepository, availabilityRuleRepository);

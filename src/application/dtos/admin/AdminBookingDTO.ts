@@ -10,6 +10,8 @@ export interface AdminBookingDTO {
     lawyerEarnings: number;
     status: string;
     paymentStatus: string;
+    refundAmount?: number;
+    refundStatus?: string;
     lawyerFeedback?: string;
     createdAt?: Date;
 }
