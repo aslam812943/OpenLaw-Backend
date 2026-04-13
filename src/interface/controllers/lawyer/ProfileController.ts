@@ -38,7 +38,25 @@ export class LawyerProfileController {
         return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, MessageConstants.COMMON.UNAUTHORIZED);
       }
 
-      const imageUrl = req.file ? req.file.path : "";
+      let imageUrl: string | undefined = undefined;
+
+      if (req.file) {
+       
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+          return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, "Invalid file type. Only JPEG, PNG and WEBP are allowed.");
+        }
+
+       
+        if (req.file.size > 5 * 1024 * 1024) {
+          return ApiResponse.error(res, HttpStatusCode.BAD_REQUEST, "File size too large. Maximum 5MB allowed.");
+        }
+
+        imageUrl = req.file.path;
+      }
+
+      const practiceAreas = req.body.practiceAreas ? (typeof req.body.practiceAreas === 'string' ? JSON.parse(req.body.practiceAreas) : req.body.practiceAreas) : [];
+      const languages = req.body.languages ? (typeof req.body.languages === 'string' ? JSON.parse(req.body.languages) : req.body.languages) : [];
 
       const dto = new UpdateLawyerProfileDTO(
         req.body.name,
@@ -47,9 +65,11 @@ export class LawyerProfileController {
         req.body.city,
         req.body.state,
         req.body.pincode,
+        practiceAreas,
+        languages,
         imageUrl,
         req.body.bio,
-        Number(req.body.consultationFee)
+        req.body.consultationFee ? Number(req.body.consultationFee) : undefined
       );
 
       await this._updateProfileUseCase.execute(userId, dto);

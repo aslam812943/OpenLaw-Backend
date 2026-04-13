@@ -59,9 +59,19 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     }
   }
 
+  async findByPhone(phone: number): Promise<Lawyer | null> {
+    try {
+      const lawyerDoc = await this.baseFindOne({ phone });
+      if (!lawyerDoc) return null;
+      return this.mapToDomain(lawyerDoc);
+    } catch (error: unknown) {
+      throw new InternalServerError("Error while fetching lawyer by phone number.");
+    }
+  }
+
   async addVerificationDetils(lawyer: VerificationLawyerDTO): Promise<Lawyer> {
     try {
-      // Check if bar number is already used by another account
+
       const existingLawyer = await this.findByBarNumber(lawyer.barNumber);
       if (existingLawyer && existingLawyer.id !== lawyer.userId) {
         throw new ConflictError("This Bar Number is already registered with another account.");
@@ -252,6 +262,10 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
       data.Address.pincode = Number(dto.pincode);
       if (dto.bio) data.bio = dto.bio;
       if (dto.consultationFee !== undefined) data.consultationFee = dto.consultationFee;
+
+      if (dto.practiceAreas) data.practiceAreas = dto.practiceAreas;
+      if (dto.languages) data.languages = dto.languages;
+
       data.isVerified = true;
 
       await data.save();
