@@ -40,9 +40,9 @@ export class AvailabilityController {
         ruleData.startDate,
         ruleData.endDate,
         ruleData.availableDays,
-        ruleData.bufferTime,
-        ruleData.slotDuration,
-        ruleData.maxBookings,
+        Number(ruleData.bufferTime),
+        Number(ruleData.slotDuration),
+        Number(ruleData.maxBookings),
         ruleData.sessionType,
         ruleData.exceptionDays,
         lawyerId
@@ -71,9 +71,9 @@ export class AvailabilityController {
         req.body.startDate,
         req.body.endDate,
         req.body.availableDays,
-        req.body.bufferTime,
-        req.body.slotDuration,
-        req.body.maxBookings,
+        Number(req.body.bufferTime),
+        Number(req.body.slotDuration),
+        Number(req.body.maxBookings),
         req.body.sessionType,
         req.body.exceptionDays
       );

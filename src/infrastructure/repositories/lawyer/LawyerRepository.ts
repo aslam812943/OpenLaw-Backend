@@ -362,11 +362,11 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     };
   }
 
-  async updateWalletBalance(lawyerId: string, amount: number): Promise<void> {
+  async updateWalletBalance(lawyerId: string, amount: number, session?: mongoose.ClientSession): Promise<void> {
     try {
       await this.baseUpdate(lawyerId, {
         $inc: { walletBalance: amount }
-      });
+      }, session);
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.WALLET_UPDATE_ERROR);
     }

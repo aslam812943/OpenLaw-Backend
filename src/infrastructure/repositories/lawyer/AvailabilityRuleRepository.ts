@@ -154,7 +154,7 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
   }
 
 
-  async reserveSlot(id: string, userId: string, durationMinutes: number = 15): Promise<boolean> {
+  async reserveSlot(id: string, userId: string, durationMinutes: number = 15, session?: mongoose.ClientSession): Promise<boolean> {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + durationMinutes);
 
@@ -190,20 +190,20 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
           reservedBy: userId
         }
       },
-      { new: true }
+      { new: true, session }
     );
 
     return !!result;
   }
 
 
-  async bookSlot(id: string, userId?: string, bookingId?: string): Promise<void> {
+  async bookSlot(id: string, userId?: string, bookingId?: string, session?: mongoose.ClientSession): Promise<boolean> {
     const updateQuery: mongoose.UpdateQuery<ISlotModel> = { isBooked: true, isReserved: false };
     if (bookingId) {
       updateQuery.bookingId = bookingId;
     }
 
-    const filter: mongoose.FilterQuery<ISlotModel> = { _id: id };
+    const filter: mongoose.FilterQuery<ISlotModel> = { _id: id, isBooked: false };
     if (userId) {
       filter.$and = [
         { $or: [{ reservedBy: userId }, { reservedBy: { $exists: false } }, { reservedBy: null }] },
@@ -211,7 +211,8 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
       ];
     }
 
-    await SlotModel.findOneAndUpdate(filter, { $set: updateQuery });
+    const result = await SlotModel.findOneAndUpdate(filter, { $set: updateQuery }, { new: true, session });
+    return !!result;
   }
 
 

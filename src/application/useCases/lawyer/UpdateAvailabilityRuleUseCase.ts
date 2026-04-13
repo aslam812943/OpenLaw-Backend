@@ -5,6 +5,7 @@ import { UpdateAvailabilityRuleDTO } from "../../dtos/lawyer/UpdateAvailabilityR
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
+import { AvailabilityValidator } from "../../utils/AvailabilityValidator";
 
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { Slot } from "../../../domain/entities/Slot";
@@ -16,15 +17,27 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
     private readonly _lawyerRepository: ILawyerRepository
   ) { }
 
-  private toMinutes(time: string): number {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + m;
-  }
-
   async execute(ruleId: string, dto: UpdateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: (Slot | IGeneratedSlot)[]; }> {
     try {
+
+      AvailabilityValidator.validate(dto); 
+
+
+      const existingRule = await this._availabilityRuleRepository.getRuleById(ruleId);
+      if (!existingRule) throw new NotFoundError("Rule not found");
+
+      const lawyerId = existingRule.lawyerId.toString();
+
+      const allRules = await this._availabilityRuleRepository.getAllRules(lawyerId);
+      const overlapError = AvailabilityValidator.checkOverlaps(dto, allRules, ruleId);
+      if (overlapError) {
+        throw new BadRequestError(overlapError);
+      }
+
+
       const updateRule = await this._availabilityRuleRepository.updateRule(ruleId, dto);
-      if (!updateRule) throw new NotFoundError("Rule not found");
+      if (!updateRule) throw new NotFoundError("Failed to update rule");
+
 
       const bookedSlots = await this._availabilityRuleRepository.getBookedSlotsByRuleId(ruleId);
 
@@ -36,10 +49,10 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
         const isOverlapping = bookedSlots.some(booked => {
           if (booked.date !== newSlot.date) return false;
 
-          const nStart = this.toMinutes(newSlot.startTime);
-          const nEnd = this.toMinutes(newSlot.endTime);
-          const bStart = this.toMinutes(booked.startTime);
-          const bEnd = this.toMinutes(booked.endTime);
+          const nStart = AvailabilityValidator.toMinutes(newSlot.startTime);
+          const nEnd = AvailabilityValidator.toMinutes(newSlot.endTime);
+          const bStart = AvailabilityValidator.toMinutes(booked.startTime);
+          const bEnd = AvailabilityValidator.toMinutes(booked.endTime);
 
           return nStart < bEnd && bStart < nEnd;
         });
@@ -47,7 +60,7 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
       });
 
       if (filteredSlots.length > 0) {
-        await this._availabilityRuleRepository.createSlots(ruleId, updateRule.lawyerId.toString(), filteredSlots);
+        await this._availabilityRuleRepository.createSlots(ruleId, lawyerId, filteredSlots);
       }
 
       return {
@@ -55,6 +68,9 @@ export class UpdateAvailabilityRuleUseCase implements IUpdateAvailabilityRuleUse
         slots: [...bookedSlots, ...filteredSlots],
       };
     } catch (error: unknown) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError) {
+        throw error;
+      }
       if (error instanceof Error) {
         throw new BadRequestError(error.message);
       }

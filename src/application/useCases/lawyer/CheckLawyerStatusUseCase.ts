@@ -6,7 +6,7 @@ import { ICheckLawyerStatusUseCase } from "../../interface/use-cases/lawyer/IChe
 export class CheckLawyerStatusUseCase implements ICheckLawyerStatusUseCase {
     constructor(private _lawyerRepository: ILawyerRepository) { }
 
-    async check(lawyerId: string): Promise<{ isActive: boolean }> {
+    async check(lawyerId: string): Promise<{ isActive: boolean; verificationStatus?: string; isAdminVerified?: boolean }> {
 
         if (!lawyerId) {
             throw new BadRequestError("Lawyer ID is required.");
@@ -19,6 +19,10 @@ export class CheckLawyerStatusUseCase implements ICheckLawyerStatusUseCase {
             throw new NotFoundError("Lawyer not found.");
         }
 
-        return { isActive: !lawyer.isBlock };
+        return {
+            isActive: !lawyer.isBlock,
+            verificationStatus: lawyer.verificationStatus,
+            isAdminVerified: lawyer.isAdminVerified
+        };
     }
 }

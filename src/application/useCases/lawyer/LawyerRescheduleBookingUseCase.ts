@@ -55,7 +55,10 @@ export class LawyerRescheduleBookingUseCase implements ILawyerRescheduleBookingU
             booking.startTime
         );
 
-        await this._slotRepository.bookSlot(newSlotId, booking.userId.toString(), bookingId);
+        const booked = await this._slotRepository.bookSlot(newSlotId, booking.userId.toString(), bookingId);
+        if (!booked) {
+            throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
+        }
 
         await this._bookingRepository.rescheduleBooking(
             bookingId,

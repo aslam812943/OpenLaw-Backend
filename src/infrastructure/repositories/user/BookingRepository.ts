@@ -55,7 +55,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         );
     }
 
-    async create(booking: Booking): Promise<Booking> {
+    async create(booking: Booking, session?: mongoose.ClientSession): Promise<Booking> {
         try {
             const { id, ...bookingData } = booking;
 
@@ -63,7 +63,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
             bookingData.bookingId = `BK-${dateStr}-${randomStr}`;
 
-            const savedBooking = await this.baseCreate(bookingData as unknown as Partial<IBookingDocument>);
+            const savedBooking = await this.baseCreate(bookingData as unknown as Partial<IBookingDocument>, session);
 
             return this.mapToEntity(savedBooking);
         } catch (error: unknown) {
@@ -81,7 +81,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         }
     }
 
-    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string): Promise<void> {
+    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string, session?: mongoose.ClientSession): Promise<void> {
         try {
             const updateData: Partial<IBookingDocument> = { status };
             if (reason) {
@@ -94,7 +94,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             if (lawyerFeedback) {
                 updateData.lawyerFeedback = lawyerFeedback;
             }
-            await this.baseUpdate(id, updateData);
+            await this.baseUpdate(id, updateData, session);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }

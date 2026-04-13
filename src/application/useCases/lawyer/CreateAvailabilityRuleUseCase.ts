@@ -6,6 +6,7 @@ import { CreateAvailabilityRuleDTO } from "../../dtos/lawyer/CreateAvailabilityR
 import { AvailabilityRuleMapper } from "../../mapper/lawyer/AvailabilityRuleMapper";
 import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+import { AvailabilityValidator } from "../../utils/AvailabilityValidator";
 
 export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUseCase {
 
@@ -15,76 +16,6 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
     private readonly _lawyerRepository: ILawyerRepository
   ) { }
 
-  private toMinutes(time: string): number {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + m;
-  }
-
-  private async validate(dto: CreateAvailabilityRuleDTO) {
-    const errors: string[] = [];
-
-    const startMin = this.toMinutes(dto.startTime);
-    const endMin = this.toMinutes(dto.endTime);
-
-
-    if (startMin >= endMin) errors.push("Start time must be before end time.");
-    if (Number(dto.slotDuration) < 30 || Number(dto.slotDuration) > 120)
-      errors.push("Slot duration must be 30–120 minutes.");
-    if (Number(dto.bufferTime) < 5 || Number(dto.bufferTime) > 60)
-      errors.push("Buffer time must be 5–60 minutes.");
-    if (Number(dto.slotDuration) + Number(dto.bufferTime) > endMin - startMin)
-      errors.push("Slot duration + buffer time exceeds total available time.");
-
-    if (dto.startDate > dto.endDate)
-      errors.push("Start date must be earlier than end date.");
-
-    if (!dto.availableDays || dto.availableDays.length === 0)
-      errors.push("At least one available day is required.");
-
-    if (dto.exceptionDays.length > 0) {
-      for (const ex of dto.exceptionDays) {
-        if (ex < dto.startDate || ex > dto.endDate) {
-          errors.push(`Exception date ${ex} is outside the date range.`);
-        }
-      }
-    }
-
-    const existingRules = await this._availabilityRuleRepository.getAllRules(dto.lawyerId);
-
-    const newStartDate = new Date(dto.startDate);
-    const newEndDate = new Date(dto.endDate);
-
-    for (const rule of existingRules) {
-      const ruleStartDate = new Date(rule.startDate);
-      const ruleEndDate = new Date(rule.endDate);
-
-      const dateOverlap = newStartDate <= ruleEndDate && newEndDate >= ruleStartDate;
-
-      if (!dateOverlap) continue;
-
-      const dayOverlap = dto.availableDays.some((d) =>
-        rule.availableDays.includes(d)
-      );
-
-      if (!dayOverlap) continue;
-
-      const ruleStartMin = this.toMinutes(rule.startTime);
-      const ruleEndMin = this.toMinutes(rule.endTime);
-
-      const timeOverlap = startMin < ruleEndMin && ruleStartMin < endMin;
-
-      if (timeOverlap) {
-        errors.push(
-          `Overlapping rule found with "${rule.title}")`
-        );
-      }
-    }
-
-    if (errors.length > 0) {
-      throw new BadRequestError("Validation failed: " + errors.join("; "));
-    }
-  }
-
   async execute(dto: CreateAvailabilityRuleDTO): Promise<{ rule: AvailabilityRule; slots: IGeneratedSlot[] }> {
 
     try {
@@ -92,7 +23,15 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
         throw new BadRequestError("Lawyer ID is missing.");
       }
 
-      await this.validate(dto);
+  
+      AvailabilityValidator.validate(dto);
+
+
+      const existingRules = await this._availabilityRuleRepository.getAllRules(dto.lawyerId);
+      const overlapError = AvailabilityValidator.checkOverlaps(dto, existingRules);
+      if (overlapError) {
+        throw new BadRequestError(overlapError);
+      }
 
       const newRuleEntity = AvailabilityRuleMapper.toEntity(dto);
 
@@ -113,6 +52,7 @@ export class CreateAvailabilityRuleUseCase implements ICreateAvailabilityRuleUse
       return { rule: savedRule, slots };
 
     } catch (err: unknown) {
+      if (err instanceof BadRequestError) throw err;
       const error = err as Error;
       throw new BadRequestError(
         error.message || "Something went wrong while creating availability rule."

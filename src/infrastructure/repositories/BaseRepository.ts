@@ -1,4 +1,4 @@
-import { Model, Document, FilterQuery, UpdateQuery, QueryOptions } from "mongoose";
+import mongoose, { Model, Document, FilterQuery, UpdateQuery, QueryOptions } from "mongoose";
 import { InternalServerError } from "../errors/InternalServerError";
 import { MessageConstants } from "../constants/MessageConstants";
 
@@ -9,33 +9,34 @@ export class BaseRepository<T extends Document> {
         this.model = model;
     }
 
-    async baseCreate(data: Partial<T>): Promise<T> {
+    async baseCreate(data: Partial<T>, session?: mongoose.ClientSession): Promise<T> {
         try {
-            return await this.model.create(data);
+            const docs = await this.model.create([data], { session });
+            return docs[0];
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
-    async baseFindOne(filter: FilterQuery<T>, options: QueryOptions = {}): Promise<T | null> {
+    async baseFindOne(filter: FilterQuery<T>, options: QueryOptions = {}, session?: mongoose.ClientSession): Promise<T | null> {
         try {
-            return await this.model.findOne(filter, null, options).exec();
+            return await this.model.findOne(filter, null, { ...options, session }).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
         }
     }
 
-    async baseFindById(id: string): Promise<T | null> {
+    async baseFindById(id: string, session?: mongoose.ClientSession): Promise<T | null> {
         try {
-            return await this.model.findById(id).exec();
+            return await this.model.findById(id).session(session || null).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
         }
     }
 
-    async baseUpdate(id: string, data: UpdateQuery<T>): Promise<T | null> {
+    async baseUpdate(id: string, data: UpdateQuery<T>, session?: mongoose.ClientSession): Promise<T | null> {
         try {
-            return await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+            return await this.model.findByIdAndUpdate(id, data, { new: true, session }).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }

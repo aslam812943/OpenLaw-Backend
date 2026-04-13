@@ -74,9 +74,9 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
     }
   }
 
-  async updateWalletBalance(amount: number): Promise<void> {
+  async updateWalletBalance(amount: number, session?: import("mongoose").ClientSession): Promise<void> {
     try {
-      await this.model.findOneAndUpdate({}, { $inc: { walletBalance: amount } });
+      await this.model.findOneAndUpdate({}, { $inc: { walletBalance: amount } }, { session });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
     }

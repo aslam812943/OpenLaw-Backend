@@ -62,6 +62,9 @@ export const MessageConstants = {
         SLOT_ALREADY_TAKEN: "This slot is already reserved or booked by someone else. Please choose another slot.",
         RESCHEDULE_SUCCESS: "Appointment rescheduled successfully.",
         RESCHEDULE_WINDOW_EXPIRED: "Appointments can only be rescheduled up to 24 hours before the scheduled time.",
+        SLOT_EXPIRED: "This slot's time has already passed. Please choose a future slot.",
+        WALLET_BOOKING_FAILED: "Failed to complete wallet booking. Your balance has not been deducted.",
+        TRANSACTION_ERROR: "An error occurred during the booking transaction. Please try again.",
     },
     REPOSITORY: {
         CREATE_ERROR: "Database error while creating document.",
