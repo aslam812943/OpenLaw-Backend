@@ -1,3 +1,5 @@
+import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
+
 export class LoginUserDTO {
   email: string;
   password: string;
@@ -6,11 +8,10 @@ export class LoginUserDTO {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email || !emailRegex.test(data.email)) {
-      throw new Error("A valid email address is required");
+      throw new BadRequestError("A valid email address is required");
     }
-    if (!data.password) {
-      
-      throw new Error("Password must be provided");
+    if (!data.password || data.password.trim() === '') {
+      throw new BadRequestError("Password must be provided");
     }
     this.email = data.email;
     this.password = data.password;

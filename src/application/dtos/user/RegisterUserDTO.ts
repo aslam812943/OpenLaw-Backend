@@ -10,17 +10,21 @@ export class UserRegisterDTO {
   isBlock: boolean;
 
   constructor(data: Partial<UserRegisterDTO>) {
-    if (!data.name || data.name.length < 3 || data.name.length > 25) {
+    if (!data.name || data.name.trim().length < 3 || data.name.trim().length > 25) {
       throw new BadRequestError("Name must be between 3 and 25 characters");
     }
-
-    if (data.phone) {
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(data.phone.toString())) {
-        throw new BadRequestError("Phone number must contain exactly 10 digits");
-      }
-      this.phone = Number(data.phone);
+    if (!/^[a-zA-Z]/.test(data.name.trim())) {
+      throw new BadRequestError("Name must start with a letter");
     }
+
+    if (!data.phone) {
+      throw new BadRequestError("Phone number is required");
+    }
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(data.phone.toString())) {
+      throw new BadRequestError("Phone number must contain exactly 10 digits");
+    }
+    this.phone = Number(data.phone);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email || !emailRegex.test(data.email)) {
