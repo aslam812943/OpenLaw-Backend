@@ -15,6 +15,14 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
             throw new BadRequestError("Old and new password are required.");
         }
 
+        if (dto.oldPassword === dto.newPassword) {
+            throw new BadRequestError("New password must be different from the old password.");
+        }
+
+        if (dto.newPassword.length < 6) {
+            throw new BadRequestError("New password must be at least 6 characters long.");
+        }
+
         await this._lawyerRepository.changePassword(
             dto.id,
             dto.oldPassword,
