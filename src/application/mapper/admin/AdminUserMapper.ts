@@ -7,7 +7,7 @@ export class AdminUserMapper {
       _id: user.id ? user.id.toString() : "",
       name: user.name,
       email: user.email,
-      phone: user.phone.toString(),
+      phone: user.phone?.toString() || '',
       isBlock: user.isBlock,
     };
     return new GetAllUserDTO(dto);
