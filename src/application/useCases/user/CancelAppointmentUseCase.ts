@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
@@ -45,104 +46,116 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         appointmentDate.setHours(hours, minutes, 0, 0);
 
         const now = new Date();
-        const createdAt = booking.createdAt || now;
-        const timeSinceBooking = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+
+        if (appointmentDate < now) {
+            throw new BadRequestError("Cannot cancel an appointment that has already passed.");
+        }
+
+
+        if (booking.status === 'completed' || booking.status === 'rejected') {
+            throw new BadRequestError(`Cannot cancel a booking that is already ${booking.status}.`);
+        }
+
+        const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         let refundAmount = 0;
         let refundStatus: 'full' | 'partial' = 'full';
 
-   
-        if (timeSinceBooking <= 48) {
+
+        if (hoursUntilAppointment >= 48) {
             refundAmount = booking.consultationFee;
             refundStatus = 'full';
         } else {
+
             refundAmount = booking.consultationFee * 0.7;
             refundStatus = 'partial';
         }
 
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-        if (booking.paymentStatus === 'paid' && booking.paymentId) {
-            await this._paymentService.refundPayment(booking.paymentId, refundAmount);
+        try {
+            if (booking.paymentStatus === 'paid' && booking.paymentId) {
+                await this._paymentService.refundPayment(booking.paymentId, refundAmount);
 
-            const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
+                const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
 
-           
-            await this._walletRepository.addTransaction(booking.userId, refundAmount, {
-                type: 'credit',
-                amount: refundAmount,
-                date: new Date(),
-                status: 'completed',
-                bookingId: bookingId,
-                description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Cancelled by User`,
-                metadata: {
-                    reason: reason,
-                    lawyerName: lawyer?.name,
-                    lawyerId: booking.lawyerId,
-                    date: booking.date,
-                    time: booking.startTime,
-                    displayId: booking.bookingId
+                await this._walletRepository.addTransaction(booking.userId, refundAmount, {
+                    type: 'credit',
+                    amount: refundAmount,
+                    date: new Date(),
+                    status: 'completed',
+                    bookingId: bookingId,
+                    description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Cancelled by User`,
+                    metadata: {
+                        reason: reason,
+                        lawyerName: lawyer?.name,
+                        lawyerId: booking.lawyerId,
+                        date: booking.date,
+                        time: booking.startTime,
+                        displayId: booking.bookingId
+                    }
+                }, session);
+
+
+                if (refundStatus === 'partial') {
+                    const retainedAmount = booking.consultationFee - refundAmount;
+                    const commissionPercent = booking.commissionPercent || 0;
+
+                    const adminShare = retainedAmount * (commissionPercent / 100);
+                    const lawyerShare = retainedAmount - adminShare;
+
+                    await this._lawyerRepository.updateWalletBalance(booking.lawyerId, lawyerShare, session);
+                    await this._adminRepository.updateWalletBalance(adminShare, session);
+
+                    await this._sendNotificationUseCase.execute(
+                        booking.lawyerId,
+                        `You have received ₹${lawyerShare.toFixed(2)} as a cancellation fee share for appointment ${booking.bookingId}.`,
+                        'WALLET_CREDIT',
+                        { appointmentId: bookingId, amount: lawyerShare }
+                    );
                 }
-            });
+            }
 
-           
-            if (refundStatus === 'partial') {
-                const retainedAmount = booking.consultationFee - refundAmount;
-                const commissionPercent = booking.commissionPercent || 0;
+            await this._bookingRepository.updateStatus(bookingId, "cancelled", reason, {
+                amount: refundAmount,
+                status: refundStatus
+            }, undefined, session);
 
-                const adminShare = retainedAmount * (commissionPercent / 100);
-                const lawyerShare = retainedAmount - adminShare;
-
-            
-                await this._lawyerRepository.updateWalletBalance(booking.lawyerId, lawyerShare);
-
-                
-                await this._adminRepository.updateWalletBalance(adminShare);
-
+            if (refundAmount > 0) {
                 await this._sendNotificationUseCase.execute(
-                    booking.lawyerId,
-                    `You have received ₹${lawyerShare.toFixed(2)} as a cancellation fee share for appointment ${booking.bookingId}.`,
-                    'WALLET_CREDIT',
-                    { appointmentId: bookingId, amount: lawyerShare }
+                    booking.userId,
+                    `Your appointment (${booking.bookingId}) has been cancelled. A refund of ₹${refundAmount} has been credited to your wallet.`,
+                    'WALLET_REFUND',
+                    { appointmentId: bookingId, amount: refundAmount }
                 );
             }
 
-            if (booking.status === 'completed') {
-                await this._lawyerRepository.updateWalletBalance(booking.lawyerId, -refundAmount);
-            }
-        }
-
-        await this._bookingRepository.updateStatus(bookingId, "cancelled", reason, {
-            amount: refundAmount,
-            status: refundStatus
-        });
-
-       
-        if (refundAmount > 0) {
             await this._sendNotificationUseCase.execute(
-                booking.userId,
-                `Your appointment (${booking.bookingId}) has been cancelled. A refund of ₹${refundAmount} has been credited to your wallet.`,
-                'WALLET_REFUND',
-                { appointmentId: bookingId, amount: refundAmount }
+                booking.lawyerId,
+                `User cancelled appointment (${booking.bookingId}) for ${booking.date} at ${booking.startTime}. Reason: ${reason}`,
+                'APPOINTMENT_CANCELLED',
+                { appointmentId: bookingId }
             );
-        }
 
-    
-        await this._sendNotificationUseCase.execute(
-            booking.lawyerId,
-            `User cancelled appointment (${booking.bookingId}) for ${booking.date} at ${booking.startTime}. Reason: ${reason}`,
-            'APPOINTMENT_CANCELLED',
-            { appointmentId: bookingId }
-        );
+            await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
 
-        await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
-
-        try {
-            const chatRoom = await this._chatRoomRepository.findByBookingId(bookingId);
-            if (chatRoom && chatRoom.id) {
-                await this._messageRepository.deleteByRoomId(chatRoom.id);
-                await this._chatRoomRepository.deleteByBookingId(bookingId);
+            try {
+                const chatRoom = await this._chatRoomRepository.findByBookingId(bookingId);
+                if (chatRoom && chatRoom.id) {
+                    await this._messageRepository.deleteByRoomId(chatRoom.id);
+                    await this._chatRoomRepository.deleteByBookingId(bookingId);
+                }
+            } catch (error) {
             }
+
+            await session.commitTransaction();
         } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
     }
 }

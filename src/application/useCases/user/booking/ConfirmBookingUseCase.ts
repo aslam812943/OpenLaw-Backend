@@ -109,7 +109,11 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
 
         const data = await this._bookingRepository.create(booking);
         if (metadata.slotId && metadata.slotId !== '') {
-            await this._slotRepository.bookSlot(metadata.slotId, metadata.userId, data.id);
+            const booked = await this._slotRepository.bookSlot(metadata.slotId, metadata.userId, data.id);
+            if (!booked) {
+                
+                throw new BadRequestError("Payment confirmed but the selected slot was already taken or expired. Please contact support with your Payment ID.");
+            }
         }
 
 

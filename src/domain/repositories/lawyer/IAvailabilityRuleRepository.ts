@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { AvailabilityRule } from "../../entities/AvailabilityRule";
 import { Slot } from "../../entities/Slot";
@@ -15,8 +16,8 @@ export interface IAvailabilityRuleRepository {
     getAllRules(id: string): Promise<AvailabilityRule[]>;
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>
-    reserveSlot(id: string, userId: string, durationMinutes?: number): Promise<boolean>
-    bookSlot(id: string, userId?: string, bookingId?: string): Promise<void>;
+    reserveSlot(id: string, userId: string, durationMinutes?: number, session?: mongoose.ClientSession): Promise<boolean>
+    bookSlot(id: string, userId?: string, bookingId?: string, session?: mongoose.ClientSession): Promise<boolean>;
     findSlotIdByDateTime(lawyerId: string, date: string, startTime: string): Promise<string | null>;
     releaseSlot(id: string): Promise<void>;
     cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void>

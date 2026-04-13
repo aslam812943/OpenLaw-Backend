@@ -16,13 +16,27 @@ export class CreateBookingPaymentUseCase implements ICreateBookingPaymentUseCase
     async execute(bookingDetails: BookingDTO): Promise<string> {
         if (bookingDetails.slotId) {
             const slot = await this._slotRepository.getSlotById(bookingDetails.slotId);
-            if (slot && slot.restrictedTo && slot.restrictedTo !== bookingDetails.userId) {
+            if (!slot) {
+                throw new BadRequestError("Slot not found.");
+            }
+            if (slot.restrictedTo && slot.restrictedTo !== bookingDetails.userId) {
                 throw new BadRequestError("This slot is reserved for a specific follow-up appointment.");
             }
 
             const reserved = await this._slotRepository.reserveSlot(bookingDetails.slotId, bookingDetails.userId);
             if (!reserved) {
                 throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
+            }
+
+           
+            const now = new Date();
+            const [year, month, day] = slot.date.split('-').map(Number);
+            const [hours, minutes] = slot.startTime.split(':').map(Number);
+            const slotDateTime = new Date(year, month - 1, day, hours, minutes);
+
+            if (slotDateTime <= now) {
+                await this._slotRepository.releaseSlot(bookingDetails.slotId);
+                throw new BadRequestError(MessageConstants.BOOKING.SLOT_EXPIRED);
             }
         }
 

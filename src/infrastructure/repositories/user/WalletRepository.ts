@@ -24,9 +24,9 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         }
     }
 
-    async findByUserId(userId: string): Promise<Wallet | null> {
+    async findByUserId(userId: string, session?: mongoose.ClientSession): Promise<Wallet | null> {
         try {
-            const walletDoc = await this.baseFindOne({ userId });
+            const walletDoc = await this.baseFindOne({ userId }, {}, session);
             if (!walletDoc) return null;
             return this.mapToDomain(walletDoc);
         } catch (error: unknown) {
@@ -34,27 +34,35 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         }
     }
 
-    async addTransaction(userId: string, amount: number, transaction: WalletTransaction): Promise<void> {
+    async addTransaction(userId: string, amount: number, transaction: WalletTransaction, externalSession?: mongoose.ClientSession): Promise<void> {
         try {
-            const session = await mongoose.startSession();
-            await session.withTransaction(async () => {
-                const wallet = await this.model.findOne({ userId }).session(session);
-                if (!wallet) {
-                    const newWallet = new WalletModel({
-                        userId,
-                        balance: amount,
-                        transactions: [transaction]
-                    });
-                    await newWallet.save({ session });
-                } else {
-                    wallet.balance += amount;
-                    wallet.transactions.push(transaction as unknown as ITransactions);
-                    await wallet.save({ session });
-                }
-            });
-            await session.endSession();
+            if (externalSession) {
+                await this._executeAddTransaction(userId, amount, transaction, externalSession);
+            } else {
+                const session = await mongoose.startSession();
+                await session.withTransaction(async () => {
+                    await this._executeAddTransaction(userId, amount, transaction, session);
+                });
+                await session.endSession();
+            }
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    private async _executeAddTransaction(userId: string, amount: number, transaction: WalletTransaction, session: mongoose.ClientSession): Promise<void> {
+        const wallet = await this.model.findOne({ userId }).session(session);
+        if (!wallet) {
+            const newWallet = new WalletModel({
+                userId,
+                balance: amount,
+                transactions: [transaction]
+            });
+            await newWallet.save({ session });
+        } else {
+            wallet.balance += amount;
+            wallet.transactions.push(transaction as unknown as ITransactions);
+            await wallet.save({ session });
         }
     }
 

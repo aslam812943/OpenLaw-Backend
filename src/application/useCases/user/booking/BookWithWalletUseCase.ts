@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { IBookingRepository } from "../../../../domain/repositories/IBookingRepository";
 import { IPaymentRepository } from "../../../../domain/repositories/IPaymentRepository";
 import { Booking } from "../../../../domain/entities/Booking";
@@ -15,6 +16,7 @@ import { ISendNotificationUseCase } from "../../../interface/use-cases/common/no
 import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRepository";
 import { ChatRoom } from "../../../../domain/entities/ChatRoom";
 import { WalletTransaction } from "../../../../domain/entities/Wallet";
+import { MessageConstants } from "../../../../infrastructure/constants/MessageConstants";
 
 export class BookWithWalletUseCase implements IBookWithWalletUseCase {
     constructor(
@@ -31,25 +33,42 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
     async execute(bookingDetails: BookingDTO): Promise<ResponseBookingDetilsDTO> {
         const { userId, lawyerId, consultationFee, slotId, parentBookingId } = bookingDetails;
 
-
         const lawyer = await this._lawyerRepository.findById(lawyerId);
         if (!lawyer) {
             throw new NotFoundError("Lawyer not found");
         }
 
-
         if (slotId) {
             const slot = await this._slotRepository.getSlotById(slotId);
-            if (slot && slot.restrictedTo && slot.restrictedTo !== userId) {
+            if (!slot) {
+                throw new BadRequestError("Slot not found.");
+            }
+
+            if (slot.restrictedTo && slot.restrictedTo !== userId) {
                 throw new BadRequestError("This slot is reserved for a specific follow-up appointment.");
+            }
+
+
+            const now = new Date();
+            const [year, month, day] = slot.date.split('-').map(Number);
+            const [hours, minutes] = slot.startTime.split(':').map(Number);
+            const slotDateTime = new Date(year, month - 1, day, hours, minutes);
+
+            if (slotDateTime <= now) {
+                throw new BadRequestError(MessageConstants.BOOKING.SLOT_EXPIRED);
+            }
+
+            const reserved = await this._slotRepository.reserveSlot(slotId, userId, 2);
+            if (!reserved) {
+                throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
             }
         }
 
         const wallet = await this._walletRepository.findByUserId(userId);
         if (!wallet || wallet.balance < consultationFee) {
+            if (slotId) await this._slotRepository.releaseSlot(slotId);
             throw new BadRequestError("Insufficient wallet balance");
         }
-
 
         let commissionPercent = 0;
         if (lawyer.subscriptionId) {
@@ -59,114 +78,130 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             }
         }
 
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-        const booking = new Booking(
-            '',
-            userId,
-            lawyerId,
-            bookingDetails.date,
-            bookingDetails.startTime,
-            bookingDetails.endTime,
-            consultationFee,
-            'confirmed',
-            'paid',
-            'WALLET_PAYMENT',
-            'WALLET',
-            bookingDetails.description,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            commissionPercent,
-            undefined,
-            undefined,
-            undefined,
-            'none',
-            undefined,
-            undefined,
-            'none',
-            parentBookingId
-        );
+        try {
+            const booking = new Booking(
+                '',
+                userId,
+                lawyerId,
+                bookingDetails.date,
+                bookingDetails.startTime,
+                bookingDetails.endTime,
+                consultationFee,
+                'confirmed',
+                'paid',
+                'WALLET_PAYMENT',
+                'WALLET',
+                bookingDetails.description,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                commissionPercent,
+                undefined,
+                undefined,
+                undefined,
+                'none',
+                undefined,
+                undefined,
+                'none',
+                parentBookingId
+            );
 
-        const data = await this._bookingRepository.create(booking);
+
+            const data = await this._bookingRepository.create(booking, session);
 
 
-        const transaction: WalletTransaction = {
-            type: 'debit',
-            amount: consultationFee,
-            date: new Date(),
-            status: 'completed',
-            bookingId: data.id,
-            description: `Payment for consultation with ${lawyer.name}`,
-            metadata: {
-                lawyerName: lawyer.name,
-                lawyerId: lawyer.id,
-                date: bookingDetails.date,
-                time: bookingDetails.startTime,
-                displayId: data.bookingId
+            const walletTransaction: WalletTransaction = {
+                type: 'debit',
+                amount: consultationFee,
+                date: new Date(),
+                status: 'completed',
+                bookingId: data.id,
+                description: `Payment for consultation with ${lawyer.name}`,
+                metadata: {
+                    lawyerName: lawyer.name,
+                    lawyerId: lawyer.id,
+                    date: bookingDetails.date,
+                    time: bookingDetails.startTime,
+                    displayId: data.bookingId
+                }
+            };
+            await this._walletRepository.addTransaction(userId, -consultationFee, walletTransaction, session);
+
+            if (slotId) {
+                const booked = await this._slotRepository.bookSlot(slotId, userId, data.id, session);
+                if (!booked) {
+                    throw new Error("SLOT_TAKEN_OR_EXPIRED");
+                }
             }
-        };
 
-        await this._walletRepository.addTransaction(userId, -consultationFee, transaction);
-
-
-        if (slotId) {
-            await this._slotRepository.bookSlot(slotId, userId, data.id);
-        }
-
-
-        if (parentBookingId) {
-            await this._bookingRepository.updateFollowUpStatus(parentBookingId, 'booked');
-        }
-
-
-        const payment = new Payment(
-            '',
-            userId,
-            lawyerId,
-            consultationFee,
-            'INR',
-            'completed',
-            'WALLET_PAYMENT',
-            'wallet',
-            new Date(),
-            new Date(),
-            data.id,
-            undefined,
-            'booking'
-        );
-        await this._paymentRepository.create(payment);
-
-
-        if (!parentBookingId) {
-            const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, data.id);
-            if (!existingRoom) {
-                await this._chatRoomRepository.save(new ChatRoom('', userId, lawyerId, data.id));
+            if (parentBookingId) {
+                await this._bookingRepository.updateFollowUpStatus(parentBookingId, 'booked');
             }
+
+            const payment = new Payment(
+                '',
+                userId,
+                lawyerId,
+                consultationFee,
+                'INR',
+                'completed',
+                'WALLET_PAYMENT',
+                'wallet',
+                new Date(),
+                new Date(),
+                data.id,
+                undefined,
+                'booking'
+            );
+            await this._paymentRepository.create(payment);
+
+            if (!parentBookingId) {
+                const existingRoom = await this._chatRoomRepository.findByUserAndLawyer(userId, lawyerId, data.id);
+                if (!existingRoom) {
+                    await this._chatRoomRepository.save(new ChatRoom('', userId, lawyerId, data.id));
+                }
+            }
+
+            await session.commitTransaction();
+
+
+            this._sendNotificationUseCase.execute(
+                lawyerId,
+                `You have a new booking (paid via Wallet) from a client for ${bookingDetails.date} at ${bookingDetails.startTime}. Booking ID: ${data.bookingId}`,
+                'NEW_BOOKING',
+                { appointmentId: data.id }
+            ).catch(err => console.error("Notification failed", err));
+
+            return new ResponseBookingDetilsDTO(
+                data.id,
+                data.date,
+                data.startTime,
+                data.endTime,
+                data.consultationFee,
+                lawyer.name,
+                lawyer.profileImage,
+                'WALLET_PAYMENT',
+                'WALLET',
+                data.description
+            );
+
+        } catch (error: unknown) {
+            await session.abortTransaction();
+            if (slotId) await this._slotRepository.releaseSlot(slotId);
+
+            if (error instanceof Error && error.message === "SLOT_TAKEN_OR_EXPIRED") {
+                throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
+            }
+            throw new BadRequestError(MessageConstants.BOOKING.TRANSACTION_ERROR);
+        } finally {
+            session.endSession();
         }
-
-
-        await this._sendNotificationUseCase.execute(
-            lawyerId,
-            `You have a new booking (paid via Wallet) from a client for ${bookingDetails.date} at ${bookingDetails.startTime}. Booking ID: ${data.bookingId}`,
-            'NEW_BOOKING',
-            { appointmentId: data.id }
-        );
-
-        return new ResponseBookingDetilsDTO(
-            data.id,
-            data.date,
-            data.startTime,
-            data.endTime,
-            data.consultationFee,
-            lawyer.name,
-            lawyer.profileImage,
-            'WALLET_PAYMENT',
-            'WALLET',
-            data.description
-        );
     }
 }

@@ -109,6 +109,15 @@ export class LawyerAuthMiddleware {
                 return;
             }
 
+            const whitelistedPaths = ['/profile', '/verifyDetils'];
+            if (status.verificationStatus === 'Rejected' && !whitelistedPaths.includes(req.path)) {
+                res.status(HttpStatusCode.FORBIDDEN).json({
+                    success: false,
+                    message: "Your profile has been rejected by the admin. Please resubmit your details.",
+                });
+                return;
+            }
+
             next();
         } catch (error) {
 

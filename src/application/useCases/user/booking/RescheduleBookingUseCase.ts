@@ -36,7 +36,7 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
         }
 
 
-   
+
 
         const newSlot = await this._slotRepository.getSlotById(newSlotId);
 
@@ -60,7 +60,10 @@ export class RescheduleBookingUseCase implements IRescheduleBookingUseCase {
             booking.startTime
         );
 
-        await this._slotRepository.bookSlot(newSlotId, userId, bookingId);
+        const booked = await this._slotRepository.bookSlot(newSlotId, userId, bookingId);
+        if (!booked) {
+            throw new BadRequestError(MessageConstants.BOOKING.SLOT_ALREADY_TAKEN);
+        }
 
         await this._bookingRepository.rescheduleBooking(
             bookingId,
