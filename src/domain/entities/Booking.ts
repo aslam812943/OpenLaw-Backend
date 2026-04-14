@@ -29,6 +29,7 @@ export class Booking {
         public followUpStatus: 'cancelled' | 'pending' | 'booked' | 'none' = 'none',
         public parentBookingId?: string,
         public followUpSlotId?: string,
-        public rescheduleCount: number = 0
+        public rescheduleCount: number = 0,
+        public penaltyAmount: number = 0
     ) { }
 }

@@ -51,7 +51,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.followUpStatus as 'none' | 'pending' | 'booked',
             doc.parentBookingId?.toString(),
             doc.followUpSlotId?.toString(),
-            doc.rescheduleCount || 0
+            doc.rescheduleCount || 0,
+            doc.penaltyAmount || 0
         );
     }
 
@@ -81,7 +82,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         }
     }
 
-    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string, session?: mongoose.ClientSession): Promise<void> {
+    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string, session?: mongoose.ClientSession, penaltyAmount?: number): Promise<void> {
         try {
             const updateData: Partial<IBookingDocument> = { status };
             if (reason) {
@@ -93,6 +94,9 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             }
             if (lawyerFeedback) {
                 updateData.lawyerFeedback = lawyerFeedback;
+            }
+            if (penaltyAmount !== undefined) {
+                updateData.penaltyAmount = penaltyAmount;
             }
             await this.baseUpdate(id, updateData, session);
         } catch (error: unknown) {

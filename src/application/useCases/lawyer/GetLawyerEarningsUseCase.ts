@@ -13,7 +13,7 @@ export class GetLawyerEarningsUseCase implements IGetLawyerEarningsUseCase {
 
     async execute(lawyerId: string, page: number = 1, limit: number = 10): Promise<GetLawyerEarningsDTO> {
         const [result, lawyer, stats] = await Promise.all([
-            this._bookingRepository.findByLawyerId(lawyerId, page, limit, 'confirmed,completed,follow-up,cancelled'),
+            this._bookingRepository.findByLawyerId(lawyerId, page, limit, 'confirmed,completed,follow-up,cancelled,rejected'),
             this._lawyerRepository.findById(lawyerId),
             this._bookingRepository.getEarningsStats(lawyerId)
         ]);
