@@ -37,7 +37,7 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
             throw new NotFoundError("Appointment not found.");
         }
 
-       
+
         if (['completed', 'rejected', 'cancelled'].includes(booking.status)) {
             throw new BadRequestError(`Cannot update an appointment that is already ${booking.status}.`);
         }
@@ -51,15 +51,16 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
 
         const now = new Date();
 
-    
+
         if ((status === 'confirmed' || status === 'rejected') && appointmentDate < now) {
             throw new BadRequestError(`Cannot ${status} an appointment that has already passed.`);
         }
 
-      
+
         if (status === 'completed' && appointmentDate > now) {
             throw new BadRequestError("Cannot mark a future appointment as completed.");
         }
+
 
         const session = await mongoose.startSession();
         session.startTransaction();
@@ -90,39 +91,41 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                         await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
                     }
 
-                    await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, {
-                        amount: booking.consultationFee,
-                        status: 'full'
-                    }, undefined, session);
-
+                    let penaltyAmount = 0;
                     if (lawyer?.subscriptionId) {
                         const subscription = await this._subscriptionRepository.findById(lawyer.subscriptionId.toString());
                         if (subscription && subscription.lawyerCancellationPenaltyPercent > 0) {
-                            const penaltyAmount = (booking.consultationFee * subscription.lawyerCancellationPenaltyPercent) / 100;
-                            if (penaltyAmount > 0) {
-                                await this._lawyerRepository.updateWalletBalance(booking.lawyerId.toString(), -penaltyAmount, session);
-                                await this._adminRepository.updateWalletBalance(penaltyAmount, session);
-                                await this._walletRepository.addTransaction(booking.lawyerId.toString(), -penaltyAmount, {
-                                    type: 'debit',
-                                    amount: penaltyAmount,
-                                    date: new Date(),
-                                    status: 'completed',
-                                    bookingId: appointmentId,
-                                    description: `Cancellation penalty for appointment ${booking.bookingId}`,
-                                    metadata: {
-                                        displayId: booking.bookingId,
-                                        reason: "Lawyer rejected the booking"
-                                    }
-                                }, session);
-
-                                await this._sendNotificationUseCase.execute(
-                                    booking.lawyerId.toString(),
-                                    `A penalty of ₹${penaltyAmount.toFixed(2)} (${subscription.lawyerCancellationPenaltyPercent}%) has been deducted from your wallet for cancelling appointment ${booking.bookingId}.`,
-                                    'CANCELLATION_PENALTY',
-                                    { appointmentId, penaltyAmount }
-                                );
-                            }
+                            penaltyAmount = (booking.consultationFee * subscription.lawyerCancellationPenaltyPercent) / 100;
                         }
+                    }
+
+                    await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, {
+                        amount: booking.consultationFee,
+                        status: 'full'
+                    }, undefined, session, penaltyAmount);
+
+                    if (penaltyAmount > 0) {
+                        await this._lawyerRepository.updateWalletBalance(booking.lawyerId.toString(), -penaltyAmount, session);
+                        await this._adminRepository.updateWalletBalance(penaltyAmount, session);
+                        await this._walletRepository.addTransaction(booking.lawyerId.toString(), -penaltyAmount, {
+                            type: 'debit',
+                            amount: penaltyAmount,
+                            date: new Date(),
+                            status: 'completed',
+                            bookingId: appointmentId,
+                            description: `Cancellation penalty for appointment ${booking.bookingId}`,
+                            metadata: {
+                                displayId: booking.bookingId,
+                                reason: "Lawyer rejected the booking"
+                            }
+                        }, session);
+
+                        await this._sendNotificationUseCase.execute(
+                            booking.lawyerId.toString(),
+                            `A penalty of ₹${penaltyAmount.toFixed(2)} has been deducted from your wallet for cancelling appointment ${booking.bookingId}.`,
+                            'CANCELLATION_PENALTY',
+                            { appointmentId, penaltyAmount }
+                        );
                     }
                 } else {
                     await this._bookingRepository.updateStatus(appointmentId, 'rejected', undefined, undefined, undefined, session);

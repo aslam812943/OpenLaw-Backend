@@ -77,7 +77,20 @@ const io = new Server(server, {
 socketServerService.setupSocketServer(io);
 
 
+import cron from "node-cron";
+import { autoCancelExpiredBookingsUseCase } from "./di/cronContainer";
+
 const PORT = process.env.PORT
+
+// Schedule cleanup task to run every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    logger.info("Running automated booking cleanup...");
+    await autoCancelExpiredBookingsUseCase.execute();
+  } catch (error) {
+    logger.error("Error in automated booking cleanup cron:", error);
+  }
+});
 
 server.listen(PORT, () => {
   logger.info(` Server + Socket.IO running on port ${PORT}`);

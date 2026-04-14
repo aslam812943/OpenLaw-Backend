@@ -28,6 +28,7 @@ export interface IBookingDocument extends Document {
     parentBookingId?: mongoose.Types.ObjectId;
     followUpSlotId?: mongoose.Types.ObjectId;
     rescheduleCount: number;
+    penaltyAmount: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -59,7 +60,8 @@ const BookingSchema: Schema = new Schema({
     followUpStatus: { type: String, enum: ['none', 'pending', 'booked'], default: 'none' },
     parentBookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
     followUpSlotId: { type: Schema.Types.ObjectId, ref: 'Slot' },
-    rescheduleCount: { type: Number, default: 0 }
+    rescheduleCount: { type: Number, default: 0 },
+    penaltyAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);
