@@ -14,6 +14,24 @@ export class SetFollowUpUseCase implements ISetFollowUpUseCase {
         private _lawyerRepository: ILawyerRepository
     ) { }
 
+    private getAppointmentEndDateTime(date: string, endTime: string): Date {
+        const endDateTime = new Date(date);
+
+        
+        if (endTime.includes(' ')) {
+            const [time, modifier] = endTime.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+            endDateTime.setHours(hours, minutes, 0, 0);
+        } else {
+            const [hours, minutes] = endTime.split(':').map(Number);
+            endDateTime.setHours(hours, minutes, 0, 0);
+        }
+
+        return endDateTime;
+    }
+
     async execute(appointmentId: string, followUpType: 'none' | 'specific' | 'deadline', followUpDate?: string, followUpTime?: string, feedback?: string): Promise<void> {
         if (!appointmentId || !followUpType) {
             throw new BadRequestError("Appointment ID and follow-up type are required.");
@@ -26,6 +44,12 @@ export class SetFollowUpUseCase implements ISetFollowUpUseCase {
 
         if (booking.status === 'cancelled' || booking.status === 'rejected') {
             throw new BadRequestError("Follow-up cannot be set for cancelled or rejected appointments.");
+        }
+
+        const appointmentEndDateTime = this.getAppointmentEndDateTime(booking.date, booking.endTime);
+        const now = new Date();
+        if (appointmentEndDateTime > now) {
+            throw new BadRequestError("Follow-up can only be added after the booked time has finished.");
         }
 
 

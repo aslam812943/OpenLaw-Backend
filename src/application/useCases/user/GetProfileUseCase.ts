@@ -21,6 +21,7 @@ export class GetProfileUseCase implements IGetProfileUseCase {
     if (!data) {
       throw new NotFoundError(`User not found for ID: ${userId}`);
     }
+  
 
     const userDTO = new ResponseGetProfileDTO(
       data.id ?? "",
@@ -29,7 +30,7 @@ export class GetProfileUseCase implements IGetProfileUseCase {
       data.phone ? String(data.phone) : "",
       data.profileImage ?? "",
       data.address ?? {},
-      data.isPassword ?? true
+      data.isPassword ?? false
     );
 
     return userDTO;

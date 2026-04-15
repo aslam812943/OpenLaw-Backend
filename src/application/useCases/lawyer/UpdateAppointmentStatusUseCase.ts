@@ -70,26 +70,28 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                 if (booking.paymentStatus === 'paid') {
                     const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
 
-                    if (booking.paymentId === 'WALLET_PAYMENT' || booking.stripeSessionId === 'WALLET') {
-                        await this._walletRepository.addTransaction(booking.userId, booking.consultationFee, {
-                            type: 'credit',
-                            amount: booking.consultationFee,
-                            date: new Date(),
-                            status: 'completed',
-                            bookingId: appointmentId,
-                            description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Lawyer Rejected`,
-                            metadata: {
-                                reason: feedback || 'Lawyer rejected the appointment',
-                                lawyerName: lawyer?.name,
-                                lawyerId: booking.lawyerId.toString(),
-                                date: booking.date,
-                                time: booking.startTime,
-                                displayId: booking.bookingId
-                            }
-                        }, session);
-                    } else if (booking.paymentId) {
+                    const isWalletPayment = booking.paymentId === 'WALLET_PAYMENT' || booking.stripeSessionId === 'WALLET';
+
+                    if (!isWalletPayment && booking.paymentId) {
                         await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
                     }
+
+                    await this._walletRepository.addTransaction(booking.userId.toString(), booking.consultationFee, {
+                        type: 'credit',
+                        amount: booking.consultationFee,
+                        date: new Date(),
+                        status: 'completed',
+                        bookingId: appointmentId,
+                        description: `Refund for appointment with ${lawyer?.name || 'Lawyer'} - Lawyer Rejected`,
+                        metadata: {
+                            reason: feedback || 'Lawyer rejected the appointment',
+                            lawyerName: lawyer?.name,
+                            lawyerId: booking.lawyerId.toString(),
+                            date: booking.date,
+                            time: booking.startTime,
+                            displayId: booking.bookingId
+                        }
+                    }, session);
 
                     let penaltyAmount = 0;
                     if (lawyer?.subscriptionId) {
@@ -138,7 +140,7 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                     { appointmentId }
                 );
 
-                if (booking.paymentStatus === 'paid' && (booking.paymentId === 'WALLET_PAYMENT' || booking.stripeSessionId === 'WALLET')) {
+                if (booking.paymentStatus === 'paid') {
                     await this._sendNotificationUseCase.execute(
                         booking.userId.toString(),
                         `A refund of ₹${booking.consultationFee} for appointment ${booking.bookingId} has been added to your wallet.`,

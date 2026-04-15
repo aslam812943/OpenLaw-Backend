@@ -12,7 +12,7 @@ export class ReviewMapper {
                 d._id?.toString() || d.userId?.toString() || "",
                 d.userId?.toString() || "",
                 d.userName || "Anonymous",
-                d.userImage || "/default-user.jpg",
+                d.userImage || "/profile.jpg",
                 Number(d.rating ?? 0),
                 d.comment,
                 d.createdAt || new Date()
