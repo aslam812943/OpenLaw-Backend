@@ -31,6 +31,18 @@ export class VideoCallController {
         try {
             const { bookingId } = req.params;
 
+            const userId = req.user?.id;
+            const role = req.user?.role as 'user' | 'lawyer';
+
+            if (!userId || !role) {
+                return ApiResponse.error(res, HttpStatusCode.UNAUTHORIZED, "Unauthorized");
+            }
+
+            const ability = await this._canJoinCallUseCase.execute(bookingId, userId, role);
+            if (!ability.canJoin) {
+                return ApiResponse.error(res, HttpStatusCode.FORBIDDEN, ability.message);
+            }
+
             await this._joinCallUseCase.execute(bookingId);
             return ApiResponse.success(res, HttpStatusCode.OK, "Joined call successfully");
         } catch (error: unknown) {

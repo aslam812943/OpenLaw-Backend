@@ -22,6 +22,7 @@ export class PopulatedChatRoomDTO {
             startTime: string;
             description: string;
             date: string;
+            status?: string;
         },
         public type?:string
     ) { }

@@ -118,7 +118,8 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
                     description: doc.bookingDetails.description,
-                    date: doc.bookingDetails.date
+                    date: doc.bookingDetails.date,
+                    status: doc.bookingDetails.status
                 } : undefined
             };
         } catch (error: unknown) {
@@ -212,7 +213,8 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
                     description: doc.bookingDetails.description,
-                    date: doc.bookingDetails.date
+                    date: doc.bookingDetails.date,
+                    status: doc.bookingDetails.status
                 } : undefined
             }));
         } catch (error: unknown) {
@@ -288,7 +290,8 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
                     description: doc.bookingDetails.description,
-                    date: doc.bookingDetails.date
+                    date: doc.bookingDetails.date,
+                    status: doc.bookingDetails.status
                 } : undefined
             }));
         } catch (error: unknown) {
@@ -407,7 +410,8 @@ export class ChatRoomRepository extends BaseRepository<IChatRoomDocument> implem
                     bookingId: doc.bookingDetails.bookingId,
                     startTime: doc.bookingDetails.startTime,
                     description: doc.bookingDetails.description,
-                    date: doc.bookingDetails.date
+                    date: doc.bookingDetails.date,
+                    status: doc.bookingDetails.status
                 } : undefined
             }));
         } catch (error: unknown) {

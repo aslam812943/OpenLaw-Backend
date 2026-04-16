@@ -58,7 +58,7 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
 
             if (booking.paymentStatus === 'paid') {
                 if (booking.paymentId === 'WALLET_PAYMENT' || booking.stripeSessionId === 'WALLET') {
-                    await this._walletRepository.addTransaction(booking.userId, booking.consultationFee, {
+                    await this._walletRepository.addTransaction(booking.userId.toString(), booking.consultationFee, {
                         type: 'credit',
                         amount: booking.consultationFee,
                         date: new Date(),
@@ -76,6 +76,24 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
                     }, session);
                 } else if (booking.paymentId) {
                     await this._paymentService.refundPayment(booking.paymentId, booking.consultationFee);
+
+
+                    await this._walletRepository.addTransaction(booking.userId.toString(), booking.consultationFee, {
+                        type: 'credit',
+                        amount: booking.consultationFee,
+                        date: new Date(),
+                        status: 'completed',
+                        bookingId: appointmentId,
+                        description: `Refund: Appointment expired (No response from Lawyer)`,
+                        metadata: {
+                            reason: 'Automatic cancellation due to non-response',
+                            lawyerName: lawyer?.name,
+                            lawyerId: booking.lawyerId.toString(),
+                            date: booking.date,
+                            time: booking.startTime,
+                            displayId: booking.bookingId
+                        }
+                    }, session);
                 }
 
                 let penaltyAmount = 0;

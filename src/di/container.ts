@@ -9,11 +9,13 @@ import { SendNotificationUseCase } from "../application/useCases/common/notifica
 import { GetNotificationsUseCase } from "../application/useCases/common/notification/GetNotificationsUseCase";
 import { MarkNotificationAsReadUseCase } from "../application/useCases/common/notification/MarkNotificationAsReadUseCase";
 import { NotificationController } from "../interface/controllers/common/notification/NotificationController";
+import { BookingRepository } from "../infrastructure/repositories/user/BookingRepository";
 
 const messageRepository = new MessageRepository();
 const chatRoomRepository = new ChatRoomRepository();
+const bookingRepository = new BookingRepository();
 
-const sendMessageUseCase = new SendMessageUseCase(messageRepository, chatRoomRepository);
+const sendMessageUseCase = new SendMessageUseCase(messageRepository, chatRoomRepository, bookingRepository);
 const markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(messageRepository);
 const socketAuthService = new SocketAuthService();
 
