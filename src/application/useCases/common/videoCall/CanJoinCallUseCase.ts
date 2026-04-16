@@ -20,25 +20,23 @@ export class CanJoinCallUseCase implements ICanJoinCallUseCase {
             return { canJoin: false, message: "Unauthorized: You are not the assigned lawyer for this booking" };
         }
 
-        
-        if (booking.status !== 'confirmed'&& booking.status!=='follow-up' || booking.paymentStatus !== 'paid') {
+        if (!['confirmed', 'follow-up'].includes(booking.status) || booking.paymentStatus !== 'paid') {
             return { canJoin: false, message: "Valid confirmed booking required" };
         }
 
-
-        /*
+        // Allow the call to start only 5 minutes before the scheduled time.
         const now = new Date();
         const start = this.parseTime(booking.date, booking.startTime);
         const end = this.parseTime(booking.date, booking.endTime);
+        const callStartAllowed = new Date(start.getTime() - 5 * 60 * 1000);
 
-        if (now < start) {
-            return { canJoin: false, message: "Consultation time has not started yet" };
+        if (now < callStartAllowed) {
+            return { canJoin: false, message: "Call can be started only 5 minutes before the scheduled time" };
         }
 
         if (now > end) {
             return { canJoin: false, message: "Consultation session has already ended" };
         }
-        */
 
 
         if (role === 'user' && !booking.lawyerJoined) {
@@ -49,14 +47,31 @@ export class CanJoinCallUseCase implements ICanJoinCallUseCase {
     }
 
     private parseTime(dateStr: string, timeStr: string): Date {
-
         const date = new Date(dateStr);
-        const [time, modifier] = timeStr.split(' ');
-        let [hours, minutes] = time.split(':').map(Number);
 
-        if (modifier === 'PM' && hours < 12) hours += 12;
-        if (modifier === 'AM' && hours === 12) hours = 0;
+        if (!timeStr) return date;
 
+        const ampmMatch = timeStr.match(/\b(AM|PM)\b/i);
+        const modifier = ampmMatch?.[1]?.toUpperCase();
+        const timePart = timeStr.replace(/\b(AM|PM)\b/i, '').trim();
+        const [hoursStr, minutesStr = '0'] = timePart.split(':');
+
+        const hours = Number(hoursStr);
+        const minutes = Number(minutesStr);
+
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) return date;
+
+        if (modifier === 'PM' && hours < 12) {
+            date.setHours(hours + 12, minutes, 0, 0);
+            return date;
+        }
+
+        if (modifier === 'AM' && hours === 12) {
+            date.setHours(0, minutes, 0, 0);
+            return date;
+        }
+
+        
         date.setHours(hours, minutes, 0, 0);
         return date;
     }

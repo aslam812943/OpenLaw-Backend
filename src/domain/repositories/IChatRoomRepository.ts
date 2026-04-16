@@ -39,6 +39,7 @@ export interface PopulatedChatRoom {
         startTime: string;
         description: string;
         date: string;
+        status?: string;
     };
     createdAt: Date;
     lastMessage?: {
