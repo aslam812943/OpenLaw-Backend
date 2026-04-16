@@ -30,9 +30,9 @@ export class CanJoinCallUseCase implements ICanJoinCallUseCase {
         const end = this.parseTime(booking.date, booking.endTime);
         const callStartAllowed = new Date(start.getTime() - 5 * 60 * 1000);
 
-        if (now < callStartAllowed) {
-            return { canJoin: false, message: "Call can be started only 5 minutes before the scheduled time" };
-        }
+        // if (now < callStartAllowed) {
+        //     return { canJoin: false, message: "Call can be started only 5 minutes before the scheduled time" };
+        // }
 
         if (now > end) {
             return { canJoin: false, message: "Consultation session has already ended" };
