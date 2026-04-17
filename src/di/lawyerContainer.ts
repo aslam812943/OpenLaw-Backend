@@ -68,7 +68,9 @@ import { SpecializationController } from "../interface/controllers/lawyer/Specia
 import { GetActiveSpecializationsUseCase } from "../application/useCases/lawyer/specialization/GetActiveSpecializationsUseCase";
 import { SetFollowUpUseCase } from "../application/useCases/lawyer/SetFollowUpUseCase";
 import { LawyerRescheduleBookingUseCase } from "../application/useCases/lawyer/LawyerRescheduleBookingUseCase";
+import { ReportNoShowUseCase } from "../application/useCases/lawyer/ReportNoShowUseCase";
 import { SpecializationRepository } from "../infrastructure/repositories/admin/SpecializationRepository";
+import { MongooseDatabaseSessionFactory } from "../infrastructure/db/MongooseDatabaseSession";
 
 
 // ============================================================================
@@ -85,6 +87,7 @@ const paymentRepository = new PaymentRepository();
 const withdrawalRepository = new WithdrawalRepository();
 const reviewRepository = new ReviewRepository();
 const specializationRepository = new SpecializationRepository();
+const sessionFactory = new MongooseDatabaseSessionFactory();
 
 // ============================================================================
 //  Service Instances
@@ -117,11 +120,20 @@ const updateAppointmentStatusUseCase = new UpdateAppointmentStatusUseCase(
     chatRoomRepository,
     messageRepository,
     new AdminRepository(),
-    subscriptionRepository
+    subscriptionRepository,
+    sessionFactory
 );
 
 const setFollowUpUseCase = new SetFollowUpUseCase(bookingRepository, sendNotificationUseCase, availabilityRuleRepository, lawyerRepository);
 const lawyerRescheduleUseCase = new LawyerRescheduleBookingUseCase(bookingRepository, availabilityRuleRepository, sendNotificationUseCase);
+const reportNoShowUseCase = new ReportNoShowUseCase(
+    bookingRepository,
+    lawyerRepository,
+    walletRepository,
+    new AdminRepository(),
+    sendNotificationUseCase,
+    sessionFactory
+);
 
 const getSubscriptionPlansUseCase = new GetSubscriptionPlansUseCase(subscriptionRepository);
 const getCurrentSubscriptionUseCase = new GetCurrentSubscriptionUseCase(lawyerRepository, subscriptionRepository);
@@ -159,7 +171,8 @@ export const appoimentsController = new AppointmentsController(
     updateAppointmentStatusUseCase,
     setFollowUpUseCase,
     getAppointmentDetailsUseCase,
-    lawyerRescheduleUseCase
+    lawyerRescheduleUseCase,
+    reportNoShowUseCase
 );
 export const subscriptionController = new SubscriptionController(getSubscriptionPlansUseCase, getCurrentSubscriptionUseCase);
 export const subscriptionPaymentController = new SubscriptionPaymentController(createSubscriptionCheckoutUseCase, verifySubscriptionPaymentUseCase);

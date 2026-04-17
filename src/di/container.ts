@@ -22,7 +22,8 @@ const socketAuthService = new SocketAuthService();
 export const socketServerService = new SocketServerService(
     sendMessageUseCase,
     markMessagesAsReadUseCase,
-    socketAuthService
+    socketAuthService,
+    bookingRepository
 );
 
 // Notifications

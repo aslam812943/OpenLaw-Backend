@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { ISession } from "../../interfaces/ISession";
 import { Lawyer } from "../../entities/Lawyer";
 import { VerificationLawyerDTO } from "../../../application/dtos/lawyer/VerificationLawyerDTO";
 import { UpdateLawyerProfileDTO } from "../../../application/dtos/lawyer/UpdateLawyerProfileDTO";
@@ -21,5 +21,5 @@ export interface ILawyerRepository {
   // findOne(userId: string): Promise<string | null>
   updateGoogleId(id: string, googleId: string): Promise<void>;
   updateSubscriptionStatus(id: string, subscriptionId: string, paymentVerified: boolean, startDate: Date, expiryDate: Date): Promise<void>;
-  updateWalletBalance(lawyerId: string, amount: number, session?: mongoose.ClientSession): Promise<void>;
+  updateWalletBalance(lawyerId: string, amount: number, session?: ISession): Promise<void>;
 }

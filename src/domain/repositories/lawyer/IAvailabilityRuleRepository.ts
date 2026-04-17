@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { ISession } from "../../interfaces/ISession";
 import { UpdateAvailabilityRuleDTO } from "../../../application/dtos/lawyer/UpdateAvailabilityRuleDTO";
 import { AvailabilityRule } from "../../entities/AvailabilityRule";
 import { Slot } from "../../entities/Slot";
@@ -16,13 +16,13 @@ export interface IAvailabilityRuleRepository {
     getAllRules(id: string): Promise<AvailabilityRule[]>;
     deleteRuleById(ruleId: string): Promise<void>
     getAllSlots(lawyerId: string): Promise<Slot[]>
-    reserveSlot(id: string, userId: string, durationMinutes?: number, session?: mongoose.ClientSession): Promise<boolean>
-    bookSlot(id: string, userId?: string, bookingId?: string, session?: mongoose.ClientSession): Promise<boolean>;
+    reserveSlot(id: string, userId: string, durationMinutes?: number, session?: ISession): Promise<boolean>
+    bookSlot(id: string, userId?: string, bookingId?: string, session?: ISession): Promise<boolean>;
     findSlotIdByDateTime(lawyerId: string, date: string, startTime: string): Promise<string | null>;
     releaseSlot(id: string): Promise<void>;
-    cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void>
+    cancelSlot(startTime: string, lawyerId: string, date: string, session?: ISession): Promise<void>
     getAppoiments(lawyerId: string): Promise<Booking[]>
-    updateAppointmentStatus(id: string, status: string): Promise<void>;
+    updateAppointmentStatus(id: string, status: string, session?: ISession): Promise<void>;
     restrictSlot(id: string, userId: string): Promise<void>;
     getSlotById(id: string): Promise<Slot | null>;
     releaseSlotByBookingId(bookingId: string, lawyerId?: string, date?: string, startTime?: string): Promise<void>;

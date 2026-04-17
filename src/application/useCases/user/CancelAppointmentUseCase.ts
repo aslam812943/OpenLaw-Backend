@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
@@ -11,6 +10,7 @@ import { IAdminRepository } from "../../../domain/repositories/admin/IAdminRepos
 import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { ISendNotificationUseCase } from "../../interface/use-cases/common/notification/ISendNotificationUseCase";
+import { IDatabaseSessionFactory } from "../../../domain/interfaces/IDatabaseSession";
 
 export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
     constructor(
@@ -22,7 +22,8 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
         private _sendNotificationUseCase: ISendNotificationUseCase,
         private _chatRoomRepository: IChatRoomRepository,
         private _messageRepository: IMessageRepository,
-        private _adminRepository: IAdminRepository
+        private _adminRepository: IAdminRepository,
+        private _sessionFactory: IDatabaseSessionFactory
     ) { }
 
     async execute(bookingId: string, reason: string): Promise<void> {
@@ -72,10 +73,11 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             refundStatus = 'partial';
         }
 
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        const dbSession = await this._sessionFactory.createSession();
+        await dbSession.startTransaction();
 
         try {
+            const session = dbSession.getSession();
             if (booking.paymentStatus === 'paid' && booking.paymentId) {
                 await this._paymentService.refundPayment(booking.paymentId, refundAmount);
 
@@ -139,7 +141,7 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
                 { appointmentId: bookingId }
             );
 
-            await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date);
+            await this._slotRepository.cancelSlot(booking.startTime, booking.lawyerId, booking.date, session);
 
             try {
                 const chatRoom = await this._chatRoomRepository.findByBookingId(bookingId);
@@ -150,12 +152,12 @@ export class CancelAppointmentUseCase implements ICancelAppointmentUseCase {
             } catch (error) {
             }
 
-            await session.commitTransaction();
+            await dbSession.commitTransaction();
         } catch (error) {
-            await session.abortTransaction();
+            await dbSession.abortTransaction();
             throw error;
         } finally {
-            session.endSession();
+            dbSession.endSession();
         }
     }
 }

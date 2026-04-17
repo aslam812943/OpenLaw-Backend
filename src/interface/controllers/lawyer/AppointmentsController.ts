@@ -4,6 +4,7 @@ import { IUpdateAppointmentStatusUseCase } from "../../../application/interface/
 import { ISetFollowUpUseCase } from "../../../application/interface/use-cases/lawyer/ISetFollowUpUseCase";
 import { IGetAppointmentDetailsUseCase } from "../../../application/interface/use-cases/lawyer/IGetAppointmentDetailsUseCase";
 import { ILawyerRescheduleBookingUseCase } from "../../../application/interface/use-cases/lawyer/ILawyerRescheduleBookingUseCase";
+import { IReportNoShowUseCase } from "../../../application/interface/use-cases/lawyer/IReportNoShowUseCase";
 import { HttpStatusCode } from "../../../infrastructure/interface/enums/HttpStatusCode";
 import { MessageConstants } from "../../../infrastructure/constants/MessageConstants";
 import { ApiResponse } from "../../../infrastructure/utils/ApiResponse";
@@ -14,7 +15,8 @@ export class AppointmentsController {
         private readonly _updateStatusUseCase: IUpdateAppointmentStatusUseCase,
         private readonly _setFollowUpUseCase: ISetFollowUpUseCase,
         private readonly _getAppointmentDetailsUseCase: IGetAppointmentDetailsUseCase,
-        private readonly _rescheduleUseCase: ILawyerRescheduleBookingUseCase
+        private readonly _rescheduleUseCase: ILawyerRescheduleBookingUseCase,
+        private readonly _reportNoShowUseCase: IReportNoShowUseCase
     ) { }
 
     async getAppointments(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -91,6 +93,17 @@ export class AppointmentsController {
 
             return ApiResponse.success(res, HttpStatusCode.OK, MessageConstants.BOOKING.RESCHEDULE_SUCCESS);
         } catch (error) {
+            next(error);
+        }
+    }
+
+    async reportNoShow(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const { id } = req.params;
+            await this._reportNoShowUseCase.execute(id);
+
+            return ApiResponse.success(res, HttpStatusCode.OK, "Successfully reported User No-Show. Consultation marked as completed.");
+        } catch (error: unknown) {
             next(error);
         }
     }

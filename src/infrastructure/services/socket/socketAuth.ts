@@ -26,9 +26,10 @@ export class SocketAuthService implements ISocketAuth {
                 return next(new UnauthorizedError('Authentication error: Token missing'));
             }
 
+            const secret = (process.env.JWT_SECRET || '').trim();
             const decoded = jwt.verify(
                 token,
-                process.env.JWT_SECRET!
+                secret
             ) as JwtPayload;
 
             socket.data.userId = decoded.id;

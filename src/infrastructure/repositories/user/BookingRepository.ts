@@ -6,6 +6,7 @@ import { MessageConstants } from "../../constants/MessageConstants";
 import mongoose, { Types } from "mongoose";
 import LawyerModel from "../../db/models/LawyerModel";
 import UserModel from "../../db/models/UserModel";
+import { ISession } from "../../../domain/interfaces/ISession";
 
 import { BaseRepository } from "../BaseRepository";
 
@@ -52,11 +53,14 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.parentBookingId?.toString(),
             doc.followUpSlotId?.toString(),
             doc.rescheduleCount || 0,
-            doc.penaltyAmount || 0
+            doc.penaltyAmount || 0,
+            doc.callDuration || 0,
+            doc.lawyerCallDuration || 0,
+            doc.isWarningSent || false
         );
     }
 
-    async create(booking: Booking, session?: mongoose.ClientSession): Promise<Booking> {
+    async create(booking: Booking, session?: ISession): Promise<Booking> {
         try {
             const { id, ...bookingData } = booking;
 
@@ -82,7 +86,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
         }
     }
 
-    async updateStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected', reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string, session?: mongoose.ClientSession, penaltyAmount?: number): Promise<void> {
+    async updateStatus(id: string, status: string, reason?: string, refundDetails?: { amount: number, status: 'full' | 'partial' }, lawyerFeedback?: string, session?: ISession, penaltyAmount?: number): Promise<void> {
         try {
             const updateData: Partial<IBookingDocument> = { status };
             if (reason) {
@@ -261,6 +265,35 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             await this.baseUpdate(id, updateData);
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CALL_STATUS_UPDATE_ERROR);
+        }
+    }
+
+    async incrementCallDuration(id: string, seconds: number): Promise<void> {
+        try {
+            await this.model.findByIdAndUpdate(id, {
+                $inc: { callDuration: seconds }
+            });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    async incrementLawyerCallDuration(id: string, seconds: number): Promise<void> {
+        try {
+            const sanitizedId = id.trim();
+            await this.model.findByIdAndUpdate(sanitizedId, {
+                $inc: { lawyerCallDuration: seconds }
+            }, { new: true });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
+        }
+    }
+
+    async updateWarningStatus(id: string, isWarningSent: boolean): Promise<void> {
+        try {
+            await this.baseUpdate(id, { isWarningSent });
+        } catch (error: unknown) {
+            throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }
     }
 

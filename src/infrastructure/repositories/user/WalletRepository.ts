@@ -5,6 +5,8 @@ import { BaseRepository } from "../BaseRepository";
 import { InternalServerError } from "../../errors/InternalServerError";
 import { MessageConstants } from "../../constants/MessageConstants";
 import mongoose from "mongoose";
+import { ISession } from "../../../domain/interfaces/ISession";
+import { MongooseSession } from "../../db/MongooseDatabaseSession";
 
 export class WalletRepository extends BaseRepository<IWalletDocument> implements IWalletRepository {
     constructor() {
@@ -24,7 +26,7 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         }
     }
 
-    async findByUserId(userId: string, session?: mongoose.ClientSession): Promise<Wallet | null> {
+    async findByUserId(userId: string, session?: ISession): Promise<Wallet | null> {
         try {
             const walletDoc = await this.baseFindOne({ userId }, {}, session);
             if (!walletDoc) return null;
@@ -34,10 +36,11 @@ export class WalletRepository extends BaseRepository<IWalletDocument> implements
         }
     }
 
-    async addTransaction(userId: string, amount: number, transaction: WalletTransaction, externalSession?: mongoose.ClientSession): Promise<void> {
+    async addTransaction(userId: string, amount: number, transaction: WalletTransaction, externalSession?: ISession): Promise<void> {
         try {
-            if (externalSession) {
-                await this._executeAddTransaction(userId, amount, transaction, externalSession);
+            const nativeExternalSession = (externalSession as MongooseSession)?.nativeSession;
+            if (nativeExternalSession) {
+                await this._executeAddTransaction(userId, amount, transaction, nativeExternalSession);
             } else {
                 const session = await mongoose.startSession();
                 await session.withTransaction(async () => {

@@ -29,6 +29,9 @@ export interface IBookingDocument extends Document {
     followUpSlotId?: mongoose.Types.ObjectId;
     rescheduleCount: number;
     penaltyAmount: number;
+    callDuration: number;
+    lawyerCallDuration: number;
+    isWarningSent: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -61,7 +64,10 @@ const BookingSchema: Schema = new Schema({
     parentBookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
     followUpSlotId: { type: Schema.Types.ObjectId, ref: 'Slot' },
     rescheduleCount: { type: Number, default: 0 },
-    penaltyAmount: { type: Number, default: 0 }
+    penaltyAmount: { type: Number, default: 0 },
+    callDuration: { type: Number, default: 0 },
+    lawyerCallDuration: { type: Number, default: 0 },
+    isWarningSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export const BookingModel = mongoose.model<IBookingDocument>("Booking", BookingSchema);

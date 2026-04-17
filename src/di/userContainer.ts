@@ -76,6 +76,7 @@ import { NodeMailerEmailService } from "../infrastructure/services/nodeMailer/No
 import { OtpService } from "../infrastructure/services/otp/OtpService";
 import { LoginResponseMapper } from "../application/mapper/user/LoignResponseMapper";
 import { TokenService } from '../infrastructure/services/jwt/TokenService'
+import { MongooseDatabaseSessionFactory } from "../infrastructure/db/MongooseDatabaseSession";
 
 
 // all service instances
@@ -98,6 +99,7 @@ const messageRepository = new MessageRepository();
 const specializationRepository = new SpecializationRepository();
 const subscriptionRepository = new SubscriptionRepository();
 const adminRepository = new AdminRepository();
+const sessionFactory = new MongooseDatabaseSessionFactory();
 export const stripeService = new StripeService();
 
 // use case instances 
@@ -160,7 +162,8 @@ const cancelAppointmentUseCase = new CancelAppointmentUseCase(
     sendNotificationUseCase,
     chatRoomRepository,
     messageRepository,
-    adminRepository
+    adminRepository,
+    sessionFactory
 );
 const getWalletUseCase = new GetWalletUseCase(walletRepository);
 const cancelFollowUpUseCase = new CancelFollowUpUseCase(bookingRepository, availabilityRuleRepository);
@@ -172,7 +175,8 @@ const bookWithWalletUseCase = new BookWithWalletUseCase(
     subscriptionRepository,
     walletRepository,
     sendNotificationUseCase,
-    chatRoomRepository
+    chatRoomRepository,
+    sessionFactory
 );
 const rescheduleBookingUseCase = new RescheduleBookingUseCase(
     bookingRepository,

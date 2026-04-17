@@ -30,6 +30,9 @@ export class Booking {
         public parentBookingId?: string,
         public followUpSlotId?: string,
         public rescheduleCount: number = 0,
-        public penaltyAmount: number = 0
+        public penaltyAmount: number = 0,
+        public callDuration: number = 0,
+        public lawyerCallDuration: number = 0,
+        public isWarningSent: boolean = false
     ) { }
 }

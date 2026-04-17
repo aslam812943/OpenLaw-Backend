@@ -11,6 +11,8 @@ import { MessageConstants } from "../../constants/MessageConstants";
 
 import { BaseRepository } from "../BaseRepository";
 import { AdminDocument } from "../../db/models/admin/AdminModel";
+import { ISession } from "../../../domain/interfaces/ISession";
+import { MongooseSession } from "../../db/MongooseDatabaseSession";
 
 export class AdminRepository extends BaseRepository<AdminDocument> implements IAdminRepository {
   constructor() {
@@ -74,9 +76,10 @@ export class AdminRepository extends BaseRepository<AdminDocument> implements IA
     }
   }
 
-  async updateWalletBalance(amount: number, session?: import("mongoose").ClientSession): Promise<void> {
+  async updateWalletBalance(amount: number, session?: ISession): Promise<void> {
     try {
-      await this.model.findOneAndUpdate({}, { $inc: { walletBalance: amount } }, { session });
+      const nativeSession = (session as MongooseSession)?.nativeSession;
+      await this.model.findOneAndUpdate({}, { $inc: { walletBalance: amount } }, { session: nativeSession });
     } catch (error: unknown) {
       throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
     }

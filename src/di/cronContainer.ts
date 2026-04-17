@@ -3,12 +3,14 @@ import { BookingRepository } from "../infrastructure/repositories/user/BookingRe
 import { LawyerRepository } from "../infrastructure/repositories/lawyer/LawyerRepository";
 import { WalletRepository } from "../infrastructure/repositories/user/WalletRepository";
 import { AdminRepository } from "../infrastructure/repositories/admin/AdminRepository";
+import { ISubscriptionRepository } from "../domain/repositories/admin/ISubscriptionRepository";
 import { SubscriptionRepository } from "../infrastructure/repositories/admin/SubscriptionRepository";
 import { sendNotificationUseCase } from "./container";
 import { StripeService } from "../infrastructure/services/StripeService";
 import { ChatRoomRepository } from "../infrastructure/repositories/ChatRoomRepository";
 import { MessageRepository } from "../infrastructure/repositories/messageRepository";
 import { AvailabilityRuleRepository } from "../infrastructure/repositories/lawyer/AvailabilityRuleRepository";
+import { MongooseDatabaseSessionFactory } from "../infrastructure/db/MongooseDatabaseSession";
 
 const bookingRepository = new BookingRepository();
 const lawyerRepository = new LawyerRepository();
@@ -19,6 +21,7 @@ const stripeService = new StripeService();
 const chatRoomRepository = new ChatRoomRepository();
 const messageRepository = new MessageRepository();
 const availabilityRuleRepository = new AvailabilityRuleRepository();
+const sessionFactory = new MongooseDatabaseSessionFactory();
 
 export const autoCancelExpiredBookingsUseCase = new AutoCancelExpiredBookingsUseCase(
     bookingRepository,
@@ -30,5 +33,6 @@ export const autoCancelExpiredBookingsUseCase = new AutoCancelExpiredBookingsUse
     stripeService,
     chatRoomRepository,
     messageRepository,
-    availabilityRuleRepository
+    availabilityRuleRepository,
+    sessionFactory
 );

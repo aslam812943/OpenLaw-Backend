@@ -12,6 +12,7 @@ import { InternalServerError } from "../../errors/InternalServerError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
 import { MessageConstants } from "../../constants/MessageConstants";
+import { ISession } from "../../../domain/interfaces/ISession";
 import { BaseRepository } from "../BaseRepository";
 
 
@@ -362,7 +363,7 @@ export class LawyerRepository extends BaseRepository<ILawyerDocument> implements
     };
   }
 
-  async updateWalletBalance(lawyerId: string, amount: number, session?: mongoose.ClientSession): Promise<void> {
+  async updateWalletBalance(lawyerId: string, amount: number, session?: ISession): Promise<void> {
     try {
       await this.baseUpdate(lawyerId, {
         $inc: { walletBalance: amount }

@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { IBookingRepository } from "../../../../domain/repositories/IBookingRepository";
 import { IPaymentRepository } from "../../../../domain/repositories/IPaymentRepository";
 import { Booking } from "../../../../domain/entities/Booking";
@@ -17,6 +16,7 @@ import { IChatRoomRepository } from "../../../../domain/repositories/IChatRoomRe
 import { ChatRoom } from "../../../../domain/entities/ChatRoom";
 import { WalletTransaction } from "../../../../domain/entities/Wallet";
 import { MessageConstants } from "../../../../infrastructure/constants/MessageConstants";
+import { IDatabaseSessionFactory } from "../../../../domain/interfaces/IDatabaseSession";
 
 export class BookWithWalletUseCase implements IBookWithWalletUseCase {
     constructor(
@@ -27,7 +27,8 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
         private _subscriptionRepository: ISubscriptionRepository,
         private _walletRepository: IWalletRepository,
         private _sendNotificationUseCase: ISendNotificationUseCase,
-        private _chatRoomRepository: IChatRoomRepository
+        private _chatRoomRepository: IChatRoomRepository,
+        private _sessionFactory: IDatabaseSessionFactory
     ) { }
 
     async execute(bookingDetails: BookingDTO): Promise<ResponseBookingDetilsDTO> {
@@ -78,10 +79,11 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             }
         }
 
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        const dbSession = await this._sessionFactory.createSession();
+        await dbSession.startTransaction();
 
         try {
+            const session = dbSession.getSession();
             const booking = new Booking(
                 '',
                 userId,
@@ -93,7 +95,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
                 'confirmed',
                 'paid',
                 'WALLET_PAYMENT',
-                'WALLET',
+                `WALLET_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
                 bookingDetails.description,
                 undefined,
                 undefined,
@@ -110,7 +112,13 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
                 undefined,
                 undefined,
                 'none',
-                parentBookingId
+                parentBookingId,
+                undefined,
+                0, 
+                0, 
+                0, 
+                0, 
+                false 
             );
 
 
@@ -169,7 +177,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
                 }
             }
 
-            await session.commitTransaction();
+            await dbSession.commitTransaction();
 
 
             this._sendNotificationUseCase.execute(
@@ -193,7 +201,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             );
 
         } catch (error: unknown) {
-            await session.abortTransaction();
+            await dbSession.abortTransaction();
             if (slotId) await this._slotRepository.releaseSlot(slotId);
 
             if (error instanceof Error && error.message === "SLOT_TAKEN_OR_EXPIRED") {
@@ -201,7 +209,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
             }
             throw new BadRequestError(MessageConstants.BOOKING.TRANSACTION_ERROR);
         } finally {
-            session.endSession();
+            dbSession.endSession();
         }
     }
 }

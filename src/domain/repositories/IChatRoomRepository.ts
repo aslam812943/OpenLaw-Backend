@@ -1,22 +1,24 @@
 import { ChatRoom } from "../entities/ChatRoom";
-import { IChatRoomDocument } from "../../infrastructure/db/models/ChatRoomModel";
-import { Document, Types } from "mongoose";
 import { IBookingRepository } from "./IBookingRepository";
 
 export interface PopulatedUser {
-    _id: Types.ObjectId;
+    _id: string;
     name: string;
     profileImage?: string;
 }
 
 export interface PopulatedLawyer {
-    _id: Types.ObjectId;
+    _id: string;
     name: string;
     profileImage?: string;
     Profileimageurl?: string;
 }
 
-export interface IChatRoomDocumentWithTimestamps extends IChatRoomDocument, Document {
+export interface IChatRoomDocumentWithTimestamps {
+    userId: string;
+    lawyerId: string;
+    bookingId: string;
+    type: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -46,7 +48,7 @@ export interface PopulatedChatRoom {
         content: string;
         createdAt: Date;
     };
-    type:string
+    type: string
 }
 
 export interface IChatRoomRepository {
