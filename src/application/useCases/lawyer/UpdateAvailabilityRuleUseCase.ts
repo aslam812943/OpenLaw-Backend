@@ -6,7 +6,6 @@ import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { BadRequestError } from "../../../infrastructure/errors/BadRequestError";
 import { IGeneratedSlot, ISlotGeneratorService } from "../../interface/services/ISlotGeneratorService";
 import { AvailabilityValidator } from "../../utils/AvailabilityValidator";
-
 import { AvailabilityRule } from "../../../domain/entities/AvailabilityRule";
 import { Slot } from "../../../domain/entities/Slot";
 

@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { IAutoCancelExpiredBookingsUseCase } from "../../interface/use-cases/common/IAutoCancelExpiredBookingsUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
@@ -10,6 +9,7 @@ import { IPaymentService } from "../../interface/services/IPaymentService";
 import { IChatRoomRepository } from "../../../domain/repositories/IChatRoomRepository";
 import { IMessageRepository } from "../../../domain/repositories/IMessageRepository";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
+import { IDatabaseSessionFactory } from "../../../domain/interfaces/IDatabaseSession";
 
 export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBookingsUseCase {
     constructor(
@@ -22,37 +22,72 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
         private readonly _paymentService: IPaymentService,
         private readonly _chatRoomRepository: IChatRoomRepository,
         private readonly _messageRepository: IMessageRepository,
-        private readonly _availabilityRuleRepository: IAvailabilityRuleRepository
+        private readonly _availabilityRuleRepository: IAvailabilityRuleRepository,
+        private readonly _sessionFactory: IDatabaseSessionFactory
     ) { }
 
     async execute(): Promise<void> {
-        const { bookings } = await this._bookingRepository.findAll(1, 100, 'pending');
-
+        // Handle Pending Expired Bookings
+        const { bookings: pendingBookings } = await this._bookingRepository.findAll(1, 100, 'pending');
         const now = new Date();
 
-        for (const booking of bookings) {
+        for (const booking of pendingBookings) {
             try {
-                const expiryDate = new Date(booking.date);
-                const [time, modifier] = booking.endTime.split(' ');
-                let [hours, minutes] = time.split(':').map(Number);
-                if (modifier === 'PM' && hours < 12) hours += 12;
-                if (modifier === 'AM' && hours === 12) hours = 0;
-                expiryDate.setHours(hours, minutes, 0, 0);
-
+                const expiryDate = this.getBookingEndDate(booking);
                 if (expiryDate < now) {
-                    await this.processRejection(booking);
+                    await this.processRejection(booking, "Expired: No response from lawyer");
                 }
             } catch (error) {
-                console.error(`Error processing auto-cancellation for booking ${booking.id}:`, error);
+                console.error(`Error processing auto-cancellation for pending booking ${booking.id}:`, error);
+            }
+        }
+
+        // Handle Confirmed Bookings (24h warning and 48h auto-rejection)
+        const { bookings: confirmedBookings } = await this._bookingRepository.findAll(1, 100, 'confirmed');
+        for (const booking of confirmedBookings) {
+            try {
+                const endDate = this.getBookingEndDate(booking);
+
+               
+                const fortyEightHoursLater = new Date(endDate.getTime() + 48 * 60 * 60 * 1000);
+                if (now > fortyEightHoursLater) {
+                    await this.processRejection(booking, "Lawyer failed to mark as completed within 48h");
+                    continue;
+                }
+
+                // 24h Warning
+                const twentyFourHoursLater = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
+                if (now > twentyFourHoursLater && !booking.isWarningSent) {
+                    await this._sendNotificationUseCase.execute(
+                        booking.lawyerId.toString(),
+                        `Reminder: You have less than 24 hours to mark appointment ${booking.bookingId} as completed to avoid penalties.`,
+                        'APPOINTMENT_COMPLETION_REMINDER',
+                        { appointmentId: booking.id }
+                    );
+                    await this._bookingRepository.updateWarningStatus(booking.id, true);
+                }
+            } catch (error) {
+                console.error(`Error processing auto-cancellation for confirmed booking ${booking.id}:`, error);
             }
         }
     }
 
-    private async processRejection(booking: any): Promise<void> {
-        const session = await mongoose.startSession();
-        session.startTransaction();
+    private getBookingEndDate(booking: any): Date {
+        const endDate = new Date(booking.date);
+        const [time, modifier] = booking.endTime.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        endDate.setHours(hours, minutes, 0, 0);
+        return endDate;
+    }
+
+    private async processRejection(booking: any, reason: string): Promise<void> {
+        const dbSession = await this._sessionFactory.createSession();
+        await dbSession.startTransaction();
 
         try {
+            const session = dbSession.getSession();
             const appointmentId = booking.id;
             const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
 
@@ -104,7 +139,7 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
                     }
                 }
 
-                await this._bookingRepository.updateStatus(appointmentId, 'rejected', 'Expired: No response from lawyer', {
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected', reason, {
                     amount: booking.consultationFee,
                     status: 'full'
                 }, undefined, session, penaltyAmount);
@@ -133,7 +168,7 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
                     );
                 }
             } else {
-                await this._bookingRepository.updateStatus(appointmentId, 'rejected', 'Expired: No response from lawyer', undefined, undefined, session);
+                await this._bookingRepository.updateStatus(appointmentId, 'rejected', reason, undefined, undefined, session);
             }
 
             await this._sendNotificationUseCase.execute(
@@ -155,13 +190,13 @@ export class AutoCancelExpiredBookingsUseCase implements IAutoCancelExpiredBooki
                 console.error("Error deleting chat room during auto-rejection:", error);
             }
 
-            await session.commitTransaction();
+            await dbSession.commitTransaction();
             console.log(`Auto-cancelled expired booking ${booking.bookingId}`);
         } catch (error) {
-            await session.abortTransaction();
+            await dbSession.abortTransaction();
             throw error;
         } finally {
-            session.endSession();
+            dbSession.endSession();
         }
     }
 }

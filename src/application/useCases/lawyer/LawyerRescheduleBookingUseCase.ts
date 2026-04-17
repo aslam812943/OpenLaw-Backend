@@ -68,7 +68,7 @@ export class LawyerRescheduleBookingUseCase implements ILawyerRescheduleBookingU
             newSlotId
         );
 
-        // 4. Notify the user about the change
+    
         await this._sendNotificationUseCase.execute(
             booking.userId.toString(),
             `Your appointment with your lawyer has been rescheduled by the lawyer to ${newSlot.date} at ${newSlot.startTime}.`,

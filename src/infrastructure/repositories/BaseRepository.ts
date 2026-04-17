@@ -1,6 +1,8 @@
 import mongoose, { Model, Document, FilterQuery, UpdateQuery, QueryOptions } from "mongoose";
 import { InternalServerError } from "../errors/InternalServerError";
 import { MessageConstants } from "../constants/MessageConstants";
+import { ISession } from "../../domain/interfaces/ISession";
+import { MongooseSession } from "../db/MongooseDatabaseSession";
 
 export class BaseRepository<T extends Document> {
     protected model: Model<T>;
@@ -9,34 +11,42 @@ export class BaseRepository<T extends Document> {
         this.model = model;
     }
 
-    async baseCreate(data: Partial<T>, session?: mongoose.ClientSession): Promise<T> {
+    private getNativeSession(session?: ISession): mongoose.ClientSession | undefined {
+        return (session as MongooseSession)?.nativeSession;
+    }
+
+    async baseCreate(data: Partial<T>, session?: ISession): Promise<T> {
         try {
-            const docs = await this.model.create([data], { session });
+            const nativeSession = this.getNativeSession(session);
+            const docs = await this.model.create([data], { session: nativeSession });
             return docs[0];
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.CREATE_ERROR);
         }
     }
 
-    async baseFindOne(filter: FilterQuery<T>, options: QueryOptions = {}, session?: mongoose.ClientSession): Promise<T | null> {
+    async baseFindOne(filter: FilterQuery<T>, options: QueryOptions = {}, session?: ISession): Promise<T | null> {
         try {
-            return await this.model.findOne(filter, null, { ...options, session }).exec();
+            const nativeSession = this.getNativeSession(session);
+            return await this.model.findOne(filter, null, { ...options, session: nativeSession }).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_ERROR);
         }
     }
 
-    async baseFindById(id: string, session?: mongoose.ClientSession): Promise<T | null> {
+    async baseFindById(id: string, session?: ISession): Promise<T | null> {
         try {
-            return await this.model.findById(id).session(session || null).exec();
+            const nativeSession = this.getNativeSession(session);
+            return await this.model.findById(id).session(nativeSession || null).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.FIND_BY_ID_ERROR);
         }
     }
 
-    async baseUpdate(id: string, data: UpdateQuery<T>, session?: mongoose.ClientSession): Promise<T | null> {
+    async baseUpdate(id: string, data: UpdateQuery<T>, session?: ISession): Promise<T | null> {
         try {
-            return await this.model.findByIdAndUpdate(id, data, { new: true, session }).exec();
+            const nativeSession = this.getNativeSession(session);
+            return await this.model.findByIdAndUpdate(id, data, { new: true, session: nativeSession }).exec();
         } catch (error: unknown) {
             throw new InternalServerError(MessageConstants.REPOSITORY.UPDATE_ERROR);
         }

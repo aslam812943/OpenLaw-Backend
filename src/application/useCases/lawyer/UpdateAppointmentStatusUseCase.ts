@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { IAvailabilityRuleRepository } from "../../../domain/repositories/lawyer/IAvailabilityRuleRepository";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILawyerRepository } from "../../../domain/repositories/lawyer/ILawyerRepository";
@@ -12,6 +11,7 @@ import { NotFoundError } from "../../../infrastructure/errors/NotFoundError";
 import { IUpdateAppointmentStatusUseCase } from "../../interface/use-cases/lawyer/IUpdateAppointmentStatusUseCase";
 import { IAdminRepository } from "../../../domain/repositories/admin/IAdminRepository";
 import { ISubscriptionRepository } from "../../../domain/repositories/admin/ISubscriptionRepository";
+import { IDatabaseSessionFactory } from "../../../domain/interfaces/IDatabaseSession";
 
 export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusUseCase {
     constructor(
@@ -24,7 +24,8 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         private readonly _chatRoomRepository: IChatRoomRepository,
         private readonly _messageRepository: IMessageRepository,
         private readonly _adminRepository: IAdminRepository,
-        private readonly _subscriptionRepository: ISubscriptionRepository
+        private readonly _subscriptionRepository: ISubscriptionRepository,
+        private readonly _sessionFactory: IDatabaseSessionFactory
     ) { }
 
     async execute(appointmentId: string, status: string, feedback?: string): Promise<void> {
@@ -57,15 +58,16 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
         }
 
 
-        if (status === 'completed' && appointmentDate > now) {
-            throw new BadRequestError("Cannot mark a future appointment as completed.");
-        }
+        // if (status === 'completed' && appointmentDate > now) {
+        //     throw new BadRequestError("Cannot mark a future appointment as completed.");
+        // }
 
 
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        const dbSession = await this._sessionFactory.createSession();
+        await dbSession.startTransaction();
 
         try {
+            const session = dbSession.getSession();
             if (status === 'rejected') {
                 if (booking.paymentStatus === 'paid') {
                     const lawyer = await this._lawyerRepository.findById(booking.lawyerId);
@@ -166,6 +168,11 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                     throw new BadRequestError("Only confirmed appointments can be marked as completed.");
                 }
 
+
+                if ((booking.callDuration || 0) < 180) {
+                    throw new BadRequestError(`Cannot mark as completed. Actual video call duration (${Math.floor((booking.callDuration || 0) / 60)}m ${(booking.callDuration || 0) % 60}s) is less than the required 3 minutes.`);
+                }
+
                 await this._bookingRepository.updateStatus(appointmentId, 'completed', undefined, undefined, feedback, session);
 
                 await this._sendNotificationUseCase.execute(
@@ -221,12 +228,12 @@ export class UpdateAppointmentStatusUseCase implements IUpdateAppointmentStatusU
                 }
             }
 
-            await session.commitTransaction();
+            await dbSession.commitTransaction();
         } catch (error) {
-            await session.abortTransaction();
+            await dbSession.abortTransaction();
             throw error;
         } finally {
-            session.endSession();
+            dbSession.endSession();
         }
     }
 }

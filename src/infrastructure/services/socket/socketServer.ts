@@ -2,7 +2,9 @@ import { Server, Socket } from 'socket.io';
 import { ISendMessageUseCase } from '../../../application/interface/use-cases/common/chat/ISendMessageUseCase';
 import { IMarkMessagesAsReadUseCase } from '../../../application/interface/use-cases/common/chat/IMarkMessagesAsReadUseCase';
 import { ISocketAuth } from '../../../application/interface/services/ISocketAuth';
+import logger from '../../logging/logger';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
+import { IBookingRepository } from '../../../domain/repositories/IBookingRepository';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 import { UserRole } from '../../interface/enums/UserRole';
@@ -11,16 +13,19 @@ export class SocketServerService implements ISocketServer {
   private _sendMessageUseCase: ISendMessageUseCase;
   private _markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase;
   private _socketAuthService: ISocketAuth;
+  private _bookingRepository: IBookingRepository;
   private io: Server | null = null;
 
   constructor(
     sendMessageUseCase: ISendMessageUseCase,
     markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase,
-    socketAuthService: ISocketAuth
+    socketAuthService: ISocketAuth,
+    bookingRepository: IBookingRepository
   ) {
     this._sendMessageUseCase = sendMessageUseCase;
     this._markMessagesAsReadUseCase = markMessagesAsReadUseCase;
     this._socketAuthService = socketAuthService;
+    this._bookingRepository = bookingRepository;
   }
 
   public setupSocketServer(io: Server): void {
@@ -28,7 +33,9 @@ export class SocketServerService implements ISocketServer {
     io.use(this._socketAuthService.socketAuth.bind(this._socketAuthService));
 
     io.on("connection", (socket: Socket) => {
-      const userId = socket.data.userId
+      const userId = socket.data.userId;
+      const role = socket.data.role;
+
       if (userId) {
         socket.join(`user-${userId}`);
       }
@@ -141,7 +148,48 @@ export class SocketServerService implements ISocketServer {
       socket.on("video-call-end", ({ bookingId }: VideoJoinPayload) => {
         const videoRoomId = `video-${bookingId}`;
         io.to(videoRoomId).emit("video-call-ended");
+      });
 
+      socket.on("video-call-pulse", async ({ bookingId }: VideoJoinPayload) => {
+        const role = socket.data.role;
+        const userId = socket.data.userId;
+
+        logger.info(`[VideoPulse] Received from User=${userId}, Role=${role}, Booking=${bookingId}`);
+
+        if (!bookingId) return;
+
+        if (role === UserRole.LAWYER) {
+          await this._bookingRepository.incrementLawyerCallDuration(bookingId, 10);
+          logger.info(`[VideoPulse] Incremented lawyer duration for ${bookingId}`);
+
+          const videoRoomId = `video-${bookingId}`;
+          const clients = io.sockets.adapter.rooms.get(videoRoomId);
+          let userPresent = false;
+
+          if (clients) {
+            for (const clientId of clients) {
+              const clientSocket = io.sockets.sockets.get(clientId);
+              if (clientSocket?.data.role === UserRole.USER) {
+                userPresent = true;
+                break;
+              }
+            }
+          }
+
+          if (userPresent) {
+            await this._bookingRepository.incrementCallDuration(bookingId, 10);
+          }
+        }
+      });
+
+      // Redundant heartbeat listener
+      socket.on("heartbeat", async ({ bookingId }: VideoJoinPayload) => {
+        const role = socket.data.role;
+        const userId = socket.data.userId;
+
+        if (bookingId && role === UserRole.LAWYER) {
+          await this._bookingRepository.incrementLawyerCallDuration(bookingId, 10);
+        }
       });
 
       socket.on("disconnect", () => {

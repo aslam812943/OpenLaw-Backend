@@ -103,7 +103,13 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
             undefined,
             undefined,
             'none',
-            parentBookingId
+            parentBookingId,
+            undefined,
+            0, // rescheduleCount
+            0, // penaltyAmount
+            0, // callDuration
+            0, // lawyerCallDuration
+            false // isWarningSent
         );
 
 
@@ -111,7 +117,7 @@ export class ConfirmBookingUseCase implements IConfirmBookingUseCase {
         if (metadata.slotId && metadata.slotId !== '') {
             const booked = await this._slotRepository.bookSlot(metadata.slotId, metadata.userId, data.id);
             if (!booked) {
-                
+
                 throw new BadRequestError("Payment confirmed but the selected slot was already taken or expired. Please contact support with your Payment ID.");
             }
         }

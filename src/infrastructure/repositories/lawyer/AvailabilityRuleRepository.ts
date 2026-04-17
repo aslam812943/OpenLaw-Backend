@@ -12,6 +12,8 @@ import mongoose, { Document } from "mongoose";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingModel, IBookingDocument } from "../../db/models/BookingModel";
 import { IGeneratedSlot } from "../../../application/interface/services/ISlotGeneratorService";
+import { ISession } from "../../../domain/interfaces/ISession";
+import { MongooseSession } from "../../db/MongooseDatabaseSession";
 import { BaseRepository } from "../BaseRepository";
 
 export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule> implements IAvailabilityRuleRepository {
@@ -154,11 +156,12 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
   }
 
 
-  async reserveSlot(id: string, userId: string, durationMinutes: number = 15, session?: mongoose.ClientSession): Promise<boolean> {
+  async reserveSlot(id: string, userId: string, durationMinutes: number = 15, session?: ISession): Promise<boolean> {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + durationMinutes);
 
     const now = new Date();
+    const nativeSession = (session as MongooseSession)?.nativeSession;
 
     const result = await SlotModel.findOneAndUpdate(
       {
@@ -190,14 +193,14 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
           reservedBy: userId
         }
       },
-      { new: true, session }
+      { new: true, session: nativeSession }
     );
 
     return !!result;
   }
 
 
-  async bookSlot(id: string, userId?: string, bookingId?: string, session?: mongoose.ClientSession): Promise<boolean> {
+  async bookSlot(id: string, userId?: string, bookingId?: string, session?: ISession): Promise<boolean> {
     const updateQuery: mongoose.UpdateQuery<ISlotModel> = { isBooked: true, isReserved: false };
     if (bookingId) {
       updateQuery.bookingId = bookingId;
@@ -211,13 +214,15 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
       ];
     }
 
-    const result = await SlotModel.findOneAndUpdate(filter, { $set: updateQuery }, { new: true, session });
+    const nativeSession = (session as MongooseSession)?.nativeSession;
+    const result = await SlotModel.findOneAndUpdate(filter, { $set: updateQuery }, { new: true, session: nativeSession });
     return !!result;
   }
 
 
 
-  async cancelSlot(startTime: string, lawyerId: string, date: string): Promise<void> {
+  async cancelSlot(startTime: string, lawyerId: string, date: string, session?: ISession): Promise<void> {
+    const nativeSession = (session as MongooseSession)?.nativeSession;
     const result = await SlotModel.findOneAndUpdate(
       {
         startTime,
@@ -226,7 +231,7 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
         isBooked: true
       },
       { isBooked: false, isReserved: false, reservedBy: undefined, reservedUntil: undefined },
-      { new: true }
+      { new: true, session: nativeSession }
     );
 
     if (!result) {
@@ -283,6 +288,8 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
         lawyerJoined?: boolean;
         commissionPercent: number;
         lawyerFeedback?: string;
+        callDuration?: number;
+        isWarningSent?: boolean;
         createdAt: Date;
       }>).map((o) => {
         const userId = o.userId;
@@ -315,7 +322,19 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
           o.lawyerJoined,
           o.commissionPercent,
           o.lawyerFeedback,
-          String(o.createdAt)
+          undefined,
+          o.createdAt,
+          'none',
+          undefined,
+          undefined,
+          'none',
+          undefined,
+          undefined,
+          0, 
+          0, 
+          0, 
+          0, 
+          o.isWarningSent || false
         );
       });
 
@@ -325,14 +344,15 @@ export class AvailabilityRuleRepository extends BaseRepository<IAvailabilityRule
     }
   }
 
-  async updateAppointmentStatus(id: string, status: string): Promise<void> {
+  async updateAppointmentStatus(id: string, status: string, session?: ISession): Promise<void> {
     try {
-      await BookingModel.findByIdAndUpdate(id, { status });
+      const nativeSession = (session as MongooseSession)?.nativeSession;
+      await BookingModel.findByIdAndUpdate(id, { status }).session(nativeSession);
 
       if (status === 'cancelled' || status === 'rejected') {
-        const booking = await BookingModel.findById(id);
+        const booking = await BookingModel.findById(id).session(nativeSession);
         if (booking) {
-          await this.cancelSlot(booking.startTime, booking.lawyerId.toString(), booking.date);
+          await this.cancelSlot(booking.startTime, booking.lawyerId.toString(), booking.date, session);
         }
       }
     } catch (error: unknown) {

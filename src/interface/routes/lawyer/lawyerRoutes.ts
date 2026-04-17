@@ -65,6 +65,7 @@ router.get('/appoiments/:id', lawyerAuthMiddleware.execute, (req, res, next) => 
 router.patch('/appoiments/:id/status', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.updateStatus(req, res, next));
 router.post('/appoiments/:id/follow-up', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.setFollowUp(req, res, next));
 router.patch('/appoiments/:id/reschedule', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.reschedule(req, res, next));
+router.patch('/appoiments/:id/report-no-show', lawyerAuthMiddleware.execute, (req, res, next) => appoimentsController.reportNoShow(req, res, next));
 
 
 // Chat Routes
