@@ -6,7 +6,7 @@ export interface ISendMessageUseCase {
         senderId: string,
         content: string,
         senderRole: 'user' | 'lawyer',
-        type?: "text" | "image" | "video" | "document",
+        type?: "text" | "image" | "video" | "document" | "call",
         fileUrl?: string,
         fileName?: string,
         fileSize?: string

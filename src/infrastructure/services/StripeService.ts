@@ -166,6 +166,11 @@ export class StripeService implements IPaymentService {
                 ...(amount && { amount: Math.round(amount * 100) })
             });
         } catch (error: unknown) {
+       
+            if (error instanceof Error && error.message.includes("has already been refunded")) {
+                logger.warn(`Refund skipped: Charge ${paymentIntentId} has already been refunded.`);
+                return;
+            }
             const message = error instanceof Error ? error.message : "Stripe refund failed";
             throw new InternalServerError(message);
         }

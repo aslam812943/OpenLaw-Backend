@@ -22,7 +22,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
         senderId: string,
         content: string,
         senderRole: 'user' | 'lawyer',
-        type: "text" | "image" | "video" | "document" = "text",
+        type: "text" | "image" | "video" | "document" | "call" = "text",
         fileUrl?: string,
         fileName?: string,
         fileSize?: string
