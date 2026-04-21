@@ -41,7 +41,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
             throw new BadRequestError("Booking not found for this chat room");
         }
 
-        if (booking.status !== "confirmed" && booking.status !== "pending") {
+        if (!['confirmed', 'pending', 'follow-up'].includes(booking.status)) {
             throw new ForbiddenError("This chat is read-only. You can no longer send new messages.");
         }
 

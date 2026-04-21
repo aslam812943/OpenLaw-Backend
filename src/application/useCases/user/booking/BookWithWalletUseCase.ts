@@ -92,7 +92,7 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
                 bookingDetails.startTime,
                 bookingDetails.endTime,
                 consultationFee,
-                'confirmed',
+                'pending',
                 'paid',
                 'WALLET_PAYMENT',
                 `WALLET_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -114,11 +114,11 @@ export class BookWithWalletUseCase implements IBookWithWalletUseCase {
                 'none',
                 parentBookingId,
                 undefined,
-                0, 
-                0, 
-                0, 
-                0, 
-                false 
+                0,
+                0,
+                0,
+                0,
+                false
             );
 
 

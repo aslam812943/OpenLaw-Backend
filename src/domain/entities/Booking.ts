@@ -33,6 +33,7 @@ export class Booking {
         public penaltyAmount: number = 0,
         public callDuration: number = 0,
         public lawyerCallDuration: number = 0,
-        public isWarningSent: boolean = false
+        public isWarningSent: boolean = false,
+        public lawyerImage?: string
     ) { }
 }
