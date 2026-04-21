@@ -5,6 +5,7 @@ import { ISocketAuth } from '../../../application/interface/services/ISocketAuth
 import logger from '../../logging/logger';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
 import { IBookingRepository } from '../../../domain/repositories/IBookingRepository';
+import { IChatRoomRepository } from '../../../domain/repositories/IChatRoomRepository';
 import { ISocketServer } from '../../../application/interface/services/ISocketServer';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 import { UserRole } from '../../interface/enums/UserRole';
@@ -14,18 +15,23 @@ export class SocketServerService implements ISocketServer {
   private _markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase;
   private _socketAuthService: ISocketAuth;
   private _bookingRepository: IBookingRepository;
+  private _chatRoomRepository: IChatRoomRepository;
   private io: Server | null = null;
+  private callStartTimes: Map<string, number> = new Map();
+  private userJoinedRooms: Map<string, boolean> = new Map();
 
   constructor(
     sendMessageUseCase: ISendMessageUseCase,
     markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase,
     socketAuthService: ISocketAuth,
-    bookingRepository: IBookingRepository
+    bookingRepository: IBookingRepository,
+    chatRoomRepository: IChatRoomRepository
   ) {
     this._sendMessageUseCase = sendMessageUseCase;
     this._markMessagesAsReadUseCase = markMessagesAsReadUseCase;
     this._socketAuthService = socketAuthService;
     this._bookingRepository = bookingRepository;
+    this._chatRoomRepository = chatRoomRepository;
   }
 
   public setupSocketServer(io: Server): void {
@@ -125,6 +131,10 @@ export class SocketServerService implements ISocketServer {
           }
         }
 
+        if (role === UserRole.USER) {
+          this.userJoinedRooms.set(bookingId, true);
+        }
+
         socket.join(videoRoomId);
 
         socket.to(videoRoomId).emit("video-call-peer-joined", {
@@ -132,6 +142,28 @@ export class SocketServerService implements ISocketServer {
           socketId: socket.id,
           role: role
         });
+
+        // Trigger "Video call started" message
+        if (role === UserRole.LAWYER) {
+          (async () => {
+            try {
+              const room = await this._chatRoomRepository.findByBookingId(bookingId);
+              if (room && !this.callStartTimes.has(bookingId)) {
+                this.callStartTimes.set(bookingId, Date.now());
+                const message = await this._sendMessageUseCase.execute(
+                  room.id,
+                  socket.data.userId,
+                  "Video call started",
+                  UserRole.LAWYER,
+                  "call"
+                );
+                this.io?.to(room.id).emit("new-message", message);
+              }
+            } catch (error) {
+              logger.error("Failed to send call start message", error);
+            }
+          })();
+        }
       });
 
       socket.on("video-call-signal", ({ bookingId, signal }: VideoSignalPayload) => {
@@ -145,9 +177,63 @@ export class SocketServerService implements ISocketServer {
         });
       });
 
-      socket.on("video-call-end", ({ bookingId }: VideoJoinPayload) => {
+      socket.on("video-call-end", async ({ bookingId }: VideoJoinPayload) => {
         const videoRoomId = `video-${bookingId}`;
-        io.to(videoRoomId).emit("video-call-ended");
+        this.io?.to(videoRoomId).emit("video-call-ended");
+
+      
+        try {
+          const room = await this._chatRoomRepository.findByBookingId(bookingId);
+          if (room) {
+            const otherPartyId = socket.data.role === UserRole.LAWYER ? room.userId : room.lawyerId;
+            const otherRole = socket.data.role === UserRole.LAWYER ? "user" : "lawyer";
+            this.io?.to(`${otherRole}-${otherPartyId}`).emit("video-call-ended", { bookingId });
+          }
+        } catch (error) {
+          logger.error("Failed to notify other party of call end", error);
+        }
+
+        // Trigger "Video call ended" or "Missed call" message
+        (async () => {
+          try {
+            const startTime = this.callStartTimes.get(bookingId);
+            const userJoined = this.userJoinedRooms.get(bookingId);
+
+            if (startTime) {
+              const room = await this._chatRoomRepository.findByBookingId(bookingId);
+              if (room) {
+                let statusMessage = "";
+                if (!userJoined) {
+                  statusMessage = "Missed video call";
+                } else {
+                  const durationMs = Date.now() - startTime;
+                  const seconds = Math.floor((durationMs / 1000) % 60);
+                  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+                  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+
+                  let durationStr = "";
+                  if (hours > 0) durationStr += `${hours}h `;
+                  if (minutes > 0 || hours > 0) durationStr += `${minutes}m `;
+                  durationStr += `${seconds}s`;
+                  statusMessage = `Video call ended (${durationStr})`;
+                }
+
+                const message = await this._sendMessageUseCase.execute(
+                  room.id,
+                  socket.data.userId,
+                  statusMessage,
+                  socket.data.role,
+                  "call"
+                );
+                this.io?.to(room.id).emit("new-message", message);
+              }
+              this.callStartTimes.delete(bookingId);
+              this.userJoinedRooms.delete(bookingId);
+            }
+          } catch (error) {
+            logger.error("Failed to send call end message", error);
+          }
+        })();
       });
 
       socket.on("video-call-pulse", async ({ bookingId }: VideoJoinPayload) => {

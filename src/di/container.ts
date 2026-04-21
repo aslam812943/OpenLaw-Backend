@@ -23,7 +23,8 @@ export const socketServerService = new SocketServerService(
     sendMessageUseCase,
     markMessagesAsReadUseCase,
     socketAuthService,
-    bookingRepository
+    bookingRepository,
+    chatRoomRepository
 );
 
 // Notifications
