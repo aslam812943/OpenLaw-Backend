@@ -18,7 +18,7 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
     private mapToEntity(doc: IBookingDocument): Booking {
         const docObj = doc.toObject() as {
             userId?: { _id: Types.ObjectId, name: string },
-            lawyerId?: { _id: Types.ObjectId, name: string },
+            lawyerId?: { _id: Types.ObjectId, name: string, Profileimageurl?: string },
             createdAt?: Date
         };
 
@@ -56,7 +56,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
             doc.penaltyAmount || 0,
             doc.callDuration || 0,
             doc.lawyerCallDuration || 0,
-            doc.isWarningSent || false
+            doc.isWarningSent || false,
+            docObj.lawyerId?.Profileimageurl
         );
     }
 
@@ -78,7 +79,11 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
 
     async findById(id: string): Promise<Booking | null> {
         try {
-            const booking = await this.baseFindById(id);
+            const booking = await this.model.findById(id)
+                .populate({ path: 'lawyerId', select: 'name Profileimageurl' })
+                .populate({ path: 'userId', select: 'name' })
+                .exec();
+
             if (!booking) return null;
             return this.mapToEntity(booking);
         } catch (error: unknown) {
@@ -190,7 +195,8 @@ export class BookingRepository extends BaseRepository<IBookingDocument> implemen
                 booking = await this.baseFindOne({
                     userId,
                     lawyerId,
-                    status: 'completed'
+                    status: 'follow-up',
+                    paymentStatus: 'paid'
                 }, { sort: { createdAt: -1 } });
             }
 

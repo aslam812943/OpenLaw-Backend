@@ -20,7 +20,7 @@ export class ResponseGetAppointmentsDTO {
         public followUpTime?: string,
         public followUpStatus?: string,
         public parentBookingId?: string,
-        public rescheduleCount: number = 0
+        public rescheduleCount: number = 0,
+        public lawyerImage?: string
     ) { }
 }
-

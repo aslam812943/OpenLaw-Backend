@@ -10,6 +10,7 @@ import { GetNotificationsUseCase } from "../application/useCases/common/notifica
 import { MarkNotificationAsReadUseCase } from "../application/useCases/common/notification/MarkNotificationAsReadUseCase";
 import { NotificationController } from "../interface/controllers/common/notification/NotificationController";
 import { BookingRepository } from "../infrastructure/repositories/user/BookingRepository";
+import { EndCallUseCase } from "../application/useCases/common/videoCall/EndCallUseCase";
 
 const messageRepository = new MessageRepository();
 const chatRoomRepository = new ChatRoomRepository();
@@ -18,13 +19,15 @@ const bookingRepository = new BookingRepository();
 const sendMessageUseCase = new SendMessageUseCase(messageRepository, chatRoomRepository, bookingRepository);
 const markMessagesAsReadUseCase = new MarkMessagesAsReadUseCase(messageRepository);
 const socketAuthService = new SocketAuthService();
+const endCallUseCase = new EndCallUseCase(bookingRepository);
 
 export const socketServerService = new SocketServerService(
     sendMessageUseCase,
     markMessagesAsReadUseCase,
     socketAuthService,
     bookingRepository,
-    chatRoomRepository
+    chatRoomRepository,
+    endCallUseCase
 );
 
 // Notifications

@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { ISendMessageUseCase } from '../../../application/interface/use-cases/common/chat/ISendMessageUseCase';
 import { IMarkMessagesAsReadUseCase } from '../../../application/interface/use-cases/common/chat/IMarkMessagesAsReadUseCase';
+import { IEndCallUseCase } from '../../../application/interface/use-cases/common/IEndCallUseCase';
 import { ISocketAuth } from '../../../application/interface/services/ISocketAuth';
 import logger from '../../logging/logger';
 import { JoinRoomPayload, SendMessagePayload, MarkReadPayload, VideoJoinPayload, VideoSignalPayload } from './socketTypes';
@@ -13,6 +14,7 @@ import { UserRole } from '../../interface/enums/UserRole';
 export class SocketServerService implements ISocketServer {
   private _sendMessageUseCase: ISendMessageUseCase;
   private _markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase;
+  private _endCallUseCase: IEndCallUseCase;
   private _socketAuthService: ISocketAuth;
   private _bookingRepository: IBookingRepository;
   private _chatRoomRepository: IChatRoomRepository;
@@ -25,13 +27,15 @@ export class SocketServerService implements ISocketServer {
     markMessagesAsReadUseCase: IMarkMessagesAsReadUseCase,
     socketAuthService: ISocketAuth,
     bookingRepository: IBookingRepository,
-    chatRoomRepository: IChatRoomRepository
+    chatRoomRepository: IChatRoomRepository,
+    endCallUseCase: IEndCallUseCase
   ) {
     this._sendMessageUseCase = sendMessageUseCase;
     this._markMessagesAsReadUseCase = markMessagesAsReadUseCase;
     this._socketAuthService = socketAuthService;
     this._bookingRepository = bookingRepository;
     this._chatRoomRepository = chatRoomRepository;
+    this._endCallUseCase = endCallUseCase;
   }
 
   public setupSocketServer(io: Server): void {
@@ -181,7 +185,14 @@ export class SocketServerService implements ISocketServer {
         const videoRoomId = `video-${bookingId}`;
         this.io?.to(videoRoomId).emit("video-call-ended");
 
-      
+       
+        try {
+          await this._endCallUseCase.execute(bookingId);
+        } catch (error) {
+          logger.error("Failed to reset call status on backend", error);
+        }
+
+
         try {
           const room = await this._chatRoomRepository.findByBookingId(bookingId);
           if (room) {
