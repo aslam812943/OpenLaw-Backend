@@ -6,7 +6,7 @@ export class MessageDTO {
         public senderRole: "user" | "lawyer",
         public content: string,
         public createdAt: Date,
-        public type: "text" | "image" | "video" | "document",
+        public type: "text" | "image" | "video" | "document" | "call",
         public fileUrl?: string,
         public fileName?: string,
         public fileSize?: string,
