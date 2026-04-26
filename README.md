@@ -17,7 +17,7 @@ The backend for LegalConnect, a high-performance legal service platform. Built w
 ---
 
 ## 🏗️ Architecture
-Follows **Clean Architecture** / **DDD**:
+Follows **Clean Architecture** :
 - **`src/domain/`**: Entities and Repository interfaces.
 - **`src/application/`**: Use cases, DTOs, Mappers.
 - **`src/infrastructure/`**: Implementations (DB, Redis, Mail, Cloudinary).
